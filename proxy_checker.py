@@ -1,0 +1,696 @@
+#!/usr/bin/env python3
+"""
+Proxy Collector and Availability Checker (Windows)
+
+Purpose:
+- Read a list of source URLs from sources.txt.
+- Each URL returns content containing multiple proxy links (vmess, vless, trojan, ss, ssr, hysteria/hysteria2/hy2, tuic, juicity, etc.).
+- Some sources return base64-encoded subscription content. The script supports per-source hints (",base64,") and auto-detection.
+- Extract all proxies from fetched contents.
+- For each NEW proxy (not seen in previous runs), extract its target host and ping it to test reachability.
+- Save only available proxies to output\\available.txt.
+- Persist tested proxies' hashes in .state\\tested.txt to avoid retesting in subsequent hourly runs.
+
+How to run hourly on Windows:
+- Run once manually:  python proxy_checker.py
+- Schedule hourly: Use Windows Task Scheduler to create a basic task that runs the above command every hour. Ensure the Start in directory is set to this repository folder.
+
+Notes:
+- Pinging is not a perfect availability test for application-level proxies, but it's a fast heuristic. It reduces load by only pinging hosts.
+- This script uses only the Python standard library.
+"""
+from __future__ import annotations
+
+import base64
+import concurrent.futures
+import hashlib
+import io
+import ipaddress
+import json
+import os
+import re
+import socket
+import subprocess
+import sys
+import threading
+from tqdm import tqdm
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from urllib.parse import urlsplit, parse_qs, unquote, urlparse, quote
+from urllib.request import Request, urlopen
+
+# ------------------- Configuration -------------------
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+SOURCES_FILE = os.path.join(REPO_ROOT, 'small.txt')
+# SOURCES_FILE = os.path.join(REPO_ROOT, 'sources.txt')
+STATE_DIR = os.path.join(REPO_ROOT, '.state')
+OUTPUT_DIR = os.path.join(REPO_ROOT, 'output')
+TESTED_FILE = os.path.join(STATE_DIR, 'tested.txt')  # stores SHA1 per tested proxy URI
+AVAILABLE_FILE = os.path.join(OUTPUT_DIR, 'available.txt')
+
+# Tuning
+FETCH_TIMEOUT = 20  # seconds per source fetch
+FETCH_WORKERS = 24
+PING_WORKERS = 64
+PING_TIMEOUT_MS = 1000  # 1 second per ping attempt
+USER_AGENT = (
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+    'AppleWebKit/537.36 (KHTML, like Gecko) '
+    'Chrome/122.0 Safari/537.36'
+)
+
+# Regex to find proxy URIs
+SCHEMES = [
+    'vmess', 'vless', 'trojan', 'ss', 'ssr', 'hysteria', 'hysteria2', 'hy2', 'tuic', 'juicity'
+]
+URI_REGEX = re.compile(r'(?i)\b(?:' + '|'.join(map(re.escape, SCHEMES)) + r')://[^\s<>"\']+')
+
+# Fallback regex for host:port within strings
+HOSTPORT_REGEX = re.compile(r'([A-Za-z0-9_.\-\[\]:]+):(\d{2,5})')
+
+_print_lock = threading.Lock()
+
+def log(msg: str) -> None:
+    with _print_lock:
+        print(msg, flush=True)
+
+# ------------------- Utilities -------------------
+
+def ensure_dirs() -> None:
+    os.makedirs(STATE_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+def read_lines(path: str) -> List[str]:
+    if not os.path.exists(path):
+        return []
+    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        return [line.rstrip('\r\n') for line in f]
+
+
+def append_lines(path: str, lines: Iterable[str]) -> None:
+    if not lines:
+        return
+    with open(path, 'a', encoding='utf-8', errors='ignore') as f:
+        for line in lines:
+            f.write(line)
+            if not line.endswith('\n'):
+                f.write('\n')
+
+
+def sha1_hex(s: str) -> str:
+    return hashlib.sha1(s.encode('utf-8', errors='ignore')).hexdigest()
+
+
+def safe_b64decode_to_bytes(s: str) -> Optional[bytes]:
+    """Try to base64-decode a string with leniency (padding, URL-safe). Returns None on failure."""
+    if not s:
+        return None
+    # Remove whitespace
+    compact = ''.join(s.split())
+    # Convert URL-safe variants
+    compact = compact.replace('-', '+').replace('_', '/')
+    # Pad
+    padding = (-len(compact)) % 4
+    compact += '=' * padding
+    try:
+        return base64.b64decode(compact, validate=False)
+    except Exception:
+        return None
+
+
+def maybe_decode_subscription(content: str, hinted_base64: bool = False) -> str:
+    """Decode subscription content when required.
+
+    Logic:
+    - If hinted_base64 is True, attempt decode once; if result contains URIs, return lines; else fallback to original.
+    - Else, if original content has no URI scheme patterns, try to base64-decode once or twice, stopping when URIs are found.
+    """
+    def contains_uri(txt: str) -> bool:
+        return URI_REGEX.search(txt) is not None
+
+    if hinted_base64:
+        b = safe_b64decode_to_bytes(content)
+        if b:
+            text = b.decode('utf-8', errors='ignore')
+            if contains_uri(text):
+                return text
+            # sometimes the decoded content still is base64 layer
+            b2 = safe_b64decode_to_bytes(text)
+            if b2:
+                t2 = b2.decode('utf-8', errors='ignore')
+                if contains_uri(t2):
+                    return t2
+        return content
+
+    # Auto-detect: if already contains URIs, return as-is
+    if contains_uri(content):
+        return content
+
+    # Try base64 decode once or twice
+    b = safe_b64decode_to_bytes(content)
+    if b:
+        text = b.decode('utf-8', errors='ignore')
+        if contains_uri(text):
+            return text
+        b2 = safe_b64decode_to_bytes(text)
+        if b2:
+            t2 = b2.decode('utf-8', errors='ignore')
+            if contains_uri(t2):
+                return t2
+    return content
+
+
+# ------------------- Fetching -------------------
+
+def parse_source_line(line: str) -> Tuple[str, Dict[str, bool]]:
+    """Return (url, flags). Flags currently supports {'base64': bool}.
+    Lines may look like: 'https://example/path,base64,' or just URL.
+    """
+    parts = [p for p in line.split(',') if p]
+    if not parts:
+        return '', {}
+    url = parts[0].strip()
+    flags = {p.strip().lower(): True for p in parts[1:]}
+    return url, {'base64': flags.get('base64', False)}
+
+
+def fetch_url(url: str, timeout: int = FETCH_TIMEOUT) -> Optional[str]:
+    try:
+        req = Request(url, headers={'User-Agent': USER_AGENT, 'Accept': '*/*'})
+        with urlopen(req, timeout=timeout) as resp:
+            # limit size to 10 MB to avoid memory blowups
+            max_bytes = 10 * 1024 * 1024
+            data = resp.read(max_bytes + 1)
+            if len(data) > max_bytes:
+                data = data[:max_bytes]
+            return data.decode('utf-8', errors='ignore')
+    except Exception as e:
+        log(f"Fetch failed: {url} -> {e}")
+        return None
+
+
+# ------------------- Extraction -------------------
+
+def extract_uris(text: str) -> List[str]:
+    if not text:
+        return []
+    found = set()
+    uris = []
+    for m in URI_REGEX.finditer(text):
+        uri = m.group(0)
+        # strip trailing punctuation that often follows links
+        uri = uri.rstrip(')>,;\"\'\n\r')
+        if uri not in found:
+            found.add(uri)
+            uris.append(uri)
+    return uris
+
+
+# ------------------- Host parsing -------------------
+
+def _split_netloc_for_host(netloc: str) -> Optional[str]:
+    # Remove userinfo if present
+    if '@' in netloc:
+        netloc = netloc.rsplit('@', 1)[-1]
+    # If IPv6 in brackets
+    if netloc.startswith('['):
+        end = netloc.find(']')
+        if end != -1:
+            host = netloc[1:end]
+            return host
+    # Else split by colon for host:port
+    if ':' in netloc:
+        return netloc.split(':', 1)[0]
+    return netloc or None
+
+
+def _idna(host: str) -> str:
+    try:
+        return host.encode('idna').decode('ascii')
+    except Exception:
+        return host
+
+
+def host_from_vmess(uri: str) -> Optional[str]:
+    # vmess://<base64-json>
+    try:
+        payload_b64 = uri.split('://', 1)[1]
+        b = safe_b64decode_to_bytes(payload_b64)
+        if not b:
+            return None
+        obj = json.loads(b.decode('utf-8', errors='ignore') or '{}')
+        host = obj.get('add') or obj.get('address') or obj.get('host')
+        if isinstance(host, str) and host:
+            return _idna(host.strip())
+    except Exception:
+        return None
+    return None
+
+
+def host_from_ss(uri: str) -> Optional[str]:
+    # ss:// can be either base64(method:pass@host:port) or method:pass@host:port directly
+    try:
+        payload = uri.split('://', 1)[1]
+        # If it looks like base64 up to a possible '#'
+        main_part = payload.split('#', 1)[0]
+        # strip plugin/query if present
+        main_part = main_part.split('?', 1)[0]
+        # Sometimes when it's not base64, urlparse can handle directly
+        b = safe_b64decode_to_bytes(main_part)
+        text = None
+        if b:
+            text = b.decode('utf-8', errors='ignore')
+        else:
+            # Not base64, try urlparse on full URI
+            p = urlsplit(uri)
+            host = p.hostname
+            if host:
+                return _idna(host)
+        # Now parse method:pass@host:port
+        if text:
+            if '@' in text:
+                right = text.rsplit('@', 1)[-1]
+            else:
+                # Some forms may be host:port (no creds)
+                right = text
+            # Remove plugin suffix if any
+            right = right.split('?')[0]
+            # IPv6 bracket handling
+            if right.startswith('['):
+                end = right.find(']')
+                if end != -1:
+                    return _idna(right[1:end])
+            if ':' in right:
+                return _idna(right.split(':', 1)[0])
+            return _idna(right)
+    except Exception:
+        return None
+    return None
+
+
+def host_from_ssr(uri: str) -> Optional[str]:
+    # ssr://base64(host:port:protocol:method:obfs:password_base64/?params)
+    try:
+        payload = uri.split('://', 1)[1]
+        b = safe_b64decode_to_bytes(payload)
+        if not b:
+            return None
+        text = b.decode('utf-8', errors='ignore')
+        first = text.split('/', 1)[0]
+        parts = first.split(':')
+        if len(parts) >= 2:
+            host = parts[0]
+            return _idna(host)
+    except Exception:
+        return None
+    return None
+
+
+def host_from_generic(uri: str) -> Optional[str]:
+    try:
+        p = urlsplit(uri)
+        host = p.hostname
+        if host:
+            return _idna(host)
+        # some hysteria2 links embed host in query (server=)
+        qs = parse_qs(p.query)
+        server_vals = qs.get('server') or qs.get('sv')
+        if server_vals:
+            # server can be host:port
+            m = HOSTPORT_REGEX.search(server_vals[0])
+            if m:
+                return _idna(m.group(1))
+        # fallback: find host:port anywhere in the uri
+        m = HOSTPORT_REGEX.search(uri)
+        if m:
+            return _idna(m.group(1))
+    except Exception:
+        return None
+    return None
+
+
+def extract_host(uri: str) -> Optional[str]:
+    scheme = uri.split('://', 1)[0].lower()
+    if scheme == 'vmess':
+        return host_from_vmess(uri)
+    if scheme == 'ss':
+        return host_from_ss(uri)
+    if scheme == 'ssr':
+        return host_from_ssr(uri)
+    # others via generic parsing
+    return host_from_generic(uri)
+
+
+# ------------------- Ping check -------------------
+
+def is_ip_address(host: str) -> bool:
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except Exception:
+        return False
+
+
+def ping_host(host: str) -> bool:
+    """Ping a host cross-platform. Try IPv4 first, then IPv6 if needed."""
+    host_ascii = _idna(host)
+    timeout_ms = int(PING_TIMEOUT_MS)
+    is_windows = os.name == 'nt' or sys.platform.startswith('win')
+
+    # Build candidate commands depending on platform
+    cmds: List[List[str]] = []
+    if is_windows:
+        # Windows: -n (count), -w (timeout in ms), -4/-6 to force family
+        cmds = [
+            ["ping", "-n", "1", "-w", str(timeout_ms), "-4", host_ascii],
+            ["ping", "-n", "1", "-w", str(timeout_ms), "-6", host_ascii],
+        ]
+    else:
+        is_darwin = sys.platform == 'darwin'
+        if is_darwin:
+            # macOS/BSD: -c (count), -W timeout in ms. BSD ping typically lacks -4/-6; use ping then ping6.
+            cmds = [
+                ["ping", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                ["ping6", "-c", "1", "-W", str(timeout_ms), host_ascii],
+            ]
+        else:
+            # Linux: -c (count), -W timeout in seconds. Use -4/-6 to force family.
+            timeout_sec = max(1, int(round(timeout_ms / 1000.0)))
+            cmds = [
+                ["ping", "-c", "1", "-W", str(timeout_sec), "-4", host_ascii],
+                ["ping", "-c", "1", "-W", str(timeout_sec), "-6", host_ascii],
+            ]
+
+    py_timeout = (timeout_ms / 1000.0) + 1.0
+    for cmd in cmds:
+        try:
+            res = subprocess.run(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=py_timeout,
+                creationflags=(subprocess.CREATE_NO_WINDOW if is_windows and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0),
+            )
+            if res.returncode == 0:
+                return True
+        except FileNotFoundError:
+            # e.g., ping6 not present
+            continue
+        except Exception:
+            continue
+    return False
+
+
+# ------------------- Remark formatting -------------------
+
+def _country_flag(cc: Optional[str]) -> str:
+    if not cc or len(cc) != 2 or not cc.isalpha():
+        return "🌐"
+    cc = cc.upper()
+    try:
+        return chr(0x1F1E6 + ord(cc[0]) - 65) + chr(0x1F1E6 + ord(cc[1]) - 65)
+    except Exception:
+        return "🌐"
+
+
+def _get_country_code_for_host(host: str, timeout: int = 5) -> Optional[str]:
+    try:
+        if is_ip_address(host):
+            ip = host
+        else:
+            try:
+                # Prefer IPv4 if available
+                infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+                ip = None
+                for fam, _, _, _, sockaddr in infos:
+                    if fam == socket.AF_INET:
+                        ip = sockaddr[0]
+                        break
+                if not ip and infos:
+                    ip = infos[0][4][0]
+            except Exception:
+                ip = host
+        url = f"http://ip-api.com/json/{ip}?fields=countryCode"
+        with urlopen(url, timeout=timeout) as resp:
+            data = resp.read(1024)
+            obj = json.loads(data.decode('utf-8', errors='ignore') or '{}')
+            cc = obj.get('countryCode')
+            if isinstance(cc, str) and len(cc) == 2:
+                return cc.upper()
+    except Exception:
+        return None
+    return None
+
+
+def _set_remark(uri: str, remark: str) -> str:
+    scheme = uri.split('://', 1)[0].lower()
+    if scheme == 'vmess':
+        try:
+            payload_b64 = uri.split('://', 1)[1]
+            b = safe_b64decode_to_bytes(payload_b64)
+            if b:
+                obj = json.loads(b.decode('utf-8', errors='ignore') or '{}')
+                if isinstance(obj, dict):
+                    obj['ps'] = remark
+                    new_json = json.dumps(obj, separators=(',', ':'), ensure_ascii=False)
+                    new_b64 = base64.b64encode(new_json.encode('utf-8')).decode('ascii')
+                    return 'vmess://' + new_b64
+        except Exception:
+            pass
+        return uri
+    # For non-vmess, set URL fragment
+    try:
+        base = uri.split('#', 1)[0]
+        return base + '#' + quote(remark, safe='')
+    except Exception:
+        if '#' in uri:
+            uri = uri.split('#', 1)[0]
+        return uri + '#' + quote(remark, safe='')
+
+
+def _extract_our_cc_and_num_from_uri(uri: str) -> Optional[Tuple[str, int]]:
+    scheme = uri.split('://', 1)[0].lower()
+    tag = None
+    if scheme == 'vmess':
+        try:
+            payload_b64 = uri.split('://', 1)[1]
+            b = safe_b64decode_to_bytes(payload_b64)
+            if b:
+                obj = json.loads(b.decode('utf-8', errors='ignore') or '{}')
+                ps = obj.get('ps')
+                if isinstance(ps, str):
+                    tag = ps
+        except Exception:
+            tag = None
+    else:
+        try:
+            frag = urlsplit(uri).fragment
+            if frag:
+                tag = unquote(frag)
+        except Exception:
+            tag = None
+    if not tag:
+        return None
+    m = re.match(r'^\[OpenRay\]\s+.+\s+([A-Z]{2})-(\d+)$', tag)
+    if not m:
+        return None
+    try:
+        cc = m.group(1)
+        num = int(m.group(2))
+        return cc, num
+    except Exception:
+        return None
+
+
+def _build_country_counters(existing: Iterable[str]) -> Dict[str, int]:
+    counters: Dict[str, int] = {}
+    for line in existing:
+        parsed = _extract_our_cc_and_num_from_uri(line)
+        if parsed:
+            cc, num = parsed
+            prev = counters.get(cc, 0)
+            if num > prev:
+                counters[cc] = num
+    return counters
+
+
+# ------------------- Grouping -------------------
+
+def regroup_available_by_country() -> None:
+    try:
+        lines = read_lines(AVAILABLE_FILE)
+        if not lines:
+            return
+        order: List[str] = []
+        groups: Dict[str, List[str]] = {}
+        for line in lines:
+            s = line.strip()
+            if not s:
+                continue
+            parsed = _extract_our_cc_and_num_from_uri(s)
+            cc = parsed[0] if parsed else 'XX'
+            if cc not in groups:
+                groups[cc] = []
+                order.append(cc)
+            groups[cc].append(s)
+        with open(AVAILABLE_FILE, 'w', encoding='utf-8', errors='ignore') as f:
+            for cc in order:
+                for item in groups[cc]:
+                    f.write(item)
+                    f.write('\n')
+        log(f"Regrouped available proxies by country into {len(order)} groups")
+    except Exception as e:
+        log(f"Regroup failed: {e}")
+
+# ------------------- Main processing -------------------
+
+def load_tested_hashes() -> Set[str]:
+    tested: Set[str] = set()
+    for line in read_lines(TESTED_FILE):
+        h = line.strip()
+        if h:
+            tested.add(h)
+    return tested
+
+
+def load_existing_available() -> Set[str]:
+    existing: Set[str] = set()
+    for line in read_lines(AVAILABLE_FILE):
+        s = line.strip()
+        if s:
+            existing.add(s)
+    return existing
+
+
+def main() -> int:
+    ensure_dirs()
+    if not os.path.exists(SOURCES_FILE):
+        log(f"sources.txt not found at {SOURCES_FILE}")
+        return 1
+
+    source_lines = [ln.strip() for ln in read_lines(SOURCES_FILE) if ln.strip() and not ln.strip().startswith('#')]
+    log(f"Loaded {len(source_lines)} sources")
+
+    # Fetch all sources concurrently
+    fetched_texts: List[str] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+        future_to_src = {}
+        for line in source_lines:
+            url, flags = parse_source_line(line)
+            if not url:
+                continue
+            future = pool.submit(fetch_url, url)
+            future_to_src[future] = (url, flags)
+        for fut in concurrent.futures.as_completed(future_to_src):
+            url, flags = future_to_src[fut]
+            content = None
+            try:
+                content = fut.result()
+            except Exception as e:
+                log(f"Fetch future error: {url} -> {e}")
+            if content is None:
+                continue
+            decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
+            fetched_texts.append(decoded)
+
+    log(f"Fetched {len(fetched_texts)} contents")
+
+    # Extract proxies
+    all_uris: List[str] = []
+    seen_uri: Set[str] = set()
+    for text in fetched_texts:
+        uris = extract_uris(text)
+        for u in uris:
+            if u not in seen_uri:
+                seen_uri.add(u)
+                all_uris.append(u)
+    log(f"Extracted {len(all_uris)} unique proxy URIs")
+
+    # Load persistence
+    tested_hashes = load_tested_hashes()
+    existing_available = load_existing_available()
+
+    # Filter new proxies
+    new_uris = []
+    new_hashes = []
+    for u in all_uris:
+        h = sha1_hex(u)
+        if h not in tested_hashes:
+            new_uris.append(u)
+            new_hashes.append(h)
+    log(f"New proxies to test: {len(new_uris)} (skipped already-tested: {len(all_uris) - len(new_uris)})")
+
+    # Extract hosts for new proxies
+    host_map: Dict[str, Optional[str]] = {}
+    for u in new_uris:
+        host_map[u] = extract_host(u)
+    to_test = [(u, host) for u, host in host_map.items() if host]
+    log(f"New proxies with resolvable hosts: {len(to_test)}")
+
+    # Ping concurrently
+    available_to_add: List[str] = []
+    def check_one(item: Tuple[str, str]) -> Optional[str]:
+        uri, host = item
+        try:
+            ok = ping_host(host)
+            return uri if ok else None
+        except Exception:
+            return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+        for result in tqdm(pool.map(check_one, to_test), total=len(to_test)):
+            if result is not None:
+                available_to_add.append(result)
+
+    log(f"Available proxies found this run (ping ok): {len(available_to_add)}")
+
+    # Deduplicate against existing available file and write
+    new_available_unique: List[str] = []
+    exists_set = set(existing_available)
+    for u in available_to_add:
+        if u not in exists_set:
+            exists_set.add(u)
+            new_available_unique.append(u)
+
+    if new_available_unique:
+        # Build per-country counters from existing entries
+        counters = _build_country_counters(existing_available)
+        cc_cache: Dict[str, Optional[str]] = {}
+        formatted_to_append: List[str] = []
+        for u in tqdm(new_available_unique):
+            host = host_map.get(u)
+            cc = None
+            if host:
+                if host in cc_cache:
+                    cc = cc_cache[host]
+                else:
+                    cc = _get_country_code_for_host(host)
+                    cc_cache[host] = cc
+            if not cc:
+                cc = 'XX'
+            flag = _country_flag(cc)
+            next_num = counters.get(cc, 0) + 1
+            counters[cc] = next_num
+            remark = f"[OpenRay] {flag} {cc}-{next_num}"
+            new_u = _set_remark(u, remark)
+            formatted_to_append.append(new_u)
+        append_lines(AVAILABLE_FILE, formatted_to_append)
+        log(f"Appended {len(formatted_to_append)} new available proxies to {AVAILABLE_FILE} with formatted remarks")
+    else:
+        log("No new available proxies to append (all duplicates)")
+
+    # Regroup available proxies by country
+    regroup_available_by_country()
+
+    # Persist tested hashes (append all newly tested regardless of success)
+    append_lines(TESTED_FILE, new_hashes)
+    log(f"Recorded {len(new_hashes)} newly tested proxies to {TESTED_FILE}")
+
+    return 0
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(130)
