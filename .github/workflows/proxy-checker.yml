@@ -1,40 +1,44 @@
 name: Proxy Checker
 
+# Trigger workflow
 on:
   schedule:
-#     Run every 3 hours (at minutes 0 of hours 0, 3, 6, 9, 12, 15, 18, 21)
-#    - cron: '0 */3 * * *'
-    # Run every minute
-    - cron: '* * * * *'
+    # Run every 3 hours (at minutes 0 of hours 0, 3, 6, 9, 12, 15, 18, 21)
+    - cron: '0 */3 * * *'
+  workflow_dispatch:  # Allow manual trigger
 
-
-  # Allow manual triggering
-  workflow_dispatch:
+# Permissions for push
+permissions:
+  contents: write
 
 jobs:
   check-proxies:
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout repository with full history
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        # Fetch full history to preserve .state directory
         fetch-depth: 0
 
+    # Set up Python
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.13'
 
+    # Install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install tqdm
 
+    # Run proxy checker script
     - name: Run proxy checker
       run: python proxy_checker.py
 
+    # Commit and push changes
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
@@ -44,7 +48,7 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "Update proxy lists - $(date -u '+%Y-%m-%d %H:%M:%S') UTC"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+          git push --quiet https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
