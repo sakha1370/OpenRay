@@ -7,9 +7,10 @@ on:
     - cron: '0 */3 * * *'
   workflow_dispatch:  # Allow manual trigger
 
-# Permissions for push
+# Permissions
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   check-proxies:
@@ -38,17 +39,16 @@ jobs:
     - name: Run proxy checker
       run: python proxy_checker.py
 
-    # Commit and push changes
-    - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .state/ output/
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Update proxy lists - $(date -u '+%Y-%m-%d %H:%M:%S') UTC"
-          git push --quiet https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Create Pull Request with changes
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "Update proxy lists"
+        branch: auto/proxy-updates
+        title: "Update proxy lists"
+        body: "Automated update of proxy lists and state files."
+        add-paths: |
+          .state/**
+          output/**
+        delete-branch: true
