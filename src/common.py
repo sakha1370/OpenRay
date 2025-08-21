@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import os
 import base64
 import hashlib
 import threading
@@ -8,6 +8,10 @@ try:
     from tqdm import tqdm as _tqdm  # type: ignore
 
     def progress(iterable, total=None):
+        # Disable tqdm in GitHub Actions or other CI environments
+        # if os.environ.get('GITHUB_ACTIONS') or os.environ.get('CI'):
+        #     return iterable
+
         return _tqdm(iterable, total=total)
 except Exception:
 
