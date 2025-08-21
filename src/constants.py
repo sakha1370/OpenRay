@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import multiprocessing
 from typing import Optional, List
 
 # Determine repository root as parent of this src directory
@@ -52,13 +53,73 @@ def _get_sources_file() -> str:
 
 SOURCES_FILE = _get_sources_file()
 
+
+def _get_system_specs():
+    """Get system CPU cores and available memory."""
+    try:
+        cpu_cores = multiprocessing.cpu_count()
+    except Exception:
+        cpu_cores = 2  # fallback
+
+    try:
+        # Get available memory in GB
+        import psutil
+        memory_gb = psutil.virtual_memory().total / (1024 ** 3)
+    except ImportError:
+        # Fallback without psutil - estimate based on common CI environments
+        memory_gb = 16 if os.environ.get('GITHUB_ACTIONS') else 8
+    except Exception:
+        memory_gb = 8  # conservative fallback
+
+    return cpu_cores, memory_gb
+
+
+def _adaptive_workers(base_per_core: int, max_total: int, min_total: int = 1) -> int:
+    """Calculate optimal worker count based on system specs."""
+    cpu_cores, memory_gb = _get_system_specs()
+
+    # Base calculation: workers per core
+    workers = cpu_cores * base_per_core
+
+    # Memory constraint (rough estimate: 100MB per worker)
+    max_by_memory = int(memory_gb * 1024 / 100)  # MB
+    workers = min(workers, max_by_memory)
+
+    # Apply bounds
+    return max(min_total, min(workers, max_total))
+
+
+def _adaptive_timeout(base_ms: int, is_network: bool = True) -> int:
+    """Calculate adaptive timeout based on system and environment."""
+    cpu_cores, memory_gb = _get_system_specs()
+
+    # Slower systems need more time
+    cpu_factor = 1.0 if cpu_cores >= 4 else 1.3
+
+    # CI environments typically have better network
+    env_factor = 0.8 if os.environ.get('GITHUB_ACTIONS') else 1.0
+
+    if is_network:
+        env_factor *= 0.9  # Network is usually good in CI
+
+    return int(base_ms * cpu_factor * env_factor)
+
+
+
 # Tuning (overridable by environment)
-FETCH_TIMEOUT = _env_int('OPENRAY_FETCH_TIMEOUT', 20, 1, 120)  # seconds per source fetch
-FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS', 24, 1, 256)
-PING_WORKERS = _env_int('OPENRAY_PING_WORKERS', 64, 1, 1024)
-PING_TIMEOUT_MS = _env_int('OPENRAY_PING_TIMEOUT_MS', 1000, 100, 10000)  # per ping attempt
+# Adaptive parameter calculation
+FETCH_TIMEOUT = _env_int('OPENRAY_FETCH_TIMEOUT',
+                        _adaptive_timeout(20000, True) // 1000, 1, 120)
+FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS',
+                        _adaptive_workers(6, 64, 8), 1, 256)
+PING_WORKERS = _env_int('OPENRAY_PING_WORKERS',
+                       _adaptive_workers(16, 256, 32), 1, 1024)
+PING_TIMEOUT_MS = _env_int('OPENRAY_PING_TIMEOUT_MS',
+                          _adaptive_timeout(1000, True), 100, 10000)
+
 # TCP connect timeout for checking specific proxy ports (ms)
-CONNECT_TIMEOUT_MS = _env_int('OPENRAY_CONNECT_TIMEOUT_MS', 1500, 100, 10000)
+CONNECT_TIMEOUT_MS = _env_int('OPENRAY_CONNECT_TIMEOUT_MS',
+                             _adaptive_timeout(1500, True), 100, 10000)
 # Ports to try for TCP connectivity fallback (when ICMP ping is blocked, e.g., in CI)
 TCP_FALLBACK_PORTS: List[int] = [80, 443, 8080, 8443, 2052, 2082, 2086, 2095]
 USER_AGENT = (
@@ -73,6 +134,26 @@ PROBE_TIMEOUT_MS = _env_int('OPENRAY_PROBE_TIMEOUT_MS', 1200, 100, 10000)
 ENABLE_STAGE3 = _env_int('OPENRAY_ENABLE_STAGE3', 1, 0, 1)  # default enable
 # Validate up to many proxies with core by default (can be reduced via env)
 STAGE3_MAX = _env_int('OPENRAY_STAGE3_MAX', 5000, 1, 100000)
+
+
+def _adaptive_stage3_workers() -> int:
+    """Calculate optimal Stage 3 worker count (V2Ray core validation)."""
+    cpu_cores, memory_gb = _get_system_specs()
+
+    # Stage 3 is CPU+memory intensive (spawning V2Ray processes)
+    # More conservative than ping workers
+    base_workers = cpu_cores * 2  # 2x cores for CPU-bound tasks
+
+    # Memory constraint: V2Ray processes use ~50-100MB each
+    max_by_memory = int(memory_gb * 1024 / 75)  # Conservative 75MB per process
+
+    # Apply reasonable bounds
+    workers = min(base_workers, max_by_memory)
+    return max(4, min(workers, 64))  # Range: 4-64 workers
+
+# Stage 3 adaptive workers
+STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS', 
+                         _adaptive_stage3_workers(), 4, 256)
 
 def _auto_find_v2ray_core() -> str:
     # Priority 1: explicit env OPENRAY_V2RAY_CORE

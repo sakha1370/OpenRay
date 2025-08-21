@@ -16,6 +16,7 @@ from .constants import (
     ENABLE_STAGE3,
     STAGE3_MAX,
     OUTPUT_DIR,
+    STAGE3_WORKERS,
 )
 from .geo import _build_country_counters, _country_flag
 from .grouping import regroup_available_by_country, write_grouped_outputs
@@ -89,6 +90,7 @@ def main() -> int:
                     return None
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+                print("Start Stage 2 for existing proxies")
                 for res in progress(pool.map(check_existing, items), total=len(items)):
                     if res is not None:
                         alive.append(res)
@@ -117,8 +119,9 @@ def main() -> int:
                             return None
                         return u if res is True else None
 
-                    workers = min(int(PING_WORKERS), 16)
+                    workers = int(STAGE3_WORKERS)
                     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
+                        print("Start Stage 3 for existing proxies")
                         for r in progress(pool2.map(_core_check, subset), total=len(subset)):
                             if r is not None:
                                 kept_subset.append(r)
@@ -206,6 +209,7 @@ def main() -> int:
             return (uri, host, False)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+        print("Start Stage 2 for new proxies")
         for uri, host, ok in progress(pool.map(check_one, to_test), total=len(to_test)):
             # Mark host as tested this run
             if host not in host_success_run:
@@ -229,14 +233,20 @@ def main() -> int:
         else:
             subset = available_to_add[:int(STAGE3_MAX)]
             kept_subset: List[str] = []
-            for u in subset:
+
+            def _core_check(u: str) -> Optional[str]:
                 try:
                     res = validate_with_v2ray_core(u, timeout_s=12)
                 except Exception:
-                    res = None
-                # Keep only if explicitly validated by core
-                if res is True:
-                    kept_subset.append(u)
+                    return None
+                return u if res is True else None
+
+            workers = int(STAGE3_WORKERS)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
+                print("Start Stage 3 for new proxies")
+                for r in progress(pool2.map(_core_check, subset), total=len(subset)):
+                    if r is not None:
+                        kept_subset.append(r)
             # Merge: replace subset portion with validated ones
             available_to_add = kept_subset + available_to_add[len(subset):]
 
