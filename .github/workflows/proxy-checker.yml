@@ -10,14 +10,12 @@ on:
 # Permissions (top-level fallback)
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   check-proxies:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
     # Checkout repository with full history
@@ -26,7 +24,6 @@ jobs:
       with:
         fetch-depth: 0
         persist-credentials: false
-        token: ${{ github.token }}
 
     - name: Configure Git user
       run: |
@@ -49,22 +46,9 @@ jobs:
     - name: Run proxy checker
       run: python proxy_checker.py
 
-    # Create Pull Request with changes
-    - name: Create Pull Request
-      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-      uses: peter-evans/create-pull-request@v6
-      with:
-        # Prefer a Personal Access Token to bypass 'GITHUB_TOKEN not permitted to create PRs' repo policy.
-        # Create a PAT (classic) with 'repo' scope and add as a repo secret named PERSONAL_TOKEN.
-        # If PERSONAL_TOKEN is not set, the workflow falls back to github.token and may fail unless the repo setting allows it.
-        token: ${{ secrets.PERSONAL_TOKEN || github.token }}
-        commit-message: "Update proxy lists"
-        committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-        author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-        branch: auto/proxy-updates
-        title: "Update proxy lists"
-        body: "Automated update of proxy lists and state files."
-        add-paths: |
-          .state/**
-          output/**
-        delete-branch: true
+    # Commit and push changes directly to main
+    - name: Commit and push changes
+      run: |
+        git add .state/ output/
+        git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
+        git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
