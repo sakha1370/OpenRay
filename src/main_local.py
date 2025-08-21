@@ -69,7 +69,7 @@ def main() -> int:
 
     alive: List[str] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-        print("Start Stage 2")
+        print("Start Stage 2 for existing proxies")
         for res in progress(pool.map(_check_one, items), total=len(items)):
             if res is not None:
                 alive.append(res)
@@ -97,7 +97,7 @@ def main() -> int:
 
             workers = min(int(PING_WORKERS), 16)
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-                print("Start Stage 3")
+                print("Start Stage 3 for existing proxies")
                 for r in progress(pool.map(_core_check, subset), total=len(subset)):
                     if r is not None:
                         kept_subset.append(r)
@@ -105,8 +105,6 @@ def main() -> int:
             alive = kept_subset + alive[len(subset):]
 
     # Optional: export v2ray/xray JSON configs for alive proxies
-    print("Start State 3_")
-
     try:
         exp_flag = os.environ.get('OPENRAY_EXPORT_V2RAY', '').strip().lower()
         if exp_flag in ('1', 'true', 'yes', 'on'):

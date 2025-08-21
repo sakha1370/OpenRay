@@ -278,6 +278,7 @@ def main() -> int:
         counters = _build_country_counters(existing_available)
         cc_cache: Dict[str, Optional[str]] = {}
         formatted_to_append: List[str] = []
+        print("Start formatting new available proxies")
         for u in progress(new_available_unique, total=len(new_available_unique)):
             host = host_map.get(u)
             cc = None
