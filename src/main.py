@@ -97,6 +97,36 @@ def main() -> int:
                         h = host_map_existing.get(res)
                         if h:
                             host_success_run[h] = True
+
+            # Optional Stage 3: validate a subset of revalidated existing proxies with V2Ray core (if configured)
+            if int(ENABLE_STAGE3) == 1 and alive:
+                core_path = ''
+                try:
+                    from .constants import V2RAY_CORE_PATH  # local import to avoid circulars in some contexts
+                    core_path = (V2RAY_CORE_PATH or '').strip()
+                except Exception:
+                    core_path = ''
+                if not core_path:
+                    log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation for existing proxies.")
+                else:
+                    subset = alive[:int(STAGE3_MAX)]
+                    kept_subset: List[str] = []
+
+                    def _core_check(u: str) -> Optional[str]:
+                        try:
+                            res = validate_with_v2ray_core(u, timeout_s=12)
+                        except Exception:
+                            return None
+                        return u if res is True else None
+
+                    workers = min(int(PING_WORKERS), 16)
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
+                        for r in progress(pool2.map(_core_check, subset), total=len(subset)):
+                            if r is not None:
+                                kept_subset.append(r)
+                    # Merge: replace subset portion with validated ones
+                    alive = kept_subset + alive[len(subset):]
+
             if len(alive) != len(existing_lines):
                 tmp_path = AVAILABLE_FILE + '.tmp'
                 with open(tmp_path, 'w', encoding='utf-8', errors='ignore') as f:
