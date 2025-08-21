@@ -42,6 +42,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install tqdm
 
+    # Install Xray core
+    - name: Install Xray core
+      run: |
+        # Download and install Xray
+        wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        unzip Xray-linux-64.zip
+        chmod +x xray
+        sudo mv xray /usr/local/bin/
+        # Verify installation
+        xray version
+
     # Run proxy checker script
     - name: Run proxy checker
       run: python -m src.main
