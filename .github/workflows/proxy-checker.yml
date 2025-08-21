@@ -45,11 +45,13 @@ jobs:
     # Install Xray core
     - name: Install Xray core
       run: |
-        # Download and install Xray
-        wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        unzip Xray-linux-64.zip
-        chmod +x xray
-        sudo mv xray /usr/local/bin/
+        # Download and install Xray (extract to isolated directory to avoid overwrite prompts)
+        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        mkdir -p xray-dist
+        unzip -q -n Xray-linux-64.zip -d xray-dist
+        chmod +x xray-dist/xray
+        sudo mv xray-dist/xray /usr/local/bin/
+        rm -rf xray-dist Xray-linux-64.zip
         # Verify installation
         xray version
 
