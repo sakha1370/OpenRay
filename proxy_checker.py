@@ -52,6 +52,8 @@ FETCH_TIMEOUT = 20  # seconds per source fetch
 FETCH_WORKERS = 24
 PING_WORKERS = 64
 PING_TIMEOUT_MS = 1000  # 1 second per ping attempt
+# Ports to try for TCP connectivity fallback (when ICMP ping is blocked, e.g., in CI)
+TCP_FALLBACK_PORTS: List[int] = [80, 443, 8080, 8443, 2052, 2082, 2086, 2095]
 USER_AGENT = (
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
     'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -352,52 +354,86 @@ def is_ip_address(host: str) -> bool:
 
 
 def ping_host(host: str) -> bool:
-    """Ping a host cross-platform. Try IPv4 first, then IPv6 if needed."""
+    """Check host reachability.
+
+    Prefers ICMP ping (fast) when available. In restricted environments (e.g., GitHub Actions),
+    ICMP may be blocked; in that case or on failure, fall back to a short TCP connect
+    attempt to a small set of common ports.
+    """
     host_ascii = _idna(host)
     timeout_ms = int(PING_TIMEOUT_MS)
     is_windows = os.name == 'nt' or sys.platform.startswith('win')
 
-    # Build candidate commands depending on platform
-    cmds: List[List[str]] = []
-    if is_windows:
-        # Windows: -n (count), -w (timeout in ms), -4/-6 to force family
-        cmds = [
-            ["ping", "-n", "1", "-w", str(timeout_ms), "-4", host_ascii],
-            ["ping", "-n", "1", "-w", str(timeout_ms), "-6", host_ascii],
-        ]
-    else:
-        is_darwin = sys.platform == 'darwin'
-        if is_darwin:
-            # macOS/BSD: -c (count), -W timeout in ms. BSD ping typically lacks -4/-6; use ping then ping6.
+    # If running in GitHub Actions, skip ICMP and go straight to TCP fallback to avoid CAP_NET_RAW issues.
+    force_tcp = os.environ.get('GITHUB_ACTIONS', '').lower() == 'true'
+
+    if not force_tcp:
+        # Build candidate commands depending on platform
+        cmds: List[List[str]] = []
+        if is_windows:
+            # Windows: -n (count), -w (timeout in ms), -4/-6 to force family
             cmds = [
-                ["ping", "-c", "1", "-W", str(timeout_ms), host_ascii],
-                ["ping6", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                ["ping", "-n", "1", "-w", str(timeout_ms), "-4", host_ascii],
+                ["ping", "-n", "1", "-w", str(timeout_ms), "-6", host_ascii],
             ]
         else:
-            # Linux: -c (count), -W timeout in seconds. Use -4/-6 to force family.
-            timeout_sec = max(1, int(round(timeout_ms / 1000.0)))
-            cmds = [
-                ["ping", "-c", "1", "-W", str(timeout_sec), "-4", host_ascii],
-                ["ping", "-c", "1", "-W", str(timeout_sec), "-6", host_ascii],
-            ]
+            is_darwin = sys.platform == 'darwin'
+            if is_darwin:
+                # macOS/BSD: -c (count), -W timeout in ms. BSD ping typically lacks -4/-6; use ping then ping6.
+                cmds = [
+                    ["ping", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                    ["ping6", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                ]
+            else:
+                # Linux: -c (count), -W timeout in seconds. Use -4/-6 to force family.
+                timeout_sec = max(1, int(round(timeout_ms / 1000.0)))
+                cmds = [
+                    ["ping", "-c", "1", "-W", str(timeout_sec), "-4", host_ascii],
+                    ["ping", "-c", "1", "-W", str(timeout_sec), "-6", host_ascii],
+                ]
 
-    py_timeout = (timeout_ms / 1000.0) + 1.0
-    for cmd in cmds:
-        try:
-            res = subprocess.run(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=py_timeout,
-                creationflags=(subprocess.CREATE_NO_WINDOW if is_windows and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0),
-            )
-            if res.returncode == 0:
-                return True
-        except FileNotFoundError:
-            # e.g., ping6 not present
-            continue
-        except Exception:
-            continue
+        py_timeout = (timeout_ms / 1000.0) + 1.0
+        for cmd in cmds:
+            try:
+                res = subprocess.run(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=py_timeout,
+                    creationflags=(subprocess.CREATE_NO_WINDOW if is_windows and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0),
+                )
+                if res.returncode == 0:
+                    return True
+            except FileNotFoundError:
+                # e.g., ping6 not present
+                continue
+            except Exception:
+                continue
+
+    # TCP fallback: try to connect to a few common ports with a short timeout
+    try:
+        # Resolve host (prefer IPv4 first)
+        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        # Order: IPv4 first, then others
+        addrs: List[str] = []
+        for fam, _, _, _, sockaddr in infos:
+            ip = sockaddr[0]
+            if fam == socket.AF_INET:
+                addrs.append(ip)
+        for fam, _, _, _, sockaddr in infos:
+            if fam != socket.AF_INET:
+                addrs.append(sockaddr[0])
+        timeout_sec = max(0.2, min(2.0, timeout_ms / 1000.0))
+        for ip in addrs:
+            for port in TCP_FALLBACK_PORTS:
+                try:
+                    with socket.create_connection((ip, port), timeout=timeout_sec):
+                        return True
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
     return False
 
 
