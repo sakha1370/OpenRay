@@ -19,39 +19,49 @@ This is an **open-source project**, made for the community, to help those who si
 ---
 
 
-## 🔗 Full Proxy Collection
+## 📑 Proxy Lists (Collapsible)
+
+<details>
+<summary>Full Proxy Collection</summary>
+
 
 👉 [**Download All Proxies (Latest Build)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/all_valid_proxies.txt)
 
+</details>
 
----
-
-## 📑 Proxy List by Type
+<details>
+<summary>Proxy List by Type</summary>
 
 | | | | |
 |---|---|---|---|
 | 🔵 [**Vmess**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/vmess.txt) | 🟢 [**Vless**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/vless.txt) | 🔒 [**Trojan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/trojan.txt) | ⚡ [**Shadowsocks (SS)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/ss.txt) |
 | 🔑 [**ShadowsocksR (SSR)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/ssr.txt) | 🌐 [**Hysteria / Hy2**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/hysteria.txt) | 🚀 [**TUIC**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/tuic.txt) | 🧃 [**Juicity**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/kind/juicity.txt) |
 
----
+</details>
 
-## 🌍 Proxy List by Country
+<details>
+<summary>Proxy List by Country</summary>
+
+
 
 | | | | |
 |---|---|---|---|
-| 🇺🇸 [**United States**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/US.txt) | 🇩🇪 [**Germany**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/DE.txt) | 🇬🇧 [**United Kingdom**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/GB.txt) | 🇫🇷 [**France**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/FR.txt) |
-| 🇨🇦 [**Canada**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CA.txt) | 🇯🇵 [**Japan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/JP.txt) | 🇸🇬 [**Singapore**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/SG.txt) | 🇷🇺 [**Russia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/RU.txt) |
-| 🇳🇱 [**Netherlands**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/NL.txt) | 🇨🇭 [**Switzerland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CH.txt) | 🇸🇪 [**Sweden**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/SE.txt) | 🇦🇺 [**Australia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/AU.txt) |
-| 🇮🇷 [**Iran**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/IR.txt) | 🇨🇳 [**China**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CN.txt) | 🇭🇰 [**Hong Kong**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/HK.txt) | 🇰🇷 [**South Korea**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/KR.txt) |
-| 🇮🇹 [**Italy**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/IT.txt) | 🇪🇸 [**Spain**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/ES.txt) | 🇧🇷 [**Brazil**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/BR.txt) | 🇮🇳 [**India**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/IN.txt) |
-| 🇹🇷 [**Turkey**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/TR.txt) | 🇺🇦 [**Ukraine**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/UA.txt) | 🇵🇱 [**Poland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/PL.txt) | 🇨🇿 [**Czech Republic**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CZ.txt) |
-| 🇮🇪 [**Ireland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/IE.txt) | 🇦🇪 [**UAE**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/AE.txt) | 🇦🇲 [**Armenia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/AM.txt) | 🇦🇹 [**Austria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/AT.txt) |
-| 🇧🇪 [**Belgium**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/BE.txt) | 🇧🇬 [**Bulgaria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/BG.txt) | 🇧🇿 [**Belize**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/BZ.txt) | 🇨🇷 [**Costa Rica**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CR.txt) |
-| 🇨🇼 [**Curaçao**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CW.txt) | 🇨🇾 [**Cyprus**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/CY.txt) | 🇪🇪 [**Estonia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/EE.txt) | 🇫🇮 [**Finland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/FI.txt) |
-| 🇭🇺 [**Hungary**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/HU.txt) | 🇮🇩 [**Indonesia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/ID.txt) | 🇹🇼 [**Taiwan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/TW.txt) | 🇰🇿 [**Kazakhstan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/KZ.txt) |
-| 🇱🇹 [**Lithuania**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/LT.txt) | 🇱🇻 [**Latvia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/LV.txt) | 🇲🇹 [**Malta**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/MT.txt) | 🇳🇿 [**New Zealand**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/NZ.txt) |
-| 🇵🇭 [**Philippines**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/PH.txt) | 🇵🇹 [**Portugal**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/PT.txt) | 🇸🇦 [**Saudi Arabia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/SA.txt) | 🌐 [**Other Countries**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/countery/XX.txt) |
+| 🇺🇸 [**United States**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/US.txt) | 🇩🇪 [**Germany**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/DE.txt) | 🇬🇧 [**United Kingdom**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/GB.txt) | 🇫🇷 [**France**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/FR.txt) |
+| 🇨🇦 [**Canada**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CA.txt) | 🇯🇵 [**Japan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/JP.txt) | 🇸🇬 [**Singapore**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/SG.txt) | 🇷🇺 [**Russia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/RU.txt) |
+| 🇳🇱 [**Netherlands**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/NL.txt) | 🇨🇭 [**Switzerland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CH.txt) | 🇸🇪 [**Sweden**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/SE.txt) | 🇦🇺 [**Australia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/AU.txt) |
+| 🇮🇷 [**Iran**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/IR.txt) | 🇨🇳 [**China**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CN.txt) | 🇭🇰 [**Hong Kong**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/HK.txt) | 🇰🇷 [**South Korea**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/KR.txt) |
+| 🇮🇹 [**Italy**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/IT.txt) | 🇪🇸 [**Spain**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/ES.txt) | 🇧🇷 [**Brazil**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/BR.txt) | 🇮🇳 [**India**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/IN.txt) |
+| 🇹🇷 [**Turkey**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/TR.txt) | 🇺🇦 [**Ukraine**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/UA.txt) | 🇵🇱 [**Poland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/PL.txt) | 🇨🇿 [**Czech Republic**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CZ.txt) |
+| 🇮🇪 [**Ireland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/IE.txt) | 🇦🇪 [**UAE**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/AE.txt) | 🇦🇲 [**Armenia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/AM.txt) | 🇦🇹 [**Austria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/AT.txt) |
+| 🇧🇪 [**Belgium**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/BE.txt) | 🇧🇬 [**Bulgaria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/BG.txt) | 🇧🇿 [**Belize**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/BZ.txt) | 🇨🇷 [**Costa Rica**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CR.txt) |
+| 🇨🇼 [**Curaçao**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CW.txt) | 🇨🇾 [**Cyprus**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/CY.txt) | 🇪🇪 [**Estonia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/EE.txt) | 🇫🇮 [**Finland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/FI.txt) |
+| 🇭🇺 [**Hungary**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/HU.txt) | 🇮🇩 [**Indonesia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/ID.txt) | 🇹🇼 [**Taiwan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/TW.txt) | 🇰🇿 [**Kazakhstan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/KZ.txt) |
+| 🇱🇹 [**Lithuania**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/LT.txt) | 🇱🇻 [**Latvia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/LV.txt) | 🇲🇹 [**Malta**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/MT.txt) | 🇳🇿 [**New Zealand**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/NZ.txt) |
+| 🇵🇭 [**Philippines**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/PH.txt) | 🇵🇹 [**Portugal**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/PT.txt) | 🇸🇦 [**Saudi Arabia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/SA.txt) | 🌐 [**Other Countries**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/XX.txt) |
 
+</details>
+
+---
 
 ## ⚡ Features
 
@@ -78,5 +88,3 @@ This is an **open-source project**, made for the community, to help those who si
 
 This project is for **educational and research purposes only**.  
 You are solely responsible for how you use the provided links.
-
----

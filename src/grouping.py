@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Dict, List, Set
 
-from .constants import AVAILABLE_FILE, KIND_DIR, COUNTERY_DIR
+from .constants import AVAILABLE_FILE, KIND_DIR, COUNTRY_DIR
 from .common import log
 from .io_ops import read_lines, write_text_file_atomic
 from .parsing import _extract_our_cc_and_num_from_uri
@@ -13,7 +13,7 @@ def write_grouped_outputs() -> None:
     """Generate per-kind and per-country files from AVAILABLE_FILE.
 
     - output\kind\<scheme>.txt
-    - output\countery\<CC>.txt (uses existing remark format; falls back to XX)
+    - output\country\<CC>.txt (uses an existing remark format; falls back to XX)
     """
     try:
         lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
@@ -61,16 +61,16 @@ def write_grouped_outputs() -> None:
                 cc_order.append(cc)
             cc_groups[cc].append(s)
 
-        os.makedirs(COUNTERY_DIR, exist_ok=True)
+        os.makedirs(COUNTRY_DIR, exist_ok=True)
         produced_cc: Set[str] = set()
         for cc in cc_order:
-            out_path = os.path.join(COUNTERY_DIR, f'{cc}.txt')
+            out_path = os.path.join(COUNTRY_DIR, f'{cc}.txt')
             write_text_file_atomic(out_path, cc_groups[cc])
             produced_cc.add(f'{cc}.txt')
         # Remove stale country txt files
         try:
-            for name in os.listdir(COUNTERY_DIR):
-                p = os.path.join(COUNTERY_DIR, name)
+            for name in os.listdir(COUNTRY_DIR):
+                p = os.path.join(COUNTRY_DIR, name)
                 if os.path.isfile(p) and name.lower().endswith('.txt') and name not in produced_cc:
                     try:
                         os.remove(p)

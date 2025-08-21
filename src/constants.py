@@ -14,7 +14,7 @@ TESTED_FILE = os.path.join(STATE_DIR, 'tested.txt')  # stores SHA1 per tested pr
 AVAILABLE_FILE = os.path.join(OUTPUT_DIR, 'all_valid_proxies.txt')
 STREAKS_FILE = os.path.join(STATE_DIR, 'streaks.json')
 KIND_DIR = os.path.join(OUTPUT_DIR, 'kind')
-COUNTERY_DIR = os.path.join(OUTPUT_DIR, 'countery')
+COUNTRY_DIR = os.path.join(OUTPUT_DIR, 'country')
 
 
 def _env_int(name: str, default: int, min_v: Optional[int] = None, max_v: Optional[int] = None) -> int:
