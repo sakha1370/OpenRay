@@ -33,25 +33,71 @@ import socket
 import subprocess
 import sys
 import threading
-from tqdm import tqdm
+import time
+try:
+    from tqdm import tqdm as _tqdm  # type: ignore
+    def progress(iterable, total=None):
+        return _tqdm(iterable, total=total)
+except Exception:
+    def progress(iterable, total=None):
+        return iterable
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 from urllib.parse import urlsplit, parse_qs, unquote, urlparse, quote
 from urllib.request import Request, urlopen
 
 # ------------------- Configuration -------------------
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
-SOURCES_FILE = os.path.join(REPO_ROOT, 'small.txt')
-# SOURCES_FILE = os.path.join(REPO_ROOT, 'sources.txt')
 STATE_DIR = os.path.join(REPO_ROOT, '.state')
 OUTPUT_DIR = os.path.join(REPO_ROOT, 'output')
 TESTED_FILE = os.path.join(STATE_DIR, 'tested.txt')  # stores SHA1 per tested proxy URI
-AVAILABLE_FILE = os.path.join(OUTPUT_DIR, 'available.txt')
+AVAILABLE_FILE = os.path.join(OUTPUT_DIR, 'all_valid_proxies.txt')
+STREAKS_FILE = os.path.join(STATE_DIR, 'streaks.json')
+LAST24H_FILE = os.path.join(OUTPUT_DIR, 'proxies_last24h.txt')
+KIND_DIR = os.path.join(OUTPUT_DIR, 'kind')
+COUNTERY_DIR = os.path.join(OUTPUT_DIR, 'countery')
 
-# Tuning
-FETCH_TIMEOUT = 20  # seconds per source fetch
-FETCH_WORKERS = 24
-PING_WORKERS = 64
-PING_TIMEOUT_MS = 1000  # 1 second per ping attempt
+# Helpers to read environment configuration with sane bounds
+
+def _env_int(name: str, default: int, min_v: Optional[int] = None, max_v: Optional[int] = None) -> int:
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    try:
+        n = int(val)
+    except Exception:
+        return default
+    if min_v is not None and n < min_v:
+        n = min_v
+    if max_v is not None and n > max_v:
+        n = max_v
+    return n
+
+
+def _get_sources_file() -> str:
+    # Priority: CLI arg > env OPENRAY_SOURCES > default sources.txt (fallback to small.txt if missing)
+    candidate = None
+    if len(sys.argv) > 1 and sys.argv[1].strip():
+        candidate = sys.argv[1].strip()
+        if not os.path.isabs(candidate):
+            candidate = os.path.join(REPO_ROOT, candidate)
+    elif os.environ.get('OPENRAY_SOURCES'):
+        candidate = os.environ.get('OPENRAY_SOURCES').strip()
+        if not os.path.isabs(candidate):
+            candidate = os.path.join(REPO_ROOT, candidate)
+    else:
+        # Default to sources.txt if present; else fallback to small.txt; else default to sources.txt path
+        default_sources = os.path.join(REPO_ROOT, 'sources.txt')
+        small_sources = os.path.join(REPO_ROOT, 'small.txt')
+        candidate = default_sources if os.path.exists(default_sources) else (small_sources if os.path.exists(small_sources) else default_sources)
+    return candidate
+
+SOURCES_FILE = _get_sources_file()
+
+# Tuning (overridable by environment)
+FETCH_TIMEOUT = _env_int('OPENRAY_FETCH_TIMEOUT', 20, 1, 120)  # seconds per source fetch
+FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS', 24, 1, 256)
+PING_WORKERS = _env_int('OPENRAY_PING_WORKERS', 64, 1, 1024)
+PING_TIMEOUT_MS = _env_int('OPENRAY_PING_TIMEOUT_MS', 1000, 100, 10000)  # per ping attempt
 # Ports to try for TCP connectivity fallback (when ICMP ping is blocked, e.g., in CI)
 TCP_FALLBACK_PORTS: List[int] = [80, 443, 8080, 8443, 2052, 2082, 2086, 2095]
 USER_AGENT = (
@@ -59,6 +105,10 @@ USER_AGENT = (
     'AppleWebKit/537.36 (KHTML, like Gecko) '
     'Chrome/122.0 Safari/537.36'
 )
+
+# Streak selection parameters (overridable)
+CONSECUTIVE_REQUIRED = _env_int('OPENRAY_STREAK_REQUIRED', 5, 1, 100)
+LAST24H_WINDOW_SECONDS = _env_int('OPENRAY_LAST24H_SECONDS', 24 * 3600, 60, 7 * 24 * 3600)
 
 # Regex to find proxy URIs
 SCHEMES = [
@@ -552,6 +602,92 @@ def _build_country_counters(existing: Iterable[str]) -> Dict[str, int]:
 
 # ------------------- Grouping -------------------
 
+def _write_text_file_atomic(path: str, lines: List[str]) -> None:
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+    except Exception:
+        pass
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8', errors='ignore') as f:
+        for ln in lines:
+            f.write(ln)
+            f.write('\n')
+    os.replace(tmp, path)
+
+
+def write_grouped_outputs() -> None:
+    """Generate per-kind and per-country files from AVAILABLE_FILE.
+
+    - output\\kind\\<scheme>.txt
+    - output\\countery\\<CC>.txt (uses existing remark format; falls back to XX)
+    """
+    try:
+        lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
+        if not lines:
+            return
+
+        # Group by scheme (kind)
+        kind_order: List[str] = []
+        kind_groups: Dict[str, List[str]] = {}
+        for s in lines:
+            scheme = s.split('://', 1)[0].lower() if '://' in s else 'unknown'
+            if not scheme:
+                scheme = 'unknown'
+            if scheme not in kind_groups:
+                kind_groups[scheme] = []
+                kind_order.append(scheme)
+            kind_groups[scheme].append(s)
+
+        os.makedirs(KIND_DIR, exist_ok=True)
+        produced_kind: Set[str] = set()
+        for scheme in kind_order:
+            out_path = os.path.join(KIND_DIR, f'{scheme}.txt')
+            _write_text_file_atomic(out_path, kind_groups[scheme])
+            produced_kind.add(f'{scheme}.txt')
+        # Remove stale kind txt files
+        try:
+            for name in os.listdir(KIND_DIR):
+                p = os.path.join(KIND_DIR, name)
+                if os.path.isfile(p) and name.lower().endswith('.txt') and name not in produced_kind:
+                    try:
+                        os.remove(p)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        # Group by country code (from our remark); fallback to XX
+        cc_order: List[str] = []
+        cc_groups: Dict[str, List[str]] = {}
+        for s in lines:
+            parsed = _extract_our_cc_and_num_from_uri(s)
+            cc = parsed[0] if parsed else 'XX'
+            if cc not in cc_groups:
+                cc_groups[cc] = []
+                cc_order.append(cc)
+            cc_groups[cc].append(s)
+
+        os.makedirs(COUNTERY_DIR, exist_ok=True)
+        produced_cc: Set[str] = set()
+        for cc in cc_order:
+            out_path = os.path.join(COUNTERY_DIR, f'{cc}.txt')
+            _write_text_file_atomic(out_path, cc_groups[cc])
+            produced_cc.add(f'{cc}.txt')
+        # Remove stale country txt files
+        try:
+            for name in os.listdir(COUNTERY_DIR):
+                p = os.path.join(COUNTERY_DIR, name)
+                if os.path.isfile(p) and name.lower().endswith('.txt') and name not in produced_cc:
+                    try:
+                        os.remove(p)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    except Exception as e:
+        log(f"Writing grouped outputs failed: {e}")
+
 def regroup_available_by_country() -> None:
     try:
         lines = read_lines(AVAILABLE_FILE)
@@ -569,11 +705,13 @@ def regroup_available_by_country() -> None:
                 groups[cc] = []
                 order.append(cc)
             groups[cc].append(s)
-        with open(AVAILABLE_FILE, 'w', encoding='utf-8', errors='ignore') as f:
+        tmp_path = AVAILABLE_FILE + '.tmp'
+        with open(tmp_path, 'w', encoding='utf-8', errors='ignore') as f:
             for cc in order:
                 for item in groups[cc]:
                     f.write(item)
                     f.write('\n')
+        os.replace(tmp_path, AVAILABLE_FILE)
         log(f"Regrouped available proxies by country into {len(order)} groups")
     except Exception as e:
         log(f"Regroup failed: {e}")
@@ -598,17 +736,102 @@ def load_existing_available() -> Set[str]:
     return existing
 
 
+# ------------------- Streaks persistence -------------------
+
+def load_streaks() -> Dict[str, Dict[str, int]]:
+    try:
+        if not os.path.exists(STREAKS_FILE):
+            return {}
+        with open(STREAKS_FILE, 'r', encoding='utf-8', errors='ignore') as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                # Ensure numeric fields are ints
+                cleaned: Dict[str, Dict[str, int]] = {}
+                for host, obj in data.items():
+                    if not isinstance(obj, dict):
+                        continue
+                    streak = int(obj.get('streak', 0))
+                    last_test = int(obj.get('last_test', 0))
+                    last_success = int(obj.get('last_success', 0))
+                    cleaned[host] = {'streak': streak, 'last_test': last_test, 'last_success': last_success}
+                return cleaned
+    except Exception:
+        pass
+    return {}
+
+
+def save_streaks(streaks: Dict[str, Dict[str, int]]) -> None:
+    try:
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = STREAKS_FILE + '.tmp'
+        with open(tmp, 'w', encoding='utf-8', errors='ignore') as f:
+            json.dump(streaks, f, ensure_ascii=False)
+        os.replace(tmp, STREAKS_FILE)
+    except Exception:
+        # best-effort; ignore
+        pass
+
+
 def main() -> int:
     ensure_dirs()
     if not os.path.exists(SOURCES_FILE):
-        log(f"sources.txt not found at {SOURCES_FILE}")
+        log(f"Sources file not found: {SOURCES_FILE}")
         return 1
 
     source_lines = [ln.strip() for ln in read_lines(SOURCES_FILE) if ln.strip() and not ln.strip().startswith('#')]
     log(f"Loaded {len(source_lines)} sources")
 
-    # Fetch all sources concurrently
-    fetched_texts: List[str] = []
+    # Load streaks persistence
+    streaks: Dict[str, Dict[str, int]] = load_streaks()
+
+    # Optionally re-validate current available proxies to drop broken ones
+    host_success_run: Dict[str, bool] = {}
+    recheck_env = os.environ.get('OPENRAY_RECHECK_EXISTING', '1').strip().lower()
+    do_recheck = recheck_env not in ('0', 'false', 'no')
+    alive: List[str] = []
+    host_map_existing: Dict[str, Optional[str]] = {}
+    if do_recheck and os.path.exists(AVAILABLE_FILE):
+        existing_lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
+        if existing_lines:
+            host_map_existing = {u: extract_host(u) for u in existing_lines}
+            items = [(u, h) for u, h in host_map_existing.items() if h]
+            # initialize to False for tested hosts
+            for _, h in items:
+                if h not in host_success_run:
+                    host_success_run[h] = False
+            def check_existing(item: Tuple[str, str]) -> Optional[str]:
+                u, h = item
+                try:
+                    return u if ping_host(h) else None
+                except Exception:
+                    return None
+            with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+                for res in progress(pool.map(check_existing, items), total=len(items)):
+                    if res is not None:
+                        alive.append(res)
+                        h = host_map_existing.get(res)
+                        if h:
+                            host_success_run[h] = True
+            if len(alive) != len(existing_lines):
+                tmp_path = AVAILABLE_FILE + '.tmp'
+                with open(tmp_path, 'w', encoding='utf-8', errors='ignore') as f:
+                    for u in alive:
+                        f.write(u)
+                        f.write('\n')
+                os.replace(tmp_path, AVAILABLE_FILE)
+                log(f"Revalidated existing available proxies: kept {len(alive)} of {len(existing_lines)}")
+            else:
+                log("Revalidated existing available proxies: all still reachable")
+
+    # Load persistence early to filter as we parse
+    tested_hashes = load_tested_hashes()
+    existing_available = load_existing_available()
+
+    # Fetch and process sources concurrently; deduplicate URIs and collect only new ones
+    seen_uri: Set[str] = set()
+    new_uris: List[str] = []
+    new_hashes: List[str] = []
+    fetched_count = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
         future_to_src = {}
         for line in source_lines:
@@ -626,35 +849,19 @@ def main() -> int:
                 log(f"Fetch future error: {url} -> {e}")
             if content is None:
                 continue
+            fetched_count += 1
             decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
-            fetched_texts.append(decoded)
-
-    log(f"Fetched {len(fetched_texts)} contents")
-
-    # Extract proxies
-    all_uris: List[str] = []
-    seen_uri: Set[str] = set()
-    for text in fetched_texts:
-        uris = extract_uris(text)
-        for u in uris:
-            if u not in seen_uri:
+            for u in extract_uris(decoded):
+                if u in seen_uri:
+                    continue
                 seen_uri.add(u)
-                all_uris.append(u)
-    log(f"Extracted {len(all_uris)} unique proxy URIs")
+                h = sha1_hex(u)
+                if h not in tested_hashes:
+                    new_uris.append(u)
+                    new_hashes.append(h)
 
-    # Load persistence
-    tested_hashes = load_tested_hashes()
-    existing_available = load_existing_available()
-
-    # Filter new proxies
-    new_uris = []
-    new_hashes = []
-    for u in all_uris:
-        h = sha1_hex(u)
-        if h not in tested_hashes:
-            new_uris.append(u)
-            new_hashes.append(h)
-    log(f"New proxies to test: {len(new_uris)} (skipped already-tested: {len(all_uris) - len(new_uris)})")
+    log(f"Fetched {fetched_count} contents")
+    log(f"Extracted {len(seen_uri)} unique proxy URIs; new to test: {len(new_uris)}")
 
     # Extract hosts for new proxies
     host_map: Dict[str, Optional[str]] = {}
@@ -665,18 +872,22 @@ def main() -> int:
 
     # Ping concurrently
     available_to_add: List[str] = []
-    def check_one(item: Tuple[str, str]) -> Optional[str]:
+    def check_one(item: Tuple[str, str]) -> Tuple[str, str, bool]:
         uri, host = item
         try:
             ok = ping_host(host)
-            return uri if ok else None
+            return (uri, host, ok)
         except Exception:
-            return None
+            return (uri, host, False)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-        for result in tqdm(pool.map(check_one, to_test), total=len(to_test)):
-            if result is not None:
-                available_to_add.append(result)
+        for uri, host, ok in progress(pool.map(check_one, to_test), total=len(to_test)):
+            # Mark host as tested this run
+            if host not in host_success_run:
+                host_success_run[host] = False
+            if ok:
+                host_success_run[host] = True
+                available_to_add.append(uri)
 
     log(f"Available proxies found this run (ping ok): {len(available_to_add)}")
 
@@ -693,7 +904,7 @@ def main() -> int:
         counters = _build_country_counters(existing_available)
         cc_cache: Dict[str, Optional[str]] = {}
         formatted_to_append: List[str] = []
-        for u in tqdm(new_available_unique):
+        for u in progress(new_available_unique, total=len(new_available_unique)):
             host = host_map.get(u)
             cc = None
             if host:
@@ -721,6 +932,53 @@ def main() -> int:
     # Persist tested hashes (append all newly tested regardless of success)
     append_lines(TESTED_FILE, new_hashes)
     log(f"Recorded {len(new_hashes)} newly tested proxies to {TESTED_FILE}")
+
+    # Update streaks based on this run's host successes
+    try:
+        now_ts = int(time.time())
+        for host, success in host_success_run.items():
+            rec = streaks.get(host, {'streak': 0, 'last_test': 0, 'last_success': 0})
+            rec['last_test'] = now_ts
+            if success:
+                rec['streak'] = int(rec.get('streak', 0)) + 1
+                rec['last_success'] = now_ts
+            else:
+                rec['streak'] = 0
+            streaks[host] = rec
+        save_streaks(streaks)
+    except Exception as e:
+        log(f"Streaks update failed: {e}")
+
+    # Build proxies_last24h.txt: proxies whose host passed {CONSECUTIVE_REQUIRED} consecutive tests within last 24h and are alive now
+    try:
+        now_ts2 = int(time.time())
+        lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
+        winners: List[str] = []
+        cutoff = now_ts2 - int(LAST24H_WINDOW_SECONDS)
+        for u in lines:
+            h = extract_host(u)
+            if not h:
+                continue
+            rec = streaks.get(h)
+            if not rec:
+                continue
+            if int(rec.get('streak', 0)) >= int(CONSECUTIVE_REQUIRED) and int(rec.get('last_success', 0)) >= cutoff and host_success_run.get(h, False):
+                winners.append(u)
+        tmp_out = LAST24H_FILE + '.tmp'
+        with open(tmp_out, 'w', encoding='utf-8', errors='ignore') as f:
+            for u in winners:
+                f.write(u)
+                f.write('\n')
+        os.replace(tmp_out, LAST24H_FILE)
+        log(f"Wrote {len(winners)} proxies to {LAST24H_FILE}")
+    except Exception as e:
+        log(f"Writing {LAST24H_FILE} failed: {e}")
+
+    # Generate grouped outputs by kind and country
+    try:
+        write_grouped_outputs()
+    except Exception as e:
+        log(f"Grouped outputs step failed: {e}")
 
     return 0
 
