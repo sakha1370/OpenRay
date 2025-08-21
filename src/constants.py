@@ -12,7 +12,6 @@ OUTPUT_DIR = os.path.join(REPO_ROOT, 'output')
 TESTED_FILE = os.path.join(STATE_DIR, 'tested.txt')  # stores SHA1 per tested proxy URI
 AVAILABLE_FILE = os.path.join(OUTPUT_DIR, 'all_valid_proxies.txt')
 STREAKS_FILE = os.path.join(STATE_DIR, 'streaks.json')
-LAST24H_FILE = os.path.join(OUTPUT_DIR, 'proxies_last24h.txt')
 KIND_DIR = os.path.join(OUTPUT_DIR, 'kind')
 COUNTERY_DIR = os.path.join(OUTPUT_DIR, 'countery')
 
@@ -119,4 +118,3 @@ V2RAY_CORE_PATH = _auto_find_v2ray_core()
 
 # Streak selection parameters (overridable)
 CONSECUTIVE_REQUIRED = _env_int('OPENRAY_STREAK_REQUIRED', 5, 1, 100)
-LAST24H_WINDOW_SECONDS = _env_int('OPENRAY_LAST24H_SECONDS', 24 * 3600, 60, 7 * 24 * 3600)

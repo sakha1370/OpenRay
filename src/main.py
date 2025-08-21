@@ -10,8 +10,6 @@ from .constants import (
     AVAILABLE_FILE,
     CONSECUTIVE_REQUIRED,
     FETCH_WORKERS,
-    LAST24H_FILE,
-    LAST24H_WINDOW_SECONDS,
     PING_WORKERS,
     SOURCES_FILE,
     ENABLE_STAGE2,
@@ -318,31 +316,6 @@ def main() -> int:
         save_streaks(streaks)
     except Exception as e:
         log(f"Streaks update failed: {e}")
-
-    # Build proxies_last24h.txt
-    try:
-        now_ts2 = int(time.time())
-        lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
-        winners: List[str] = []
-        cutoff = now_ts2 - int(LAST24H_WINDOW_SECONDS)
-        for u in lines:
-            h = extract_host(u)
-            if not h:
-                continue
-            rec = streaks.get(h)
-            if not rec:
-                continue
-            if int(rec.get('streak', 0)) >= int(CONSECUTIVE_REQUIRED) and int(rec.get('last_success', 0)) >= cutoff and host_success_run.get(h, False):
-                winners.append(u)
-        tmp_out = LAST24H_FILE + '.tmp'
-        with open(tmp_out, 'w', encoding='utf-8', errors='ignore') as f:
-            for u in winners:
-                f.write(u)
-                f.write('\n')
-        os.replace(tmp_out, LAST24H_FILE)
-        log(f"Wrote {len(winners)} proxies to {LAST24H_FILE}")
-    except Exception as e:
-        log(f"Writing {LAST24H_FILE} failed: {e}")
 
     # Generate grouped outputs by kind and country
     try:
