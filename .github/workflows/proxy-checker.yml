@@ -54,7 +54,10 @@ jobs:
       if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
       uses: peter-evans/create-pull-request@v6
       with:
-        token: ${{ github.token }}
+        # Prefer a Personal Access Token to bypass 'GITHUB_TOKEN not permitted to create PRs' repo policy.
+        # Create a PAT (classic) with 'repo' scope and add as a repo secret named PERSONAL_TOKEN.
+        # If PERSONAL_TOKEN is not set, the workflow falls back to github.token and may fail unless the repo setting allows it.
+        token: ${{ secrets.PERSONAL_TOKEN || github.token }}
         commit-message: "Update proxy lists"
         committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
         author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
