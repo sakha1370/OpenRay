@@ -17,6 +17,8 @@ from .constants import (
     STAGE3_MAX,
     OUTPUT_DIR,
     STAGE3_WORKERS,
+    NEW_URIS_LIMIT_ENABLED,
+    NEW_URIS_LIMIT,
 )
 from .geo import _build_country_counters, _country_flag
 from .grouping import regroup_available_by_country, write_grouped_outputs
@@ -178,6 +180,19 @@ def main() -> int:
 
     log(f"Fetched {fetched_count} contents")
     log(f"Extracted {len(seen_uri)} unique proxy URIs; new to test: {len(new_uris)}")
+
+    # Optionally limit the number of new URIs processed per run
+    try:
+        if int(NEW_URIS_LIMIT_ENABLED) == 1:
+            _limit = int(NEW_URIS_LIMIT)
+            if _limit > 0 and len(new_uris) > _limit:
+                pre = len(new_uris)
+                new_uris = new_uris[:_limit]
+                new_hashes = new_hashes[:_limit]
+                log(f"Limiting new URIs to {_limit} of {pre} due to NEW_URIS_LIMIT")
+    except Exception:
+        # On any misconfiguration, proceed without limiting
+        pass
 
     # Extract hosts for new proxies
     host_map: Dict[str, Optional[str]] = {}
