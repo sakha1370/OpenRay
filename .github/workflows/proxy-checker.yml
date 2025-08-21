@@ -44,7 +44,7 @@ jobs:
 
     # Run proxy checker script
     - name: Run proxy checker
-      run: python proxy_checker.py
+      run: python -m src.main
 
     # Commit and push changes directly to main
     - name: Commit and push changes
