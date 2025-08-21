@@ -19,7 +19,7 @@ This is an **open-source project**, made for the community, to help those who si
 ---
 
 
-## 📑 Proxy Lists (Collapsible)
+## 📑 Proxy Lists (Globally)
 
 <details>
 <summary>Full Proxy Collection</summary>
@@ -58,6 +58,51 @@ This is an **open-source project**, made for the community, to help those who si
 | 🇭🇺 [**Hungary**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/HU.txt) | 🇮🇩 [**Indonesia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/ID.txt) | 🇹🇼 [**Taiwan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/TW.txt) | 🇰🇿 [**Kazakhstan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/KZ.txt) |
 | 🇱🇹 [**Lithuania**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/LT.txt) | 🇱🇻 [**Latvia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/LV.txt) | 🇲🇹 [**Malta**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/MT.txt) | 🇳🇿 [**New Zealand**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/NZ.txt) |
 | 🇵🇭 [**Philippines**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/PH.txt) | 🇵🇹 [**Portugal**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/PT.txt) | 🇸🇦 [**Saudi Arabia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/SA.txt) | 🌐 [**Other Countries**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/country/XX.txt) |
+
+</details>
+
+---
+
+
+## 📑 Proxy Lists (For Iran)
+
+<details>
+<summary>Full Proxy Collection</summary>
+
+
+👉 [**Download All Proxies (Latest Build)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/all_valid_proxies_for_iran.txt)
+
+</details>
+
+<details>
+<summary>Proxy List by Type</summary>
+
+| | | | |
+|---|---|---|---|
+| 🔵 [**Vmess**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/vmess.txt) | 🟢 [**Vless**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/vless.txt) | 🔒 [**Trojan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/trojan.txt) | ⚡ [**Shadowsocks (SS)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/ss.txt) |
+| 🔑 [**ShadowsocksR (SSR)**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/ssr.txt) | 🌐 [**Hysteria / Hy2**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/hysteria.txt) | 🚀 [**TUIC**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/tuic.txt) | 🧃 [**Juicity**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/kind/juicity.txt) |
+
+</details>
+
+<details>
+<summary>Proxy List by Country</summary>
+
+
+
+| | | | |
+|---|---|---|---|
+| 🇺🇸 [**United States**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/US.txt) | 🇩🇪 [**Germany**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/DE.txt) | 🇬🇧 [**United Kingdom**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/GB.txt) | 🇫🇷 [**France**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/FR.txt) |
+| 🇨🇦 [**Canada**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CA.txt) | 🇯🇵 [**Japan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/JP.txt) | 🇸🇬 [**Singapore**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/SG.txt) | 🇷🇺 [**Russia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/RU.txt) |
+| 🇳🇱 [**Netherlands**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/NL.txt) | 🇨🇭 [**Switzerland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CH.txt) | 🇸🇪 [**Sweden**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/SE.txt) | 🇦🇺 [**Australia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/AU.txt) |
+| 🇮🇷 [**Iran**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/IR.txt) | 🇨🇳 [**China**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CN.txt) | 🇭🇰 [**Hong Kong**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/HK.txt) | 🇰🇷 [**South Korea**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/KR.txt) |
+| 🇮🇹 [**Italy**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/IT.txt) | 🇪🇸 [**Spain**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/ES.txt) | 🇧🇷 [**Brazil**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/BR.txt) | 🇮🇳 [**India**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/IN.txt) |
+| 🇹🇷 [**Turkey**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/TR.txt) | 🇺🇦 [**Ukraine**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/UA.txt) | 🇵🇱 [**Poland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/PL.txt) | 🇨🇿 [**Czech Republic**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CZ.txt) |
+| 🇮🇪 [**Ireland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/IE.txt) | 🇦🇪 [**UAE**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/AE.txt) | 🇦🇲 [**Armenia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/AM.txt) | 🇦🇹 [**Austria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/AT.txt) |
+| 🇧🇪 [**Belgium**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/BE.txt) | 🇧🇬 [**Bulgaria**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/BG.txt) | 🇧🇿 [**Belize**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/BZ.txt) | 🇨🇷 [**Costa Rica**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CR.txt) |
+| 🇨🇼 [**Curaçao**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CW.txt) | 🇨🇾 [**Cyprus**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/CY.txt) | 🇪🇪 [**Estonia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/EE.txt) | 🇫🇮 [**Finland**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/FI.txt) |
+| 🇭🇺 [**Hungary**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/HU.txt) | 🇮🇩 [**Indonesia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/ID.txt) | 🇹🇼 [**Taiwan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/TW.txt) | 🇰🇿 [**Kazakhstan**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/KZ.txt) |
+| 🇱🇹 [**Lithuania**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/LT.txt) | 🇱🇻 [**Latvia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/LV.txt) | 🇲🇹 [**Malta**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/MT.txt) | 🇳🇿 [**New Zealand**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/NZ.txt) |
+| 🇵🇭 [**Philippines**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/PH.txt) | 🇵🇹 [**Portugal**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/PT.txt) | 🇸🇦 [**Saudi Arabia**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/SA.txt) | 🌐 [**Other Countries**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/country/XX.txt) |
 
 </details>
 
