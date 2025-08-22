@@ -85,7 +85,7 @@ def main() -> int:
         if not core_path:
             log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation.")
         else:
-            subset = alive[:int(STAGE3_MAX)]
+            subset = alive # [:int(STAGE3_MAX)]
             kept_subset: List[str] = []
 
             def _core_check(u: str) -> Optional[str]:
