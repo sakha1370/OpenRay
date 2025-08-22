@@ -32,7 +32,7 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
+from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
 from .parsing import (
     _set_remark,
     extract_host,
@@ -171,7 +171,6 @@ def main() -> int:
             else:
                 log("Revalidated existing available proxies: all still reachable")
 
-    print('-1')
     # Load persistence early to filter as we parse
     tested_hashes = load_tested_hashes()
     existing_available = load_existing_available()
@@ -183,7 +182,6 @@ def main() -> int:
     fetched_count = 0
     # Parse sources and fetch asynchronously using aiohttp (fallbacks built-in)
     parsed_sources = []
-    print('-2')
     for line in source_lines:
         url, flags = parse_source_line(line)
         if not url:
@@ -263,122 +261,15 @@ def main() -> int:
         except Exception:
             return (uri, host, False)
 
-    # Prefilter hosts using batch ping (uses fping if available)
-    alive_hosts = set()
-    log("Start prefilter hosts using batch ping ...")
-    try:
-        alive_hosts = ping_hosts_batch([h for (_, h) in to_test])
-    except Exception as e:
-        log(f"Batch ping failed; proceeding without prefilter: {e}")
-        alive_hosts = set(h for (_, h) in to_test)
-    print('2')
-    filtered: List[Tuple[str, str]] = [(u, h) for (u, h) in to_test if h in alive_hosts]
-    print('3')
-    # For very large datasets, use multiprocessing to distribute across CPU cores
-    if len(filtered) >= 10000:
-        print("Start Stage 2 for new proxies (multiprocessing)")
-        try:
-            import multiprocessing as _mp  # local import to avoid overhead when small sets
-            try:
-                workers = int(PING_WORKERS)
-            except Exception:
-                workers = 32
-            with _mp.Pool(processes=workers) as pool:
-                chunksize = max(16, min(1000, len(filtered) // max(1, workers * 4)))
-                it = pool.imap_unordered(check_pair, filtered, chunksize=chunksize)
-                for uri, host, ok in progress(it, total=len(filtered)):
-                    if host not in host_success_run:
-                        host_success_run[host] = False
-                    if ok:
-                        host_success_run[host] = True
-                        available_to_add.append(uri)
-        except Exception as e:
-            log(f"Multiprocessing stage failed; falling back to threads: {e}")
-            with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-                print("Start Stage 2 for new proxies (threads fallback)")
-                for uri, host, ok in progress(pool.map(check_one, filtered), total=len(filtered)):
-                    if host not in host_success_run:
-                        host_success_run[host] = False
-                    if ok:
-                        host_success_run[host] = True
-                        available_to_add.append(uri)
-    else:
-        # Use asyncio to run many connect/probes concurrently
-        try:
-            import asyncio  # type: ignore
-
-            async def _async_stage2(items: List[Tuple[str, str]]):
-                sem = asyncio.Semaphore(int(PING_WORKERS))
-                loop = asyncio.get_running_loop()
-                async def _check(item: Tuple[str, str]):
-                    uri, host = item
-                    async with sem:
-                        try:
-                            scheme = uri.split('://', 1)[0].lower()
-                            if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
-                                p = extract_port(uri)
-                                if p is not None:
-                                    ok2 = await loop.run_in_executor(None, lambda: connect_host_port(host, int(p)))
-                                    if ok2 and int(ENABLE_STAGE2) == 1:
-                                        ok2 = await loop.run_in_executor(None, lambda: quick_protocol_probe(uri, host, int(p)))
-                                    return (uri, host, bool(ok2))
-                            return (uri, host, True)
-                        except Exception:
-                            return (uri, host, False)
-                # Bounded worker queue instead of one task per item
-                queue: "asyncio.Queue[Tuple[str, str]]" = asyncio.Queue()
-                for it in items:
-                    queue.put_nowait(it)
-                results: List[Tuple[str, str, bool]] = []
-                async def _worker():
-                    while True:
-                        try:
-                            it = queue.get_nowait()
-                        except Exception:
-                            break
-                        try:
-                            r = await _check(it)
-                            results.append(r)
-                        finally:
-                            try:
-                                queue.task_done()
-                            except Exception:
-                                pass
-                workers = [asyncio.create_task(_worker()) for _ in range(int(PING_WORKERS))]
-                await asyncio.gather(*workers, return_exceptions=True)
-                return results
-
-            print("Start Stage 2 for new proxies (async)")
-            results = []
-            try:
-                results = asyncio.run(_async_stage2(filtered))
-            except RuntimeError:
-                # If already in an event loop (unlikely in this script), create one
-                loop = asyncio.new_event_loop()
-                try:
-                    asyncio.set_event_loop(loop)
-                    results = loop.run_until_complete(_async_stage2(filtered))
-                finally:
-                    try:
-                        loop.close()
-                    except Exception:
-                        pass
-            for uri, host, ok in progress(results, total=len(filtered)):
-                if host not in host_success_run:
-                    host_success_run[host] = False
-                if ok:
-                    host_success_run[host] = True
-                    available_to_add.append(uri)
-        except Exception as e:
-            log(f"Async stage failed; falling back to threads: {e}")
-            with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-                print("Start Stage 2 for new proxies (threads fallback)")
-                for uri, host, ok in progress(pool.map(check_one, filtered), total=len(filtered)):
-                    if host not in host_success_run:
-                        host_success_run[host] = False
-                    if ok:
-                        host_success_run[host] = True
-                        available_to_add.append(uri)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+        print("Start Stage 2 for new proxies")
+        for uri, host, ok in progress(pool.map(check_one, to_test), total=len(to_test)):
+            # Mark host as tested this run
+            if host not in host_success_run:
+                host_success_run[host] = False
+            if ok:
+                host_success_run[host] = True
+                available_to_add.append(uri)
 
     log(f"Available proxies found this run (ping/connect ok): {len(available_to_add)}")
 

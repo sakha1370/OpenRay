@@ -547,43 +547,83 @@ async def _ping_hosts_async(hosts: List[str], timeout_sec: float) -> Set[str]:
     results = await asyncio.gather(*tasks)
     return {res for res in results if res is not None}
 
-def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
-    """Batch ping using aioping (asyncio) if available; fallback to per-host ping_host."""
-    if not hosts:
-        return set()
-    uniq = list(dict.fromkeys([_idna(h) for h in hosts if h]))
-    if not uniq:
-        return set()
+def ping_host(host: str) -> bool:
+    """Check host reachability via ICMP or TCP fallback."""
+    host_ascii = _idna(host)
+    timeout_ms = int(PING_TIMEOUT_MS)
+    is_windows = os.name == 'nt' or sys.platform.startswith('win')
 
-    if timeout_ms is None:
-        try:
-            timeout_ms = int(PING_TIMEOUT_MS)
-        except (ValueError, TypeError):
-            timeout_ms = 1000
-    
-    timeout_sec = max(0.1, timeout_ms / 1000.0)
+    # If running in GitHub Actions, skip ICMP and go straight to TCP fallback to avoid CAP_NET_RAW issues.
+    force_tcp = os.environ.get('GITHUB_ACTIONS', '').lower() == 'true'
 
-    try:
-        import aioping # type: ignore
-        log(f"Using aioping (asyncio) for batch ping.")
-        
-        # Run the async pinging function
-        alive = asyncio.run(_ping_hosts_async(uniq, timeout_sec))
-        
-        log(f"aioping identified {len(alive)} alive hosts out of {len(uniq)}.")
-        return alive
+    if not force_tcp:
+        # Build candidate commands depending on platform
+        cmds: List[List[str]] = []
+        if is_windows:
+            # Windows: -n (count), -w (timeout in ms), -4/-6 to force family
+            cmds = [
+                ["ping", "-n", "1", "-w", str(timeout_ms), "-4", host_ascii],
+                ["ping", "-n", "1", "-w", str(timeout_ms), "-6", host_ascii],
+            ]
+        else:
+            is_darwin = sys.platform == 'darwin'
+            if is_darwin:
+                # macOS/BSD: -c (count), -W timeout in ms. BSD ping typically lacks -4/-6; use ping then ping6.
+                cmds = [
+                    ["ping", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                    ["ping6", "-c", "1", "-W", str(timeout_ms), host_ascii],
+                ]
+            else:
+                # Linux: -c (count), -W timeout in seconds. Use -4/-6 to force family.
+                timeout_sec = max(1, int(round(timeout_ms / 1000.0)))
+                cmds = [
+                    ["ping", "-c", "1", "-W", str(timeout_sec), "-4", host_ascii],
+                    ["ping", "-c", "1", "-W", str(timeout_sec), "-6", host_ascii],
+                ]
 
-    except (ImportError, Exception) as e:
-        log(f"aioping not available or failed ({e}), falling back to individual pings.")
-        # Fallback: per-host ping
-        alive: Set[str] = set()
-        for h in progress(uniq, total=len(uniq)):
+        py_timeout = (timeout_ms / 1000.0) + 1.0
+        for cmd in cmds:
             try:
-                if ping_host(h):
-                    alive.add(h)
+                res = subprocess.run(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=py_timeout,
+                    creationflags=(subprocess.CREATE_NO_WINDOW if is_windows and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0),
+                )
+                if res.returncode == 0:
+                    return True
+            except FileNotFoundError:
+                # e.g., ping6 not present
+                continue
             except Exception:
                 continue
-        return alive
+
+    # TCP fallback: try to connect to a few common ports with a short timeout
+    try:
+        # Resolve host (prefer IPv4 first)
+        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        # Order: IPv4 first, then others
+        addrs: List[str] = []
+        for fam, _, _, _, sockaddr in infos:
+            ip = sockaddr[0]
+            if fam == socket.AF_INET:
+                addrs.append(ip)
+        for fam, _, _, _, sockaddr in infos:
+            if fam != socket.AF_INET:
+                addrs.append(sockaddr[0])
+        timeout_sec = max(0.2, min(2.0, timeout_ms / 1000.0))
+        for ip in addrs:
+            for port in TCP_FALLBACK_PORTS:
+                try:
+                    with socket.create_connection((ip, port), timeout=timeout_sec):
+                        return True
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+    return False
 
 
 def get_country_codes_batch(hosts: List[str], timeout: int = 5, batch_size: int = 100) -> Dict[str, Optional[str]]:
