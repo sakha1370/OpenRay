@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Set, Tuple
 from urllib.request import Request, urlopen
 
 from .constants import USER_AGENT, PING_TIMEOUT_MS, TCP_FALLBACK_PORTS, FETCH_TIMEOUT, CONNECT_TIMEOUT_MS, PROBE_TIMEOUT_MS, V2RAY_CORE_PATH, ENABLE_STAGE2, FETCH_WORKERS, PING_WORKERS
-from .common import log
+from .common import log, progress
 
 
 def _idna(host: str) -> str:
@@ -429,9 +429,10 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
             concurrency = 16
     try:
         import aiohttp  # type: ignore
-    except Exception:
+    except Exception as e:
+        print(f"fail to import aiohttp: {e}")
         # Fallback: sequential (to avoid new threads here)
-        for u in urls:
+        for u in progress(urls, total=len(urls)):
             results[u] = fetch_url(u, timeout=timeout)
         return results
 
@@ -486,6 +487,8 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
     for u in urls:
         queue.put_nowait(u)
 
+    done_q: "asyncio.Queue[int]" = asyncio.Queue()
+
     async def _worker(session: "aiohttp.ClientSession") -> None:
         while True:
             try:
@@ -499,10 +502,34 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
                     queue.task_done()
                 except Exception:
                     pass
+                try:
+                    done_q.put_nowait(1)
+                except Exception:
+                    pass
+
+    async def _progress_consumer(total: int) -> None:
+        # Advance a progress bar as each URL is processed
+        for _ in progress(range(total), total=total):
+            try:
+                await done_q.get()
+            finally:
+                try:
+                    done_q.task_done()
+                except Exception:
+                    pass
 
     async with aiohttp.ClientSession(connector=connector) as session:
         workers = [asyncio.create_task(_worker(session)) for _ in range(max(1, int(concurrency)))]
+        p_task = asyncio.create_task(_progress_consumer(len(urls)))
         await asyncio.gather(*workers, return_exceptions=True)
+        try:
+            await done_q.join()
+        except Exception:
+            pass
+        try:
+            await p_task
+        except Exception:
+            pass
     return results
 
 
@@ -531,16 +558,24 @@ def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
         fping_path = shutil.which('fping') or shutil.which('fping.exe')
 
     if fping_path:
+        print("fping_path")
         try:
             # Use a temporary file for input to avoid command-line length limits
             with tempfile.NamedTemporaryFile('w', delete=False, encoding='utf-8') as tf:
                 for h in uniq:
                     tf.write(h + "\n")
                 tf_path = tf.name
-            cmd = [fping_path, '-a', '-t', str(int(timeout_ms)), '-f', tf_path]
+
+            # Convert milliseconds to seconds for fping 5.x
+            timeout_seconds = max(1, timeout_ms // 1000)  # At least 1 second, convert ms to seconds
+            cmd = [fping_path, '-a', '-t', str(timeout_seconds), '-f', tf_path]
+
             # On Windows, creationflags to hide window if available
-            creation = (subprocess.CREATE_NO_WINDOW if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=(timeout_ms/1000.0 + 5.0), creationflags=creation, encoding='utf-8', errors='ignore')
+            creation = (
+                subprocess.CREATE_NO_WINDOW if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                 timeout=(timeout_ms / 1000.0 + 5.0), creationflags=creation, encoding='utf-8',
+                                 errors='ignore')
             try:
                 os.unlink(tf_path)
             except Exception:
@@ -562,7 +597,7 @@ def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
 
     # Fallback: per-host ping
     alive: Set[str] = set()
-    for h in uniq:
+    for h in progress(uniq, total=len(uniq)):
         try:
             if ping_host(h):
                 alive.add(h)

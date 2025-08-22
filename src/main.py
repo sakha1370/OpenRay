@@ -191,7 +191,7 @@ def main() -> int:
         parsed_sources.append((url, flags))
     urls_only = [u for (u, _) in parsed_sources]
     content_map = {}
-    print('-3')
+    log("Start fetching sources...")
     try:
         import asyncio  # type: ignore
         content_map = asyncio.run(fetch_urls_async_batch(urls_only, concurrency=int(FETCH_WORKERS), timeout=int(FETCH_TIMEOUT)))
@@ -199,10 +199,10 @@ def main() -> int:
         log(f"Async fetch failed to run event loop; falling back to sequential urllib: {e}")
         # Fallback: sequential
         from .net import fetch_url as _fetch_url_sync  # local import to avoid circulars
-        for u in urls_only:
+        from .common import progress as _progress
+        for u in _progress(urls_only, total=len(urls_only)):
             content_map[u] = _fetch_url_sync(u)
 
-    print('-4')
     for (url, flags) in parsed_sources:
         content = content_map.get(url)
         if content is None:
@@ -265,7 +265,7 @@ def main() -> int:
 
     # Prefilter hosts using batch ping (uses fping if available)
     alive_hosts = set()
-    print('1')
+    log("Start prefilter hosts using batch ping ...")
     try:
         alive_hosts = ping_hosts_batch([h for (_, h) in to_test])
     except Exception as e:
