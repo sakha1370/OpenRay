@@ -71,6 +71,11 @@ def main() -> int:
     source_lines = [ln.strip() for ln in read_lines(SOURCES_FILE) if ln.strip() and not ln.strip().startswith('#')]
     log(f"Loaded {len(source_lines)} sources")
 
+    # Pre-flight connectivity check to avoid destructive actions during outages
+    if not _has_connectivity():
+        log("No Internet connectivity detected; skipping network operations and leaving existing outputs unchanged.")
+        return 2
+
     # Load streaks persistence
     streaks: Dict[str, Dict[str, int]] = load_streaks()
 
@@ -151,13 +156,17 @@ def main() -> int:
                     alive = kept_subset + alive[len(subset):]
 
             if len(alive) != len(existing_lines):
-                tmp_path = AVAILABLE_FILE + '.tmp'
-                with open(tmp_path, 'w', encoding='utf-8', errors='ignore') as f:
-                    for u in alive:
-                        f.write(u)
-                        f.write('\n')
-                os.replace(tmp_path, AVAILABLE_FILE)
-                log(f"Revalidated existing available proxies: kept {len(alive)} of {len(existing_lines)}")
+                # Outage-safe guard: avoid purging available file if connectivity appears down
+                if len(existing_lines) > 0 and len(alive) == 0 and not _has_connectivity():
+                    log("Suspected Internet outage during revalidation; keeping existing available proxies file unchanged.")
+                else:
+                    tmp_path = AVAILABLE_FILE + '.tmp'
+                    with open(tmp_path, 'w', encoding='utf-8', errors='ignore') as f:
+                        for u in alive:
+                            f.write(u)
+                            f.write('\n')
+                    os.replace(tmp_path, AVAILABLE_FILE)
+                    log(f"Revalidated existing available proxies: kept {len(alive)} of {len(existing_lines)}")
             else:
                 log("Revalidated existing available proxies: all still reachable")
 
@@ -349,17 +358,21 @@ def main() -> int:
 
     # Update streaks based on this run's host successes
     try:
-        now_ts = int(time.time())
-        for host, success in host_success_run.items():
-            rec = streaks.get(host, {'streak': 0, 'last_test': 0, 'last_success': 0})
-            rec['last_test'] = now_ts
-            if success:
-                rec['streak'] = int(rec.get('streak', 0)) + 1
-                rec['last_success'] = now_ts
-            else:
-                rec['streak'] = 0
-            streaks[host] = rec
-        save_streaks(streaks)
+        total_successes = sum(1 for v in host_success_run.values() if v)
+        if total_successes == 0 and not _has_connectivity():
+            log("Suspected Internet outage affected tests; skipping streaks update to avoid false resets.")
+        else:
+            now_ts = int(time.time())
+            for host, success in host_success_run.items():
+                rec = streaks.get(host, {'streak': 0, 'last_test': 0, 'last_success': 0})
+                rec['last_test'] = now_ts
+                if success:
+                    rec['streak'] = int(rec.get('streak', 0)) + 1
+                    rec['last_success'] = now_ts
+                else:
+                    rec['streak'] = 0
+                streaks[host] = rec
+            save_streaks(streaks)
     except Exception as e:
         log(f"Streaks update failed: {e}")
 
