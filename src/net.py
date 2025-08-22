@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Set, Tuple
 from urllib.request import Request, urlopen
 
 from .constants import USER_AGENT, PING_TIMEOUT_MS, TCP_FALLBACK_PORTS, FETCH_TIMEOUT, CONNECT_TIMEOUT_MS, PROBE_TIMEOUT_MS, V2RAY_CORE_PATH, ENABLE_STAGE2, FETCH_WORKERS, PING_WORKERS
-from .common import log, progress
+from .common import log
 
 
 def _idna(host: str) -> str:
@@ -431,7 +431,7 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
         import aiohttp  # type: ignore
     except Exception:
         # Fallback: sequential (to avoid new threads here)
-        for u in progress(urls, total=len(urls)):
+        for u in urls:
             results[u] = fetch_url(u, timeout=timeout)
         return results
 
@@ -486,15 +486,6 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
     for u in urls:
         queue.put_nowait(u)
 
-    # Optional progress bar for async path
-    _pbar = None
-    try:
-        _tmp_bar = progress(range(len(urls)), total=len(urls))
-        if hasattr(_tmp_bar, 'update'):
-            _pbar = _tmp_bar
-    except Exception:
-        _pbar = None
-
     async def _worker(session: "aiohttp.ClientSession") -> None:
         while True:
             try:
@@ -508,23 +499,10 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
                     queue.task_done()
                 except Exception:
                     pass
-                # Update progress bar for each completed URL
-                try:
-                    if _pbar is not None and hasattr(_pbar, 'update'):
-                        _pbar.update(1)
-                except Exception:
-                    pass
 
-    try:
-        async with aiohttp.ClientSession(connector=connector) as session:
-            workers = [asyncio.create_task(_worker(session)) for _ in range(max(1, int(concurrency)))]
-            await asyncio.gather(*workers, return_exceptions=True)
-    finally:
-        try:
-            if _pbar is not None and hasattr(_pbar, 'close'):
-                _pbar.close()
-        except Exception:
-            pass
+    async with aiohttp.ClientSession(connector=connector) as session:
+        workers = [asyncio.create_task(_worker(session)) for _ in range(max(1, int(concurrency)))]
+        await asyncio.gather(*workers, return_exceptions=True)
     return results
 
 
