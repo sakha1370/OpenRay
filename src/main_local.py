@@ -98,19 +98,9 @@ def main() -> int:
             workers = min(int(PING_WORKERS), 16)
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
                 print("Start Stage 3 for existing proxies")
-                futures = {pool.submit(_core_check, u): i for i, u in enumerate(subset)}
-                results_ordered: List[Optional[str]] = [None] * len(subset)
-                for fut in progress(concurrent.futures.as_completed(futures), total=len(futures)):
-                    i = futures[fut]
-                    try:
-                        r = fut.result()
-                    except Exception:
-                        r = None
+                for r in progress(pool.map(_core_check, subset), total=len(subset)):
                     if r is not None:
-                        results_ordered[i] = r
-                for val in results_ordered:
-                    if val is not None:
-                        kept_subset.append(val)
+                        kept_subset.append(r)
             # Merge: replace subset portion with validated ones
             alive = kept_subset + alive[len(subset):]
 
