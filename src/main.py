@@ -40,6 +40,7 @@ from .parsing import (
     extract_uris,
     maybe_decode_subscription,
     parse_source_line,
+    is_ip_address,
 )
 
 
@@ -419,7 +420,12 @@ def main() -> int:
             flag = _country_flag(cc)
             next_num = counters.get(cc, 0) + 1
             counters[cc] = next_num
-            remark = f"[OpenRay] {flag} {cc}-{next_num}"
+            # Determine IP stability: treat literal IP hosts as static; hostnames as dynamic (no streaks used)
+            is_dynamic = bool(host and not is_ip_address(host))
+            if is_dynamic:
+                remark = f"[OpenRay] Dynamic-{next_num}"
+            else:
+                remark = f"[OpenRay] {flag} {cc}-{next_num}"
             new_u = _set_remark(u, remark)
             formatted_to_append.append(new_u)
         append_lines(AVAILABLE_FILE, formatted_to_append)
