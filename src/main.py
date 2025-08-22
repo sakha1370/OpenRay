@@ -42,6 +42,26 @@ from .parsing import (
 )
 
 
+def _has_connectivity() -> bool:
+    """Best-effort Internet connectivity check using IP-only probes to avoid DNS dependency."""
+    try:
+        probes = [('1.1.1.1', 443), ('8.8.8.8', 53)]
+        for ip, port in probes:
+            try:
+                if ping_host(ip):
+                    return True
+            except Exception:
+                pass
+            try:
+                if connect_host_port(ip, port):
+                    return True
+            except Exception:
+                pass
+    except Exception:
+        return False
+    return False
+
+
 def main() -> int:
     ensure_dirs()
     if not os.path.exists(SOURCES_FILE):
