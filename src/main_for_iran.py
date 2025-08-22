@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from typing import List
+import socket
 
 # Patch constants BEFORE importing modules that read them
 from . import constants as C
@@ -50,6 +51,13 @@ def _seed_available_from_input() -> None:
     except Exception as e:
         log(f"Seeding available proxies failed: {e}")
 
+def check_internet_socket(host="8.8.8.8", port=53, timeout=3):
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except Exception:
+        return False
 
 def main() -> int:
     _seed_available_from_input()
@@ -57,4 +65,8 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    if check_internet_socket():
+        print("✅ Internet connection is available")
+        raise SystemExit(main())
+    else:
+        print("❌ No internet connection")
