@@ -181,6 +181,7 @@ def main() -> int:
             else:
                 log("Revalidated existing available proxies: all still reachable")
 
+    print('-1')
     # Load persistence early to filter as we parse
     tested_hashes = load_tested_hashes()
     existing_available = load_existing_available()
@@ -192,6 +193,7 @@ def main() -> int:
     fetched_count = 0
     # Parse sources and fetch asynchronously using aiohttp (fallbacks built-in)
     parsed_sources = []
+    print('-2')
     for line in source_lines:
         url, flags = parse_source_line(line)
         if not url:
@@ -199,6 +201,7 @@ def main() -> int:
         parsed_sources.append((url, flags))
     urls_only = [u for (u, _) in parsed_sources]
     content_map = {}
+    print('-3')
     try:
         import asyncio  # type: ignore
         content_map = asyncio.run(fetch_urls_async_batch(urls_only, concurrency=int(FETCH_WORKERS), timeout=int(FETCH_TIMEOUT)))
@@ -208,6 +211,8 @@ def main() -> int:
         from .net import fetch_url as _fetch_url_sync  # local import to avoid circulars
         for u in urls_only:
             content_map[u] = _fetch_url_sync(u)
+
+    print('-4')
     for (url, flags) in parsed_sources:
         content = content_map.get(url)
         if content is None:
@@ -270,14 +275,15 @@ def main() -> int:
 
     # Prefilter hosts using batch ping (uses fping if available)
     alive_hosts = set()
+    print('1')
     try:
         alive_hosts = ping_hosts_batch([h for (_, h) in to_test])
     except Exception as e:
         log(f"Batch ping failed; proceeding without prefilter: {e}")
         alive_hosts = set(h for (_, h) in to_test)
-
+    print('2')
     filtered: List[Tuple[str, str]] = [(u, h) for (u, h) in to_test if h in alive_hosts]
-
+    print('3')
     # For very large datasets, use multiprocessing to distribute across CPU cores
     if len(filtered) >= 10000:
         print("Start Stage 2 for new proxies (multiprocessing)")
