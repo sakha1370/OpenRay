@@ -42,6 +42,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install tqdm
         pip install aiohttp
+        pip install aioping
 
     # Install Xray core
     - name: Install Xray core
@@ -56,15 +57,11 @@ jobs:
         # Verify installation
         xray version
 
-    # Install fping
-    - name: Install fping
-      run: sudo apt-get update && sudo apt-get install -y fping
-
     # Run proxy checker script
     - name: Run proxy checker
       run: python -m src.main
 
-    # Commit and push changes directly to main
+    # Commit and push changes directly to the main
     - name: Commit and push changes
       run: |
         git add .state/ output/
