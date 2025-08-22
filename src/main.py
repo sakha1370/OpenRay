@@ -32,7 +32,7 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync, is_dynamic_host
+from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
 from .parsing import (
     _set_remark,
     extract_host,
@@ -273,8 +273,14 @@ def main() -> int:
         print("Start Stage 2 for new proxies (multiprocessing)")
         try:
             import multiprocessing as _mp  # local import to avoid overhead when small sets
-            with _mp.Pool() as pool:
-                for uri, host, ok in progress(pool.starmap(check_one_sync, filtered), total=len(filtered)):
+            try:
+                workers = int(PING_WORKERS)
+            except Exception:
+                workers = 32
+            with _mp.Pool(processes=workers) as pool:
+                chunksize = max(16, min(1000, len(filtered) // max(1, workers * 4)))
+                it = pool.imap_unordered(check_pair, filtered, chunksize=chunksize)
+                for uri, host, ok in progress(it, total=len(filtered)):
                     if host not in host_success_run:
                         host_success_run[host] = False
                     if ok:
@@ -313,8 +319,28 @@ def main() -> int:
                             return (uri, host, True)
                         except Exception:
                             return (uri, host, False)
-                tasks = [asyncio.create_task(_check(it)) for it in items]
-                return await asyncio.gather(*tasks, return_exceptions=False)
+                # Bounded worker queue instead of one task per item
+                queue: "asyncio.Queue[Tuple[str, str]]" = asyncio.Queue()
+                for it in items:
+                    queue.put_nowait(it)
+                results: List[Tuple[str, str, bool]] = []
+                async def _worker():
+                    while True:
+                        try:
+                            it = queue.get_nowait()
+                        except Exception:
+                            break
+                        try:
+                            r = await _check(it)
+                            results.append(r)
+                        finally:
+                            try:
+                                queue.task_done()
+                            except Exception:
+                                pass
+                workers = [asyncio.create_task(_worker()) for _ in range(int(PING_WORKERS))]
+                await asyncio.gather(*workers, return_exceptions=True)
+                return results
 
             print("Start Stage 2 for new proxies (async)")
             results = []

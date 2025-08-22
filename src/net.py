@@ -416,6 +416,8 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
     """Fetch multiple URLs concurrently using aiohttp when available.
     Falls back to sequential urllib if aiohttp is not installed.
     Returns mapping url -> content (str) or None on failure.
+    Uses a bounded worker-queue to avoid creating a task per URL for very large lists.
+    Includes simple retries with exponential backoff.
     """
     results: Dict[str, Optional[str]] = {u: None for u in urls}
     if not urls:
@@ -433,33 +435,74 @@ async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeo
             results[u] = fetch_url(u, timeout=timeout)
         return results
 
-    sem = asyncio.Semaphore(max(1, int(concurrency)))
-    client_timeout = aiohttp.ClientTimeout(total=max(1, int(timeout)))
+    # Read optional retry and size limits from env
+    try:
+        max_retries = int(os.environ.get('OPENRAY_FETCH_RETRIES', '2'))
+    except Exception:
+        max_retries = 2
+    max_bytes = 10 * 1024 * 1024  # 10 MB hard cap
 
-    async def _one(session: "aiohttp.ClientSession", url: str) -> None:
-        async with sem:
+    client_timeout = aiohttp.ClientTimeout(total=max(1, int(timeout)))
+    connector = aiohttp.TCPConnector(limit=max(1, int(concurrency)))
+
+    import random  # local to avoid module import cost if not needed
+
+    async def _fetch_one(session: "aiohttp.ClientSession", url: str) -> None:
+        # retry with exponential backoff
+        attempt = 0
+        backoff = 0.4
+        while True:
             try:
                 headers = {'User-Agent': USER_AGENT, 'Accept': '*/*'}
                 async with session.get(url, headers=headers, timeout=client_timeout) as resp:
                     # limit size to 10 MB
-                    max_bytes = 10 * 1024 * 1024
-                    data = await resp.content.readexactly(max_bytes) if resp.content_length and resp.content_length <= max_bytes else await resp.content.read()
+                    if resp.content_length and resp.content_length > max_bytes:
+                        data = await resp.content.readexactly(max_bytes)
+                    else:
+                        data = await resp.content.read()
                     if len(data) > max_bytes:
                         data = data[:max_bytes]
                     results[url] = data.decode('utf-8', errors='ignore')
+                    return
             except asyncio.IncompleteReadError as e:
                 try:
                     partial = e.partial
                     results[url] = partial.decode('utf-8', errors='ignore') if partial else None
+                    return
                 except Exception:
-                    results[url] = None
+                    pass
             except Exception as e:
-                log(f"Async fetch failed: {url} -> {e}")
-                results[url] = None
+                if attempt >= max_retries:
+                    log(f"Async fetch failed: {url} -> {e}")
+                    results[url] = None
+                    return
+                # backoff with jitter
+                await asyncio.sleep(backoff + random.random() * 0.3)
+                attempt += 1
+                backoff *= 2.0
 
-    async with aiohttp.ClientSession() as session:
-        tasks = [asyncio.create_task(_one(session, u)) for u in urls]
-        await asyncio.gather(*tasks, return_exceptions=True)
+    # Bounded worker queue
+    queue: "asyncio.Queue[str]" = asyncio.Queue()
+    for u in urls:
+        queue.put_nowait(u)
+
+    async def _worker(session: "aiohttp.ClientSession") -> None:
+        while True:
+            try:
+                u = queue.get_nowait()
+            except Exception:
+                break
+            try:
+                await _fetch_one(session, u)
+            finally:
+                try:
+                    queue.task_done()
+                except Exception:
+                    pass
+
+    async with aiohttp.ClientSession(connector=connector) as session:
+        workers = [asyncio.create_task(_worker(session)) for _ in range(max(1, int(concurrency)))]
+        await asyncio.gather(*workers, return_exceptions=True)
     return results
 
 
@@ -625,3 +668,12 @@ def check_one_sync(uri: str, host: str) -> Tuple[str, str, bool]:
         return (uri, host, True)
     except Exception:
         return (uri, host, False)
+
+
+def check_pair(item: Tuple[str, str]) -> Tuple[str, str, bool]:
+    """Helper for multiprocessing.imap_unordered: accepts (uri, host)."""
+    try:
+        uri, host = item
+    except Exception:
+        return ("", "", False)
+    return check_one_sync(uri, host)
