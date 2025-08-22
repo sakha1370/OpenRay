@@ -58,8 +58,12 @@ def _has_connectivity() -> bool:
             except Exception:
                 pass
     except Exception:
-        return False
-    return False
+        pass
+        # return False
+
+    # Internet appears broken, raise error to stop program
+    raise RuntimeError("No Internet connectivity detected")
+    # return False
 
 
 def main() -> int:
