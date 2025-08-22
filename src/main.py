@@ -32,7 +32,7 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync
+from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync, is_dynamic_host
 from .parsing import (
     _set_remark,
     extract_host,
@@ -40,7 +40,6 @@ from .parsing import (
     extract_uris,
     maybe_decode_subscription,
     parse_source_line,
-    is_ip_address,
 )
 
 
@@ -420,8 +419,8 @@ def main() -> int:
             flag = _country_flag(cc)
             next_num = counters.get(cc, 0) + 1
             counters[cc] = next_num
-            # Determine IP stability: treat literal IP hosts as static; hostnames as dynamic (no streaks used)
-            is_dynamic = bool(host and not is_ip_address(host))
+            # Determine dynamic status using DNS heuristic (no streaks used)
+            is_dynamic = True if not host else is_dynamic_host(host)
             if is_dynamic:
                 remark = f"[OpenRay] Dynamic-{next_num}"
             else:

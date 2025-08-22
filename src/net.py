@@ -157,6 +157,43 @@ def _is_ip_address(host: str) -> bool:
     except Exception:
         return False
 
+# Cache for dynamic classification to avoid repeated DNS lookups in a run
+_dynamic_cache: Dict[str, bool] = {}
+
+def is_dynamic_host(host: str) -> bool:
+    """Heuristic to decide if a proxy host should be labeled Dynamic.
+
+    Rules:
+      - Literal IPs are treated as Static (return False).
+      - Domain names are resolved; if they map to multiple distinct IPs, treat as Dynamic.
+      - If resolution fails or yields no IPs, treat as Dynamic (conservative).
+    """
+    try:
+        if not host:
+            return True
+        if _is_ip_address(host):
+            return False
+        key = host.lower()
+        if key in _dynamic_cache:
+            return _dynamic_cache[key]
+        host_ascii = _idna(host)
+        # Resolve without specific port, prefer TCP info for consistency
+        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        ips: Set[str] = set()
+        for _, _, _, _, sockaddr in infos:
+            try:
+                ip = sockaddr[0]
+                if ip:
+                    ips.add(ip)
+            except Exception:
+                continue
+        # Heuristic decision
+        result = True if len(ips) != 1 else False
+        _dynamic_cache[key] = result
+        return result
+    except Exception:
+        return True
+
 
 def _get_country_code_for_host(host: str, timeout: int = 5) -> Optional[str]:
     try:
