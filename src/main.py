@@ -150,9 +150,19 @@ def main() -> int:
                     workers = int(STAGE3_WORKERS)
                     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
                         print("Start Stage 3 for existing proxies")
-                        for r in progress(pool2.map(_core_check, subset), total=len(subset)):
+                        futures = {pool2.submit(_core_check, u): i for i, u in enumerate(subset)}
+                        results_ordered: List[Optional[str]] = [None] * len(subset)
+                        for fut in progress(concurrent.futures.as_completed(futures), total=len(futures)):
+                            i = futures[fut]
+                            try:
+                                r = fut.result()
+                            except Exception:
+                                r = None
                             if r is not None:
-                                kept_subset.append(r)
+                                results_ordered[i] = r
+                        for val in results_ordered:
+                            if val is not None:
+                                kept_subset.append(val)
                     # Merge: replace subset portion with validated ones
                     alive = kept_subset + alive[len(subset):]
 
@@ -400,9 +410,19 @@ def main() -> int:
             workers = int(STAGE3_WORKERS)
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
                 print("Start Stage 3 for new proxies")
-                for r in progress(pool2.map(_core_check, subset), total=len(subset)):
+                futures = {pool2.submit(_core_check, u): i for i, u in enumerate(subset)}
+                results_ordered: List[Optional[str]] = [None] * len(subset)
+                for fut in progress(concurrent.futures.as_completed(futures), total=len(futures)):
+                    i = futures[fut]
+                    try:
+                        r = fut.result()
+                    except Exception:
+                        r = None
                     if r is not None:
-                        kept_subset.append(r)
+                        results_ordered[i] = r
+                for val in results_ordered:
+                    if val is not None:
+                        kept_subset.append(val)
             # Merge: replace subset portion with validated ones
             available_to_add = kept_subset + available_to_add[len(subset):]
 
