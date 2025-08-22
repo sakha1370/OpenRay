@@ -547,7 +547,6 @@ def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
             timeout_ms = 1000
 
     # Detect fping
-    fping_path = None
     try:
         env_fp = os.environ.get('OPENRAY_FPING', '').strip()
     except Exception:
@@ -558,42 +557,103 @@ def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
         fping_path = shutil.which('fping') or shutil.which('fping.exe')
 
     if fping_path:
-        print("fping_path")
+        print(f"fping found at: {fping_path}")
+        # Read tuning knobs from environment (optional)
         try:
-            # Use a temporary file for input to avoid command-line length limits
-            with tempfile.NamedTemporaryFile('w', delete=False, encoding='utf-8') as tf:
-                for h in uniq:
-                    tf.write(h + "\n")
-                tf_path = tf.name
-
-            # Convert milliseconds to seconds for fping 5.x
-            timeout_seconds = max(1, timeout_ms // 1000)  # At least 1 second, convert ms to seconds
-            cmd = [fping_path, '-a', '-t', str(timeout_seconds), '-f', tf_path]
-
-            # On Windows, creationflags to hide window if available
-            creation = (
-                subprocess.CREATE_NO_WINDOW if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                 timeout=(timeout_ms / 1000.0 + 5.0), creationflags=creation, encoding='utf-8',
-                                 errors='ignore')
-            try:
-                os.unlink(tf_path)
-            except Exception:
-                pass
-            alive: Set[str] = set()
-            if res.returncode in (0, 1):  # fping returns 1 if some hosts are unreachable
-                for line in (res.stdout or '').splitlines():
-                    h = line.strip()
-                    if h:
-                        alive.add(h)
-            return alive
+            target_batch_secs = float(os.environ.get('OPENRAY_FPING_BATCH_SECS', '12'))
         except Exception:
+            target_batch_secs = 12.0
+        target_batch_secs = max(3.0, min(60.0, target_batch_secs))
+        try:
+            min_interval_ms = int(os.environ.get('OPENRAY_FPING_MIN_INTERVAL_MS', '20'))
+        except Exception:
+            min_interval_ms = 20
+        min_interval_ms = max(10, min(200, int(min_interval_ms)))
+        try:
+            retries = int(os.environ.get('OPENRAY_FPING_RETRIES', '0'))
+        except Exception:
+            retries = 0
+        retries = max(0, min(3, int(retries)))
+
+        # Clamp timeout per probe
+        timeout_ms_clamped = max(300, min(timeout_ms, 2000))  # 0.3s to 2s
+
+        # Compute dynamic batch size (but cap at 300 for safety)
+        budget_ms = int(target_batch_secs * 1000)
+        est_overhead_ms = (retries + 1) * timeout_ms_clamped
+        if budget_ms <= est_overhead_ms + 50:
+            allowed_n = 50
+        else:
+            allowed_n = max(1, (budget_ms - est_overhead_ms) // max(1, min_interval_ms))
+
+        batch_size = int(min(100, max(1, allowed_n), len(uniq)))  # Hard cap = 300
+        all_alive: Set[str] = set()
+
+        for i in range(0, len(uniq), batch_size):
+            batch = uniq[i:i + batch_size]
             try:
-                os.unlink(tf_path)
-            except Exception:
-                pass
-            # fall through to per-host
-            pass
+                # Write hosts into a temporary file
+                with tempfile.NamedTemporaryFile('w', delete=False, encoding='utf-8') as tf:
+                    for h in batch:
+                        tf.write(h + "\n")
+                    tf_path = tf.name
+
+                # Build fping command
+                cmd = [
+                    fping_path, '-a',
+                    '-r', str(retries),
+                    '-t', str(timeout_ms_clamped),
+                    '-i', str(min_interval_ms),
+                    '-f', tf_path
+                ]
+
+                # Estimate subprocess runtime
+                est_secs = (len(batch) * min_interval_ms) / 1000.0 + ((retries + 1) * timeout_ms_clamped) / 1000.0
+                subprocess_timeout = max(60.0, est_secs * 4.0)  # Always allow at least 60s
+
+                print(f"[DEBUG] fping batch {i // batch_size + 1}/{(len(uniq)+batch_size-1)//batch_size}, "
+                      f"hosts={len(batch)}, timeout={subprocess_timeout:.1f}s")
+
+                creation = (
+                    subprocess.CREATE_NO_WINDOW if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+                )
+                res = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    timeout=subprocess_timeout,
+                    creationflags=creation,
+                    encoding='utf-8',
+                    errors='ignore'
+                )
+
+                try:
+                    os.unlink(tf_path)
+                except Exception as e:
+                    print(f"[WARN] Could not delete temp file {tf_path}: {e}")
+
+                if res.returncode in (0, 1):
+                    for line in (res.stdout or '').splitlines():
+                        h = line.strip()
+                        if h:
+                            all_alive.add(h)
+                else:
+                    print(f"[ERROR] fping batch {i // batch_size + 1} exited with code {res.returncode}")
+                    if hasattr(res, 'stderr') and res.stderr:
+                        print(f"[stderr] {res.stderr.strip()}")
+
+            except Exception as e:
+                try:
+                    os.unlink(tf_path)
+                except Exception:
+                    pass
+                print(f"[EXCEPTION] fping batch {i // batch_size + 1} failed: {e}")
+                continue
+
+        if all_alive:
+            return all_alive
+        else:
+            print("[WARN] fping batches produced no results, falling back to individual ping")
 
     # Fallback: per-host ping
     alive: Set[str] = set()
