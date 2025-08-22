@@ -32,7 +32,7 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
+from .net import _get_country_code_for_host, fetch_url, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core
 from .parsing import (
     _set_remark,
     extract_host,
@@ -191,42 +191,37 @@ def main() -> int:
     new_uris: List[str] = []
     new_hashes: List[str] = []
     fetched_count = 0
-    # Parse sources and fetch asynchronously using aiohttp (fallbacks built-in)
-    parsed_sources = []
-    print('-2')
-    for line in source_lines:
-        url, flags = parse_source_line(line)
-        if not url:
-            continue
-        parsed_sources.append((url, flags))
-    urls_only = [u for (u, _) in parsed_sources]
-    content_map = {}
-    print('-3')
-    try:
-        import asyncio  # type: ignore
-        content_map = asyncio.run(fetch_urls_async_batch(urls_only, concurrency=int(FETCH_WORKERS), timeout=int(FETCH_TIMEOUT)))
-    except Exception as e:
-        log(f"Async fetch failed to run event loop; falling back to sequential urllib: {e}")
-        # Fallback: sequential
-        from .net import fetch_url as _fetch_url_sync  # local import to avoid circulars
-        for u in urls_only:
-            content_map[u] = _fetch_url_sync(u)
-
-    print('-4')
-    for (url, flags) in parsed_sources:
-        content = content_map.get(url)
-        if content is None:
-            continue
-        fetched_count += 1
-        decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
-        for u in extract_uris(decoded):
-            if u in seen_uri:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
+        future_to_src = {}
+        for line in source_lines:
+            url, flags = parse_source_line(line)
+            if not url:
                 continue
-            seen_uri.add(u)
-            h = sha1_hex(u)
-            if h not in tested_hashes:
-                new_uris.append(u)
-                new_hashes.append(h)
+            future = pool.submit(fetch_url, url)
+            future_to_src[future] = (url, flags)
+        for fut in progress(concurrent.futures.as_completed(future_to_src), total=len(future_to_src)):
+            url, flags = future_to_src[fut]
+            # Exit early if connectivity is lost mid-run
+            if not _has_connectivity():
+                log("Internet connectivity lost during fetching sources; exiting early.")
+                return 2
+            content = None
+            try:
+                content = fut.result()
+            except Exception as e:
+                log(f"Fetch future error: {url} -> {e}")
+            if content is None:
+                continue
+            fetched_count += 1
+            decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
+            for u in extract_uris(decoded):
+                if u in seen_uri:
+                    continue
+                seen_uri.add(u)
+                h = sha1_hex(u)
+                if h not in tested_hashes:
+                    new_uris.append(u)
+                    new_hashes.append(h)
 
     log(f"Fetched {fetched_count} contents")
     log(f"Extracted {len(seen_uri)} unique proxy URIs; new to test: {len(new_uris)}")
