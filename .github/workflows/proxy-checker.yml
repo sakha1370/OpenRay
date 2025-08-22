@@ -3,13 +3,17 @@ name: Proxy Checker
 # Trigger workflow
 on:
   schedule:
-    # Run at minute 0 of every 2nd hour
-    - cron: '0 */2 * * *'
+    # Run at minute 0 of every hour
+    - cron: '0 * * * *'
   workflow_dispatch:  # Allow manual trigger
 
 # Permissions (top-level fallback)
 permissions:
   contents: write
+
+concurrency:
+  group: proxy-checker-main
+  cancel-in-progress: false   # Queue new runs until the previous one finishes
 
 jobs:
   check-proxies:
