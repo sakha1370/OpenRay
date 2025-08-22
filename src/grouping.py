@@ -12,8 +12,8 @@ from .parsing import _extract_our_cc_and_num_from_uri
 def write_grouped_outputs() -> None:
     """Generate per-kind and per-country files from AVAILABLE_FILE.
 
-    - output\kind\<scheme>.txt
-    - output\country\<CC>.txt (uses an existing remark format; falls back to XX)
+    - output/kind/<scheme>.txt
+    - output/country/<CC>.txt (uses an existing remark format; falls back to XX)
     """
     try:
         lines = [ln.strip() for ln in read_lines(AVAILABLE_FILE) if ln.strip()]
