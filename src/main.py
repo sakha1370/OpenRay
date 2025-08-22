@@ -10,6 +10,7 @@ from .constants import (
     AVAILABLE_FILE,
     CONSECUTIVE_REQUIRED,
     FETCH_WORKERS,
+    FETCH_TIMEOUT,
     PING_WORKERS,
     SOURCES_FILE,
     ENABLE_STAGE2,
@@ -31,7 +32,7 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, fetch_url, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core
+from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, ping_hosts_batch, get_country_codes_batch, check_one_sync
 from .parsing import (
     _set_remark,
     extract_host,
@@ -179,33 +180,38 @@ def main() -> int:
     new_uris: List[str] = []
     new_hashes: List[str] = []
     fetched_count = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=FETCH_WORKERS) as pool:
-        future_to_src = {}
-        for line in source_lines:
-            url, flags = parse_source_line(line)
-            if not url:
+    # Parse sources and fetch asynchronously using aiohttp (fallbacks built-in)
+    parsed_sources = []
+    for line in source_lines:
+        url, flags = parse_source_line(line)
+        if not url:
+            continue
+        parsed_sources.append((url, flags))
+    urls_only = [u for (u, _) in parsed_sources]
+    content_map = {}
+    try:
+        import asyncio  # type: ignore
+        content_map = asyncio.run(fetch_urls_async_batch(urls_only, concurrency=int(FETCH_WORKERS), timeout=int(FETCH_TIMEOUT)))
+    except Exception as e:
+        log(f"Async fetch failed to run event loop; falling back to sequential urllib: {e}")
+        # Fallback: sequential
+        from .net import fetch_url as _fetch_url_sync  # local import to avoid circulars
+        for u in urls_only:
+            content_map[u] = _fetch_url_sync(u)
+    for (url, flags) in parsed_sources:
+        content = content_map.get(url)
+        if content is None:
+            continue
+        fetched_count += 1
+        decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
+        for u in extract_uris(decoded):
+            if u in seen_uri:
                 continue
-            future = pool.submit(fetch_url, url)
-            future_to_src[future] = (url, flags)
-        for fut in concurrent.futures.as_completed(future_to_src):
-            url, flags = future_to_src[fut]
-            content = None
-            try:
-                content = fut.result()
-            except Exception as e:
-                log(f"Fetch future error: {url} -> {e}")
-            if content is None:
-                continue
-            fetched_count += 1
-            decoded = maybe_decode_subscription(content, hinted_base64=flags.get('base64', False))
-            for u in extract_uris(decoded):
-                if u in seen_uri:
-                    continue
-                seen_uri.add(u)
-                h = sha1_hex(u)
-                if h not in tested_hashes:
-                    new_uris.append(u)
-                    new_hashes.append(h)
+            seen_uri.add(u)
+            h = sha1_hex(u)
+            if h not in tested_hashes:
+                new_uris.append(u)
+                new_hashes.append(h)
 
     log(f"Fetched {fetched_count} contents")
     log(f"Extracted {len(seen_uri)} unique proxy URIs; new to test: {len(new_uris)}")
@@ -230,7 +236,7 @@ def main() -> int:
     to_test = [(u, host) for u, host in host_map.items() if host]
     log(f"New proxies with resolvable hosts: {len(to_test)}")
 
-    # Ping concurrently
+    # Stage 2 for new proxies: prefilter via fast batch ping, then connect/probe using asyncio or multiprocessing for large sets
     available_to_add: List[str] = []
 
     def check_one(item: Tuple[str, str]) -> Tuple[str, str, bool]:
@@ -252,15 +258,95 @@ def main() -> int:
         except Exception:
             return (uri, host, False)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-        print("Start Stage 2 for new proxies")
-        for uri, host, ok in progress(pool.map(check_one, to_test), total=len(to_test)):
-            # Mark host as tested this run
-            if host not in host_success_run:
-                host_success_run[host] = False
-            if ok:
-                host_success_run[host] = True
-                available_to_add.append(uri)
+    # Prefilter hosts using batch ping (uses fping if available)
+    alive_hosts = set()
+    try:
+        alive_hosts = ping_hosts_batch([h for (_, h) in to_test])
+    except Exception as e:
+        log(f"Batch ping failed; proceeding without prefilter: {e}")
+        alive_hosts = set(h for (_, h) in to_test)
+
+    filtered: List[Tuple[str, str]] = [(u, h) for (u, h) in to_test if h in alive_hosts]
+
+    # For very large datasets, use multiprocessing to distribute across CPU cores
+    if len(filtered) >= 10000:
+        print("Start Stage 2 for new proxies (multiprocessing)")
+        try:
+            import multiprocessing as _mp  # local import to avoid overhead when small sets
+            with _mp.Pool() as pool:
+                for uri, host, ok in progress(pool.starmap(check_one_sync, filtered), total=len(filtered)):
+                    if host not in host_success_run:
+                        host_success_run[host] = False
+                    if ok:
+                        host_success_run[host] = True
+                        available_to_add.append(uri)
+        except Exception as e:
+            log(f"Multiprocessing stage failed; falling back to threads: {e}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+                print("Start Stage 2 for new proxies (threads fallback)")
+                for uri, host, ok in progress(pool.map(check_one, filtered), total=len(filtered)):
+                    if host not in host_success_run:
+                        host_success_run[host] = False
+                    if ok:
+                        host_success_run[host] = True
+                        available_to_add.append(uri)
+    else:
+        # Use asyncio to run many connect/probes concurrently
+        try:
+            import asyncio  # type: ignore
+
+            async def _async_stage2(items: List[Tuple[str, str]]):
+                sem = asyncio.Semaphore(int(PING_WORKERS))
+                loop = asyncio.get_running_loop()
+                async def _check(item: Tuple[str, str]):
+                    uri, host = item
+                    async with sem:
+                        try:
+                            scheme = uri.split('://', 1)[0].lower()
+                            if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
+                                p = extract_port(uri)
+                                if p is not None:
+                                    ok2 = await loop.run_in_executor(None, lambda: connect_host_port(host, int(p)))
+                                    if ok2 and int(ENABLE_STAGE2) == 1:
+                                        ok2 = await loop.run_in_executor(None, lambda: quick_protocol_probe(uri, host, int(p)))
+                                    return (uri, host, bool(ok2))
+                            return (uri, host, True)
+                        except Exception:
+                            return (uri, host, False)
+                tasks = [asyncio.create_task(_check(it)) for it in items]
+                return await asyncio.gather(*tasks, return_exceptions=False)
+
+            print("Start Stage 2 for new proxies (async)")
+            results = []
+            try:
+                results = asyncio.run(_async_stage2(filtered))
+            except RuntimeError:
+                # If already in an event loop (unlikely in this script), create one
+                loop = asyncio.new_event_loop()
+                try:
+                    asyncio.set_event_loop(loop)
+                    results = loop.run_until_complete(_async_stage2(filtered))
+                finally:
+                    try:
+                        loop.close()
+                    except Exception:
+                        pass
+            for uri, host, ok in progress(results, total=len(filtered)):
+                if host not in host_success_run:
+                    host_success_run[host] = False
+                if ok:
+                    host_success_run[host] = True
+                    available_to_add.append(uri)
+        except Exception as e:
+            log(f"Async stage failed; falling back to threads: {e}")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
+                print("Start Stage 2 for new proxies (threads fallback)")
+                for uri, host, ok in progress(pool.map(check_one, filtered), total=len(filtered)):
+                    if host not in host_success_run:
+                        host_success_run[host] = False
+                    if ok:
+                        host_success_run[host] = True
+                        available_to_add.append(uri)
 
     log(f"Available proxies found this run (ping/connect ok): {len(available_to_add)}")
 
@@ -305,18 +391,29 @@ def main() -> int:
     if new_available_unique:
         # Build per-country counters from existing entries
         counters = _build_country_counters(existing_available)
-        cc_cache: Dict[str, Optional[str]] = {}
         formatted_to_append: List[str] = []
         print("Start formatting new available proxies")
+        # Batch resolve country codes for hosts of new entries
+        hosts_to_resolve: List[str] = []
+        for u in new_available_unique:
+            h = host_map.get(u)
+            if h:
+                hosts_to_resolve.append(h)
+        # Deduplicate while preserving order
+        hosts_to_resolve = list(dict.fromkeys(hosts_to_resolve))
+        cc_map: Dict[str, Optional[str]] = {}
+        try:
+            cc_map = get_country_codes_batch(hosts_to_resolve)
+        except Exception as e:
+            log(f"Batch geolocation failed; falling back per-host: {e}")
+            for h in hosts_to_resolve:
+                try:
+                    cc_map[h] = _get_country_code_for_host(h)
+                except Exception:
+                    cc_map[h] = None
         for u in progress(new_available_unique, total=len(new_available_unique)):
             host = host_map.get(u)
-            cc = None
-            if host:
-                if host in cc_cache:
-                    cc = cc_cache[host]
-                else:
-                    cc = _get_country_code_for_host(host)
-                    cc_cache[host] = cc
+            cc = cc_map.get(host) if host else None
             if not cc:
                 cc = 'XX'
             flag = _country_flag(cc)

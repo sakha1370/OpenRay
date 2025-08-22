@@ -6,10 +6,12 @@ import socket
 import subprocess
 import sys
 import ssl
-from typing import List, Optional
+import shutil
+import tempfile
+from typing import List, Optional, Dict, Set, Tuple
 from urllib.request import Request, urlopen
 
-from .constants import USER_AGENT, PING_TIMEOUT_MS, TCP_FALLBACK_PORTS, FETCH_TIMEOUT, CONNECT_TIMEOUT_MS, PROBE_TIMEOUT_MS, V2RAY_CORE_PATH
+from .constants import USER_AGENT, PING_TIMEOUT_MS, TCP_FALLBACK_PORTS, FETCH_TIMEOUT, CONNECT_TIMEOUT_MS, PROBE_TIMEOUT_MS, V2RAY_CORE_PATH, ENABLE_STAGE2, FETCH_WORKERS, PING_WORKERS
 from .common import log
 
 
@@ -368,3 +370,221 @@ def validate_with_v2ray_core(uri: str, timeout_s: int = 10) -> Optional[bool]:
         return True if ok else False
     except Exception:
         return None
+
+
+# ------------------ Async and Batch Helpers ------------------
+import asyncio
+
+async def fetch_urls_async_batch(urls: List[str], concurrency: int = None, timeout: int = FETCH_TIMEOUT) -> Dict[str, Optional[str]]:
+    """Fetch multiple URLs concurrently using aiohttp when available.
+    Falls back to sequential urllib if aiohttp is not installed.
+    Returns mapping url -> content (str) or None on failure.
+    """
+    results: Dict[str, Optional[str]] = {u: None for u in urls}
+    if not urls:
+        return results
+    if concurrency is None:
+        try:
+            concurrency = int(os.environ.get('OPENRAY_FETCH_WORKERS', '0')) or int(FETCH_WORKERS)
+        except Exception:
+            concurrency = 16
+    try:
+        import aiohttp  # type: ignore
+    except Exception:
+        # Fallback: sequential (to avoid new threads here)
+        for u in urls:
+            results[u] = fetch_url(u, timeout=timeout)
+        return results
+
+    sem = asyncio.Semaphore(max(1, int(concurrency)))
+    client_timeout = aiohttp.ClientTimeout(total=max(1, int(timeout)))
+
+    async def _one(session: "aiohttp.ClientSession", url: str) -> None:
+        async with sem:
+            try:
+                headers = {'User-Agent': USER_AGENT, 'Accept': '*/*'}
+                async with session.get(url, headers=headers, timeout=client_timeout) as resp:
+                    # limit size to 10 MB
+                    max_bytes = 10 * 1024 * 1024
+                    data = await resp.content.readexactly(max_bytes) if resp.content_length and resp.content_length <= max_bytes else await resp.content.read()
+                    if len(data) > max_bytes:
+                        data = data[:max_bytes]
+                    results[url] = data.decode('utf-8', errors='ignore')
+            except asyncio.IncompleteReadError as e:
+                try:
+                    partial = e.partial
+                    results[url] = partial.decode('utf-8', errors='ignore') if partial else None
+                except Exception:
+                    results[url] = None
+            except Exception as e:
+                log(f"Async fetch failed: {url} -> {e}")
+                results[url] = None
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [asyncio.create_task(_one(session, u)) for u in urls]
+        await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+
+
+def ping_hosts_batch(hosts: List[str], timeout_ms: int = None) -> Set[str]:
+    """Batch ping using fping if available; fallback to per-host ping_host.
+    Returns a set of reachable hosts.
+    """
+    if not hosts:
+        return set()
+    uniq = list(dict.fromkeys([_idna(h) for h in hosts if h]))
+    if timeout_ms is None:
+        try:
+            timeout_ms = int(PING_TIMEOUT_MS)
+        except Exception:
+            timeout_ms = 1000
+
+    # Detect fping
+    fping_path = None
+    try:
+        env_fp = os.environ.get('OPENRAY_FPING', '').strip()
+    except Exception:
+        env_fp = ''
+    if env_fp and os.path.exists(env_fp):
+        fping_path = env_fp
+    else:
+        fping_path = shutil.which('fping') or shutil.which('fping.exe')
+
+    if fping_path:
+        try:
+            # Use a temporary file for input to avoid command-line length limits
+            with tempfile.NamedTemporaryFile('w', delete=False, encoding='utf-8') as tf:
+                for h in uniq:
+                    tf.write(h + "\n")
+                tf_path = tf.name
+            cmd = [fping_path, '-a', '-t', str(int(timeout_ms)), '-f', tf_path]
+            # On Windows, creationflags to hide window if available
+            creation = (subprocess.CREATE_NO_WINDOW if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=(timeout_ms/1000.0 + 5.0), creationflags=creation, encoding='utf-8', errors='ignore')
+            try:
+                os.unlink(tf_path)
+            except Exception:
+                pass
+            alive: Set[str] = set()
+            if res.returncode in (0, 1):  # fping returns 1 if some hosts are unreachable
+                for line in (res.stdout or '').splitlines():
+                    h = line.strip()
+                    if h:
+                        alive.add(h)
+            return alive
+        except Exception:
+            try:
+                os.unlink(tf_path)
+            except Exception:
+                pass
+            # fall through to per-host
+            pass
+
+    # Fallback: per-host ping
+    alive: Set[str] = set()
+    for h in uniq:
+        try:
+            if ping_host(h):
+                alive.add(h)
+        except Exception:
+            continue
+    return alive
+
+
+def get_country_codes_batch(hosts: List[str], timeout: int = 5, batch_size: int = 100) -> Dict[str, Optional[str]]:
+    """Resolve country codes for many hosts using ip-api.com batch endpoint.
+    Fallback to per-host _get_country_code_for_host on errors.
+    Returns host -> country code (2 letters) or None.
+    """
+    result: Dict[str, Optional[str]] = {h: None for h in hosts}
+    if not hosts:
+        return result
+
+    # Resolve to IPs first
+    ip_to_hosts: Dict[str, List[str]] = {}
+    for host in hosts:
+        if not host:
+            continue
+        try:
+            if _is_ip_address(host):
+                ip = host
+            else:
+                infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+                ip = None
+                for fam, _, _, _, sockaddr in infos:
+                    if fam == socket.AF_INET:
+                        ip = sockaddr[0]
+                        break
+                if not ip and infos:
+                    ip = infos[0][4][0]
+            if ip:
+                ip_to_hosts.setdefault(ip, []).append(host)
+        except Exception:
+            # leave as None
+            pass
+
+    ips = list(ip_to_hosts.keys())
+    if not ips:
+        # Fallback to per-host method
+        for h in hosts:
+            try:
+                result[h] = _get_country_code_for_host(h, timeout=timeout)
+            except Exception:
+                result[h] = None
+        return result
+
+    # Query in batches
+    try:
+        endpoint = f"http://ip-api.com/batch?fields=countryCode"
+        headers = {'Content-Type': 'application/json'}
+        for i in range(0, len(ips), max(1, int(batch_size))):
+            chunk = ips[i:i+batch_size]
+            body = json.dumps([{'query': ip} for ip in chunk]).encode('utf-8')
+            req = Request(endpoint, data=body, headers=headers, method='POST')
+            with urlopen(req, timeout=timeout) as resp:
+                data = resp.read()
+                arr = json.loads(data.decode('utf-8', errors='ignore') or '[]')
+                if isinstance(arr, list):
+                    for idx, obj in enumerate(arr):
+                        try:
+                            ip = chunk[idx]
+                        except Exception:
+                            continue
+                        cc = None
+                        if isinstance(obj, dict):
+                            c = obj.get('countryCode')
+                            if isinstance(c, str) and len(c) == 2:
+                                cc = c.upper()
+                        if ip in ip_to_hosts:
+                            for h in ip_to_hosts[ip]:
+                                result[h] = cc
+    except Exception as e:
+        # Fallback to per-host
+        for h in hosts:
+            try:
+                result[h] = _get_country_code_for_host(h, timeout=timeout)
+            except Exception:
+                result[h] = None
+    return result
+
+
+def check_one_sync(uri: str, host: str) -> Tuple[str, str, bool]:
+    """Synchronous checker used for multiprocessing. Mirrors main.check_one logic."""
+    try:
+        if not ping_host(host):
+            return (uri, host, False)
+        scheme = (uri.split('://', 1)[0] or '').lower()
+        if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
+            try:
+                from .parsing import extract_port  # local import to avoid cycles at module load
+                p = extract_port(uri)
+            except Exception:
+                p = None
+            if p is not None:
+                ok2 = connect_host_port(host, int(p))
+                if ok2 and int(ENABLE_STAGE2) == 1:
+                    ok2 = quick_protocol_probe(uri, host, int(p))
+                return (uri, host, ok2)
+        return (uri, host, True)
+    except Exception:
+        return (uri, host, False)
