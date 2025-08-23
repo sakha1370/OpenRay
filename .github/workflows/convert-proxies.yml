@@ -28,7 +28,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/output/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              subconverter -g -f /data/output/all_valid_proxies.txt -t $type -o /data/output/converted/
+              subconverter -g -F /data/output/all_valid_proxies.txt -T $type -O /data/output/converted/
           done
 
       ##############################
@@ -39,8 +39,9 @@ jobs:
           mkdir -p ${{ github.workspace }}/output_iran/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              subconverter -g -f /data/output_iran/all_valid_proxies_for_iran.txt -t $type -o /data/output_iran/converted/
+              subconverter -g -F /data/output_iran/all_valid_proxies_for_iran.txt -T $type -O /data/output_iran/converted/
           done
+
 
       ##############################
       # Commit and push
