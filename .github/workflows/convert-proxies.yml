@@ -25,7 +25,7 @@ jobs:
       ##############################
       - name: Convert general proxies
         run: |
-          mkdir -p /data/output/converted
+          mkdir -p ${{ github.workspace }}/output/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
               -g -f /data/output/all_valid_proxies.txt -t $type -o /data/output/converted/$type
@@ -36,7 +36,7 @@ jobs:
       ##############################
       - name: Convert Iran proxies
         run: |
-          mkdir -p /data/output_iran/converted
+          mkdir -p ${{ github.workspace }}/output_iran/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
               -g -f /data/output_iran/all_valid_proxies_for_iran.txt -t $type -o /data/output_iran/converted/$type
