@@ -14,15 +14,41 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Start subconverter service
+        run: |
+          # Start subconverter as a service
+          docker run -d --name subconverter -p 25500:25500 tindy2013/subconverter:latest
+          
+          # Wait for service to be ready
+          sleep 10
+          
+          # Test if service is running
+          curl -f http://localhost:25500/version || (echo "Service failed to start" && exit 1)
+
       ##############################
       # Convert general proxies
       ##############################
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
-          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              -g -f /data/output/all_valid_proxies.txt -t $type -o /data/output/converted/$type
+          
+          # Read the proxy file content
+          PROXY_CONTENT=$(cat output/all_valid_proxies.txt | base64 -w 0)
+          
+          for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
+            echo "Converting to $type format..."
+            
+            # Use subconverter API to convert proxies
+            curl -X GET "http://localhost:25500/sub?target=$type&url=data:text/plain;base64,$PROXY_CONTENT&config=" \
+              -o "${{ github.workspace }}/output/converted/$type.txt" \
+              -H "User-Agent: ClashforWindows/0.18.1" \
+              --fail --silent --show-error
+            
+            if [ $? -eq 0 ]; then
+              echo "Successfully converted to $type"
+            else
+              echo "Failed to convert to $type"
+            fi
           done
 
       ##############################
@@ -31,10 +57,30 @@ jobs:
       - name: Convert Iran proxies
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
-          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              -g -f /data/output_iran/all_valid_proxies_for_iran.txt -t $type -o /data/output_iran/converted/$type
+          
+          # Read the Iran proxy file content
+          PROXY_CONTENT=$(cat output_iran/all_valid_proxies_for_iran.txt | base64 -w 0)
+          
+          for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
+            echo "Converting Iran proxies to $type format..."
+            
+            # Use subconverter API to convert proxies
+            curl -X GET "http://localhost:25500/sub?target=$type&url=data:text/plain;base64,$PROXY_CONTENT&config=" \
+              -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
+              -H "User-Agent: ClashforWindows/0.18.1" \
+              --fail --silent --show-error
+            
+            if [ $? -eq 0 ]; then
+              echo "Successfully converted Iran proxies to $type"
+            else
+              echo "Failed to convert Iran proxies to $type"
+            fi
           done
+
+      - name: Stop subconverter service
+        run: |
+          docker stop subconverter
+          docker rm subconverter
 
       ##############################
       # Commit and push
