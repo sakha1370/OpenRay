@@ -3,8 +3,8 @@ name: Convert Proxies
 on:
   push:
     paths:
-      - output/all_valid_proxies.txt
-      - output_iran/all_valid_proxies_for_iran.txt
+      - https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/all_valid_proxies.txt
+      - https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/all_valid_proxies_for_iran.txt
   workflow_dispatch:
 
 permissions:
@@ -20,19 +20,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Step 1: Start a temporary web server to serve the local files
-      - name: Start temporary web server
+      # This step starts a simple python web server on port 8000 to serve the files
+      - name: Start a temporary web server
         run: |
           python3 -m http.server 8000 &
 
-      # Step 2: Start the subconverter container
+      # This step starts the subconverter container
       - name: Start subconverter server
         run: |
           docker run -d --name subconverter -p 25500:25500 tindy2013/subconverter
           # Wait for services to be ready
           sleep 8
 
-      # Step 3: Convert general proxies using HTTP URL
+      ____________________
+
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
@@ -41,7 +42,8 @@ jobs:
               -o "${{ github.workspace }}/output/converted/general_${type}.yaml" || true
           done
 
-      # Step 4: Convert Iran proxies using HTTP URL
+      ____________________
+
       - name: Convert Iran proxies
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
@@ -50,14 +52,16 @@ jobs:
               -o "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" || true
           done
 
-      # Step 5: Stop subconverter container and cleanup
+      ____________________
+
       - name: Stop subconverter
         if: always()
         run: |
           docker stop subconverter
           docker rm subconverter
 
-      # Step 6: Commit and push changes
+      ____________________
+
       - name: Commit and push changes (force)
         run: |
           git config user.name "github-actions"
