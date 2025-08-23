@@ -7,7 +7,6 @@ on:
       - output_iran/all_valid_proxies_for_iran.txt
   workflow_dispatch:
 
-# Add permissions at workflow level
 permissions:
   contents: write
 
@@ -18,14 +17,12 @@ jobs:
       contents: write
 
     steps:
-      # Use same checkout configuration as working workflow
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # Use same Git configuration as working workflow
       - name: Configure Git user
         run: |
           git config user.name "github-actions[bot]"
@@ -36,11 +33,18 @@ jobs:
         with:
           python-version: '3.9'
 
+      # Get the host IP for Docker networking
+      - name: Get host IP
+        run: |
+          HOST_IP=$(ip route show default | awk '/default/ {print $3}')
+          echo "HOST_IP=$HOST_IP" >> $GITHUB_ENV
+          echo "Host IP: $HOST_IP"
+
       - name: Start temporary HTTP server for proxy files
         run: |
-          # Start a simple HTTP server to serve proxy files
+          # Start HTTP server on all interfaces
           cd ${{ github.workspace }}
-          python3 -m http.server 8080 &
+          python3 -m http.server 8080 --bind 0.0.0.0 &
           HTTP_PID=$!
           echo "HTTP_PID=$HTTP_PID" >> $GITHUB_ENV
           
@@ -50,16 +54,35 @@ jobs:
           # Test if HTTP server is running
           curl -f http://localhost:8080/ || (echo "HTTP server failed to start" && exit 1)
 
-      - name: Start subconverter service
+      - name: Start subconverter service with proper networking
         run: |
-          # Start subconverter as a service
-          docker run -d --name subconverter -p 25500:25500 --add-host=host.docker.internal:host-gateway tindy2013/subconverter:latest
+          # Start subconverter with host network mode for better connectivity
+          docker run -d --name subconverter \
+            --network host \
+            tindy2013/subconverter:latest
           
           # Wait for service to be ready
           sleep 10
           
           # Test if service is running
           curl -f http://localhost:25500/version || (echo "Subconverter service failed to start" && exit 1)
+
+      # Debug network connectivity
+      - name: Debug network connectivity
+        run: |
+          echo "=== Network Debug Info ==="
+          echo "Host IP: $HOST_IP"
+          echo "Testing localhost HTTP server..."
+          curl -I http://localhost:8080/output/all_valid_proxies.txt || echo "Localhost test failed"
+          
+          echo "Testing with host IP..."
+          curl -I http://$HOST_IP:8080/output/all_valid_proxies.txt || echo "Host IP test failed"
+          
+          echo "Checking proxy file exists..."
+          ls -la output/all_valid_proxies.txt || echo "Proxy file not found"
+          
+          echo "File content preview:"
+          head -n 5 output/all_valid_proxies.txt || echo "Cannot read proxy file"
 
       ##############################
       # Convert general proxies
@@ -68,47 +91,45 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           
-          # First test the subconverter API
-          echo "Testing subconverter API..."
-          curl -v "http://localhost:25500/version" || echo "Version endpoint failed"
-          
-          # URL encode the proxy file URL properly
-          PROXY_URL="http://host.docker.internal:8080/output/all_valid_proxies.txt"
+          # Use localhost since we're using host network mode
+          PROXY_URL="http://localhost:8080/output/all_valid_proxies.txt"
           ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$PROXY_URL', safe=''))")
           
           echo "Original URL: $PROXY_URL"
           echo "Encoded URL: $ENCODED_URL"
           
-          # Test if the proxy file is accessible
-          echo "Testing proxy file accessibility..."
-          curl -I "$PROXY_URL" || echo "Proxy file not accessible"
+          # Test direct file access first
+          echo "Testing direct proxy file access..."
+          curl -f "$PROXY_URL" | head -n 3 || echo "Direct access failed"
           
           for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting to $type format..."
             
-            # Try with different parameter combinations
             API_URL="http://localhost:25500/sub?target=$type&url=$ENCODED_URL"
             echo "API URL: $API_URL"
             
             # Use subconverter API to convert proxies
-            curl -v -X GET "$API_URL" \
-              -o "${{ github.workspace }}/output/converted/$type.txt" \
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
               -H "User-Agent: ClashX/1.30.1" \
               --connect-timeout 30 \
-              --max-time 120
+              --max-time 120 \
+              "$API_URL")
             
-            CURL_EXIT_CODE=$?
-            echo "Curl exit code: $CURL_EXIT_CODE"
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            CONTENT=$(echo "$RESPONSE" | sed '$d')
             
-            if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
+            echo "HTTP Code: $HTTP_CODE"
+            
+            if [ "$HTTP_CODE" = "200" ] && [ -n "$CONTENT" ]; then
+              echo "$CONTENT" > "${{ github.workspace }}/output/converted/$type.txt"
               echo "Successfully converted to $type"
               echo "File size: $(wc -c < "${{ github.workspace }}/output/converted/$type.txt") bytes"
+              echo "Content preview:"
+              head -n 3 "${{ github.workspace }}/output/converted/$type.txt"
             else
-              echo "Failed to convert to $type (exit code: $CURL_EXIT_CODE)"
-              if [ -f "${{ github.workspace }}/output/converted/$type.txt" ]; then
-                echo "Response content:"
-                head -n 10 "${{ github.workspace }}/output/converted/$type.txt"
-              fi
+              echo "Failed to convert to $type (HTTP: $HTTP_CODE)"
+              echo "Error response:"
+              echo "$CONTENT"
               # Create empty file if conversion failed
               touch "${{ github.workspace }}/output/converted/$type.txt"
             fi
@@ -122,43 +143,55 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           
-          # URL encode the Iran proxy file URL properly
-          PROXY_URL="http://host.docker.internal:8080/output_iran/all_valid_proxies_for_iran.txt"
+          # Check if Iran proxy file exists
+          if [ ! -f "output_iran/all_valid_proxies_for_iran.txt" ]; then
+            echo "Iran proxy file not found, skipping..."
+            # Create empty files for all formats
+            for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
+              touch "${{ github.workspace }}/output_iran/converted/$type.txt"
+            done
+            exit 0
+          fi
+          
+          # Use localhost since we're using host network mode
+          PROXY_URL="http://localhost:8080/output_iran/all_valid_proxies_for_iran.txt"
           ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$PROXY_URL', safe=''))")
           
           echo "Original Iran URL: $PROXY_URL"
           echo "Encoded Iran URL: $ENCODED_URL"
           
-          # Test if the Iran proxy file is accessible
-          echo "Testing Iran proxy file accessibility..."
-          curl -I "$PROXY_URL" || echo "Iran proxy file not accessible"
+          # Test direct file access first
+          echo "Testing direct Iran proxy file access..."
+          curl -f "$PROXY_URL" | head -n 3 || echo "Direct access failed"
           
           for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting Iran proxies to $type format..."
             
-            # Try with different parameter combinations
             API_URL="http://localhost:25500/sub?target=$type&url=$ENCODED_URL"
             echo "Iran API URL: $API_URL"
             
             # Use subconverter API to convert proxies
-            curl -v -X GET "$API_URL" \
-              -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
               -H "User-Agent: ClashX/1.30.1" \
               --connect-timeout 30 \
-              --max-time 120
+              --max-time 120 \
+              "$API_URL")
             
-            CURL_EXIT_CODE=$?
-            echo "Curl exit code: $CURL_EXIT_CODE"
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            CONTENT=$(echo "$RESPONSE" | sed '$d')
             
-            if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
+            echo "HTTP Code: $HTTP_CODE"
+            
+            if [ "$HTTP_CODE" = "200" ] && [ -n "$CONTENT" ]; then
+              echo "$CONTENT" > "${{ github.workspace }}/output_iran/converted/$type.txt"
               echo "Successfully converted Iran proxies to $type"
               echo "File size: $(wc -c < "${{ github.workspace }}/output_iran/converted/$type.txt") bytes"
+              echo "Content preview:"
+              head -n 3 "${{ github.workspace }}/output_iran/converted/$type.txt"
             else
-              echo "Failed to convert Iran proxies to $type (exit code: $CURL_EXIT_CODE)"
-              if [ -f "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
-                echo "Response content:"
-                head -n 10 "${{ github.workspace }}/output_iran/converted/$type.txt"
-              fi
+              echo "Failed to convert Iran proxies to $type (HTTP: $HTTP_CODE)"
+              echo "Error response:"
+              echo "$CONTENT"
               # Create empty file if conversion failed
               touch "${{ github.workspace }}/output_iran/converted/$type.txt"
             fi
@@ -166,6 +199,7 @@ jobs:
           done
 
       - name: Stop services
+        if: always()
         run: |
           # Stop subconverter
           docker stop subconverter || true
@@ -177,10 +211,14 @@ jobs:
           fi
 
       ##############################
-      # Commit and push - Use same approach as working workflow
+      # Commit and push
       ##############################
       - name: Commit and push changes (force)
         run: |
           git add output/converted/ output_iran/converted/
-          git commit -m "Update converted proxy lists [skip ci]" || echo "No changes to commit"
-          git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update converted proxy lists [skip ci]"
+            git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+          fi
