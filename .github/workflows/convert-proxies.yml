@@ -51,25 +51,51 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           
-          # URL encode the path to the proxy file
-          PROXY_URL="http://host.docker.internal:8080/output/all_valid_proxies.txt"
+          # First test the subconverter API
+          echo "Testing subconverter API..."
+          curl -v "http://localhost:25500/version" || echo "Version endpoint failed"
           
-          for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
+          # URL encode the proxy file URL properly
+          PROXY_URL="http://host.docker.internal:8080/output/all_valid_proxies.txt"
+          ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$PROXY_URL', safe=''))")
+          
+          echo "Original URL: $PROXY_URL"
+          echo "Encoded URL: $ENCODED_URL"
+          
+          # Test if the proxy file is accessible
+          echo "Testing proxy file accessibility..."
+          curl -I "$PROXY_URL" || echo "Proxy file not accessible"
+          
+          for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting to $type format..."
             
-            # Use subconverter API to convert proxies
-            curl -X GET "http://localhost:25500/sub?target=$type&url=$(echo "$PROXY_URL" | sed 's/:/%3A/g; s|/|%2F|g')&config=" \
-              -o "${{ github.workspace }}/output/converted/$type.txt" \
-              -H "User-Agent: ClashforWindows/0.18.1" \
-              --fail --silent --show-error
+            # Try with different parameter combinations
+            API_URL="http://localhost:25500/sub?target=$type&url=$ENCODED_URL"
+            echo "API URL: $API_URL"
             
-            if [ $? -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
+            # Use subconverter API to convert proxies
+            curl -v -X GET "$API_URL" \
+              -o "${{ github.workspace }}/output/converted/$type.txt" \
+              -H "User-Agent: ClashX/1.30.1" \
+              --connect-timeout 30 \
+              --max-time 120
+            
+            CURL_EXIT_CODE=$?
+            echo "Curl exit code: $CURL_EXIT_CODE"
+            
+            if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
               echo "Successfully converted to $type"
+              echo "File size: $(wc -c < "${{ github.workspace }}/output/converted/$type.txt") bytes"
             else
-              echo "Failed to convert to $type or file is empty"
+              echo "Failed to convert to $type (exit code: $CURL_EXIT_CODE)"
+              if [ -f "${{ github.workspace }}/output/converted/$type.txt" ]; then
+                echo "Response content:"
+                head -n 10 "${{ github.workspace }}/output/converted/$type.txt"
+              fi
               # Create empty file if conversion failed
               touch "${{ github.workspace }}/output/converted/$type.txt"
             fi
+            echo "---"
           done
 
       ##############################
@@ -79,25 +105,47 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           
-          # URL encode the path to the Iran proxy file
+          # URL encode the Iran proxy file URL properly
           PROXY_URL="http://host.docker.internal:8080/output_iran/all_valid_proxies_for_iran.txt"
+          ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$PROXY_URL', safe=''))")
           
-          for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
+          echo "Original Iran URL: $PROXY_URL"
+          echo "Encoded Iran URL: $ENCODED_URL"
+          
+          # Test if the Iran proxy file is accessible
+          echo "Testing Iran proxy file accessibility..."
+          curl -I "$PROXY_URL" || echo "Iran proxy file not accessible"
+          
+          for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting Iran proxies to $type format..."
             
-            # Use subconverter API to convert proxies
-            curl -X GET "http://localhost:25500/sub?target=$type&url=$(echo "$PROXY_URL" | sed 's/:/%3A/g; s|/|%2F|g')&config=" \
-              -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
-              -H "User-Agent: ClashforWindows/0.18.1" \
-              --fail --silent --show-error
+            # Try with different parameter combinations
+            API_URL="http://localhost:25500/sub?target=$type&url=$ENCODED_URL"
+            echo "Iran API URL: $API_URL"
             
-            if [ $? -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
+            # Use subconverter API to convert proxies
+            curl -v -X GET "$API_URL" \
+              -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
+              -H "User-Agent: ClashX/1.30.1" \
+              --connect-timeout 30 \
+              --max-time 120
+            
+            CURL_EXIT_CODE=$?
+            echo "Curl exit code: $CURL_EXIT_CODE"
+            
+            if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
               echo "Successfully converted Iran proxies to $type"
+              echo "File size: $(wc -c < "${{ github.workspace }}/output_iran/converted/$type.txt") bytes"
             else
-              echo "Failed to convert Iran proxies to $type or file is empty"
+              echo "Failed to convert Iran proxies to $type (exit code: $CURL_EXIT_CODE)"
+              if [ -f "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
+                echo "Response content:"
+                head -n 10 "${{ github.workspace }}/output_iran/converted/$type.txt"
+              fi
               # Create empty file if conversion failed
               touch "${{ github.workspace }}/output_iran/converted/$type.txt"
             fi
+            echo "---"
           done
 
       - name: Stop services
