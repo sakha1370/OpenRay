@@ -1,0 +1,74 @@
+name: Proxy Checker
+
+# Trigger workflow
+on:
+  schedule:
+    # Run at minute 0 of every 2nd hour
+    - cron: '0 */2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+# Permissions (top-level fallback)
+permissions:
+  contents: write
+
+concurrency:
+  group: proxy-checker-main
+  cancel-in-progress: false   # Queue new runs until the previous one finishes
+
+jobs:
+  check-proxies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    # Checkout repository with full history
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Configure Git user
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    # Set up Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tqdm
+        pip install aiohttp
+        pip install aioping
+        pip install geoip2
+
+    # Install Xray core
+    - name: Install Xray core
+      run: |
+        # Download and install Xray (extract to isolated directory to avoid overwrite prompts)
+        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        mkdir -p xray-dist
+        unzip -q -n Xray-linux-64.zip -d xray-dist
+        chmod +x xray-dist/xray
+        sudo mv xray-dist/xray /usr/local/bin/
+        rm -rf xray-dist Xray-linux-64.zip
+        # Verify installation
+        xray version
+
+    # Run proxy checker script
+    - name: Run proxy checker
+      run: python -m src.main
+
+    # Commit and push changes directly to the main
+    - name: Commit and push changes (force)
+      run: |
+        git add .state/ output/
+        git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
+        git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
