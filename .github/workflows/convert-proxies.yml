@@ -32,8 +32,6 @@ jobs:
           # Wait for services to be ready
           sleep 8
 
-      ____________________
-
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
@@ -41,8 +39,6 @@ jobs:
             curl "http://127.0.0.1:25500/sub?target=$type&url=http://127.0.0.1:8000/output/all_valid_proxies.txt" \
               -o "${{ github.workspace }}/output/converted/general_${type}.yaml" || true
           done
-
-      ____________________
 
       - name: Convert Iran proxies
         run: |
@@ -52,15 +48,11 @@ jobs:
               -o "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" || true
           done
 
-      ____________________
-
       - name: Stop subconverter
         if: always()
         run: |
           docker stop subconverter
           docker rm subconverter
-
-      ____________________
 
       - name: Commit and push changes (force)
         run: |
