@@ -20,40 +20,53 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # This step starts a simple python web server on port 8000 to serve the files
-      - name: Start a temporary web server
+      # Start a simple Python web server to serve the files
+      - name: Start temporary web server
         run: |
           python3 -m http.server 8000 &
 
-      # This step starts the subconverter container
+      # Start the subconverter container
       - name: Start subconverter server
         run: |
           docker run -d --name subconverter -p 25500:25500 tindy2013/subconverter
-          # Wait for services to be ready
-          sleep 8
+          sleep 12  # wait for server to be ready
 
+      # Convert general proxies
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             curl "http://127.0.0.1:25500/sub?target=$type&url=http://127.0.0.1:8000/output/all_valid_proxies.txt" \
               -o "${{ github.workspace }}/output/converted/general_${type}.yaml" || true
+            # Fail if the file is empty
+            if [ ! -s "${{ github.workspace }}/output/converted/general_${type}.yaml" ]; then
+              echo "Error: general_${type}.yaml is empty!"
+              exit 1
+            fi
           done
 
+      # Convert Iran proxies
       - name: Convert Iran proxies
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
             curl "http://127.0.0.1:25500/sub?target=$type&url=http://127.0.0.1:8000/output_iran/all_valid_proxies_for_iran.txt" \
               -o "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" || true
+            # Fail if the file is empty
+            if [ ! -s "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" ]; then
+              echo "Error: iran_${type}.yaml is empty!"
+              exit 1
+            fi
           done
 
+      # Stop the subconverter container
       - name: Stop subconverter
         if: always()
         run: |
           docker stop subconverter
           docker rm subconverter
 
+      # Commit and push changes
       - name: Commit and push changes (force)
         run: |
           git config user.name "github-actions"
