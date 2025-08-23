@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 from .constants import USER_AGENT, PING_TIMEOUT_MS, TCP_FALLBACK_PORTS, FETCH_TIMEOUT, CONNECT_TIMEOUT_MS, PROBE_TIMEOUT_MS, V2RAY_CORE_PATH, ENABLE_STAGE2, FETCH_WORKERS, PING_WORKERS
 from .common import log, progress
+from .geo import get_country_code_geoip2
 
 
 def _idna(host: str) -> str:
@@ -198,27 +199,20 @@ def is_dynamic_host(host: str) -> bool:
 def _get_country_code_for_host(host: str, timeout: int = 5) -> Optional[str]:
     try:
         if _is_ip_address(host):
-            ip = host
+            cc = get_country_code_geoip2(host)
+            if cc:
+                return cc
+            # fallback to old method if GeoIP2 fails
+            url = f"http://ip-api.com/json/{host}?fields=countryCode"
+            with urlopen(url, timeout=timeout) as resp:
+                data = resp.read(1024)
+                obj = json.loads(data.decode('utf-8', errors='ignore') or '{}')
+                cc = obj.get('countryCode')
+                if isinstance(cc, str) and len(cc) == 2:
+                    return cc.upper()
         else:
-            try:
-                # Prefer IPv4 if available
-                infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
-                ip = None
-                for fam, _, _, _, sockaddr in infos:
-                    if fam == socket.AF_INET:
-                        ip = sockaddr[0]
-                        break
-                if not ip and infos:
-                    ip = infos[0][4][0]
-            except Exception:
-                ip = host
-        url = f"http://ip-api.com/json/{ip}?fields=countryCode"
-        with urlopen(url, timeout=timeout) as resp:
-            data = resp.read(1024)
-            obj = json.loads(data.decode('utf-8', errors='ignore') or '{}')
-            cc = obj.get('countryCode')
-            if isinstance(cc, str) and len(cc) == 2:
-                return cc.upper()
+            # Only use country name for static IPs, else None
+            return None
     except Exception:
         return None
     return None
