@@ -37,36 +37,30 @@ jobs:
         run: |
           echo "clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox" > proxy_types.txt
 
-      # 5. Convert general proxies
-      - name: Convert general proxies
+      - name: Convert proxies
         run: |
-          types=$(cat proxy_types.txt)
-          for type in $types; do
-            ./subconverter/subconverter \
-              -i "file://${{ github.workspace }}/output/all_valid_proxies.txt" \
-              -o "$type" -f yaml -c > "${{ github.workspace }}/output/converted/general_${type}.yaml"
-            
-            # Fail if the file is empty
-            if [ ! -s "${{ github.workspace }}/output/converted/general_${type}.yaml" ]; then
-              echo "Error: general_${type}.yaml is empty!"
-              exit 1
-            fi
-          done
+          convert_proxies() {
+            input_file=$1
+            output_dir=$2
+            proxy_types=(clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox)
+      
+            mkdir -p "$output_dir"
+      
+            for type in "${proxy_types[@]}"; do
+              ./subconverter/subconverter \
+                -i "file://$input_file" \
+                -o "$type" -f yaml -c > "$output_dir/${type}.yaml"
+      
+              if [ ! -s "$output_dir/${type}.yaml" ]; then
+                echo "Error: ${type}.yaml is empty!"
+                exit 1
+              fi
+            done
+          }
+      
+          convert_proxies "${{ github.workspace }}/output/all_valid_proxies.txt" "${{ github.workspace }}/output/converted"
+          convert_proxies "${{ github.workspace }}/output_iran/all_valid_proxies_for_iran.txt" "${{ github.workspace }}/output_iran/converted"
 
-      # 6. Convert Iran proxies
-      - name: Convert Iran proxies
-        run: |
-          types=$(cat proxy_types.txt)
-          for type in $types; do
-            ./subconverter/subconverter \
-              -i "file://${{ github.workspace }}/output_iran/all_valid_proxies_for_iran.txt" \
-              -o "$type" -f yaml -c > "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml"
-            
-            if [ ! -s "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" ]; then
-              echo "Error: iran_${type}.yaml is empty!"
-              exit 1
-            fi
-          done
 
       # 7. Commit and push changes
       - name: Commit and push changes
