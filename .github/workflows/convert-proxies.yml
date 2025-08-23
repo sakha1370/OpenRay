@@ -20,6 +20,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Download Subconverter binary
+        run: |
+          curl -L -o subconverter https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux_amd64
+          chmod +x subconverter
+
       - name: Create output folders
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
@@ -29,9 +34,8 @@ jobs:
       - name: Convert general proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}/output:/app/output tindy2013/subconverter \
-              sub -i /app/output/all_valid_proxies.txt -t $type -o /app/output/converted/general_${type}.yaml
-            if [ ! -s "${{ github.workspace }}/output/converted/general_${type}.yaml" ]; then
+            ./subconverter sub -i output/all_valid_proxies.txt -t $type -o output/converted/general_${type}.yaml
+            if [ ! -s "output/converted/general_${type}.yaml" ]; then
               echo "Error: general_${type}.yaml is empty!"
               exit 1
             fi
@@ -41,16 +45,15 @@ jobs:
       - name: Convert Iran proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}/output_iran:/app/output tindy2013/subconverter \
-              sub -i /app/output/all_valid_proxies_for_iran.txt -t $type -o /app/output/converted/iran_${type}.yaml
-            if [ ! -s "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" ]; then
+            ./subconverter sub -i output_iran/all_valid_proxies_for_iran.txt -t $type -o output_iran/converted/iran_${type}.yaml
+            if [ ! -s "output_iran/converted/iran_${type}.yaml" ]; then
               echo "Error: iran_${type}.yaml is empty!"
               exit 1
             fi
           done
 
-      # Commit and push converted files
-      - name: Commit and push changes
+      # Commit and push changes
+      - name: Commit and push
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
