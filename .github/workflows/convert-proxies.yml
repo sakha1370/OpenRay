@@ -20,6 +20,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Start subconverter server
+        run: |
+          docker run -d --name subconverter -v ${{ github.workspace }}:/data -p 25500:25500 tindy2013/subconverter
+          # صبر می‌کنیم تا سرویس بالا بیاد
+          sleep 8
+
       ##############################
       # Convert general proxies
       ##############################
@@ -27,8 +33,8 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              subconverter -g -F /data/output/all_valid_proxies.txt -T $type -O /data/output/converted/
+            curl "http://127.0.0.1:25500/sub?target=$type&url=file:///data/output/all_valid_proxies.txt" \
+              -o "${{ github.workspace }}/output/converted/general_${type}.yaml" || true
           done
 
       ##############################
@@ -38,10 +44,17 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
-              subconverter -g -F /data/output_iran/all_valid_proxies_for_iran.txt -T $type -O /data/output_iran/converted/
+            curl "http://127.0.0.1:25500/sub?target=$type&url=file:///data/output_iran/all_valid_proxies_for_iran.txt" \
+              -o "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" || true
           done
 
+      ##############################
+      # Stop subconverter
+      ##############################
+      - name: Stop subconverter
+        run: |
+          docker stop subconverter
+          docker rm subconverter
 
       ##############################
       # Commit and push
