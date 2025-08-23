@@ -20,45 +20,48 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # This step starts a simple python web server on port 8000 to serve the files
+      - name: Start a temporary web server
+        run: |
+          python3 -m http.server 8000 &
+
+      # This step starts the subconverter container
       - name: Start subconverter server
         run: |
-          docker run -d --name subconverter -v ${{ github.workspace }}:/data -p 25500:25500 tindy2013/subconverter
-          # صبر می‌کنیم تا سرویس بالا بیاد
+          docker run -d --name subconverter -p 25500:25500 tindy2013/subconverter
+          # Wait for services to be ready
           sleep 8
 
-      ##############################
-      # Convert general proxies
-      ##############################
+      ____________________
+
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            curl "http://127.0.0.1:25500/sub?target=$type&url=file:///data/output/all_valid_proxies.txt" \
+            curl "http://127.0.0.1:25500/sub?target=$type&url=http://127.0.0.1:8000/output/all_valid_proxies.txt" \
               -o "${{ github.workspace }}/output/converted/general_${type}.yaml" || true
           done
 
-      ##############################
-      # Convert Iran proxies
-      ##############################
+      ____________________
+
       - name: Convert Iran proxies
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            curl "http://127.0.0.1:25500/sub?target=$type&url=file:///data/output_iran/all_valid_proxies_for_iran.txt" \
+            curl "http://127.0.0.1:25500/sub?target=$type&url=http://127.0.0.1:8000/output_iran/all_valid_proxies_for_iran.txt" \
               -o "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" || true
           done
 
-      ##############################
-      # Stop subconverter
-      ##############################
+      ____________________
+
       - name: Stop subconverter
+        if: always()
         run: |
           docker stop subconverter
           docker rm subconverter
 
-      ##############################
-      # Commit and push
-      ##############################
+      ____________________
+
       - name: Commit and push changes (force)
         run: |
           git config user.name "github-actions"
