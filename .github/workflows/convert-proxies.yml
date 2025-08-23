@@ -24,7 +24,7 @@ jobs:
         run: |
           curl -L -o subconverter.tar.gz https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz
           tar -zxvf subconverter.tar.gz
-          chmod +x subconverter
+          chmod +x subconverter/subconverter
 
       # 3. Create output directories
       - name: Create output directories
@@ -32,11 +32,20 @@ jobs:
           mkdir -p ${{ github.workspace }}/output/converted
           mkdir -p ${{ github.workspace }}/output_iran/converted
 
-      # 4. Convert general proxies
+      # 4. Define proxy types
+      - name: Set proxy types
+        run: |
+          echo "clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox" > proxy_types.txt
+
+      # 5. Convert general proxies
       - name: Convert general proxies
         run: |
-          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            ./subconverter -i file://${{ github.workspace }}/output/all_valid_proxies.txt -o $type -f yaml -c > "${{ github.workspace }}/output/converted/general_${type}.yaml"
+          types=$(cat proxy_types.txt)
+          for type in $types; do
+            ./subconverter/subconverter \
+              -i "file://${{ github.workspace }}/output/all_valid_proxies.txt" \
+              -o "$type" -f yaml -c > "${{ github.workspace }}/output/converted/general_${type}.yaml"
+            
             # Fail if the file is empty
             if [ ! -s "${{ github.workspace }}/output/converted/general_${type}.yaml" ]; then
               echo "Error: general_${type}.yaml is empty!"
@@ -44,23 +53,26 @@ jobs:
             fi
           done
 
-      # 5. Convert Iran proxies
+      # 6. Convert Iran proxies
       - name: Convert Iran proxies
         run: |
-          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            ./subconverter -i file://${{ github.workspace }}/output_iran/all_valid_proxies_for_iran.txt -o $type -f yaml -c > "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml"
-            # Fail if the file is empty
+          types=$(cat proxy_types.txt)
+          for type in $types; do
+            ./subconverter/subconverter \
+              -i "file://${{ github.workspace }}/output_iran/all_valid_proxies_for_iran.txt" \
+              -o "$type" -f yaml -c > "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml"
+            
             if [ ! -s "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" ]; then
               echo "Error: iran_${type}.yaml is empty!"
               exit 1
             fi
           done
 
-      # 6. Commit and push changes
+      # 7. Commit and push changes
       - name: Commit and push changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add output/converted/ output_iran/converted/
           git commit -m "Update converted proxy lists [skip ci]" || echo "No changes to commit"
-          git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+          git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
