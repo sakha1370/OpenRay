@@ -20,17 +20,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Download Subconverter binary
+      - name: Download Linux AMD64 Subconverter binary
         run: |
           curl -L -o subconverter https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux_amd64
           chmod +x subconverter
+          file subconverter   # Verify it's a Linux executable
 
       - name: Create output folders
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           mkdir -p ${{ github.workspace }}/output_iran/converted
 
-      # Convert general proxies
       - name: Convert general proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
@@ -41,7 +41,6 @@ jobs:
             fi
           done
 
-      # Convert Iran proxies
       - name: Convert Iran proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
@@ -52,7 +51,6 @@ jobs:
             fi
           done
 
-      # Commit and push changes
       - name: Commit and push
         run: |
           git config user.name "github-actions"
