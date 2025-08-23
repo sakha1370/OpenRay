@@ -3,8 +3,8 @@ name: Proxy Checker
 # Trigger workflow
 on:
   schedule:
-    # Run at minute 0 of every hour
-    - cron: '0 * * * *'
+    # Run at minute 0 of every 2nd hour
+    - cron: '0 */2 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 # Permissions (top-level fallback)
@@ -67,10 +67,8 @@ jobs:
       run: python -m src.main
 
     # Commit and push changes directly to the main
-    - name: Commit and push changes
+    - name: Commit and push changes (force)
       run: |
         git add .state/ output/
         git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
-        git fetch origin main
-        git rebase origin/main
-        git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+        git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
