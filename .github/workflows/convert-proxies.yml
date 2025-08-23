@@ -7,7 +7,6 @@ on:
       - output_iran/all_valid_proxies_for_iran.txt
   workflow_dispatch:
 
-# Add permissions at workflow level
 permissions:
   contents: write
 
@@ -18,388 +17,38 @@ jobs:
       contents: write
 
     steps:
-      # Use same checkout configuration as working workflow
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      # Use same Git configuration as working workflow
-      - name: Configure Git user
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Setup Python for HTTP server
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Debug proxy file format
-        run: |
-          echo "=== Proxy File Analysis ==="
-          if [ -f "output/all_valid_proxies.txt" ]; then
-            echo "General proxy file exists"
-            echo "File size: $(wc -c < output/all_valid_proxies.txt) bytes"
-            echo "Line count: $(wc -l < output/all_valid_proxies.txt) lines"
-            echo "First 5 lines:"
-            head -n 5 output/all_valid_proxies.txt
-            echo "Sample proxy formats found:"
-            grep -E "^(vmess|vless|trojan|ss|ssr)://" output/all_valid_proxies.txt | head -n 3 || echo "No standard proxy URLs found"
-          else
-            echo "General proxy file not found"
-          fi
-          
-          if [ -f "output_iran/all_valid_proxies_for_iran.txt" ]; then
-            echo "Iran proxy file exists"
-            echo "File size: $(wc -c < output_iran/all_valid_proxies_for_iran.txt) bytes"
-            echo "Line count: $(wc -l < output_iran/all_valid_proxies_for_iran.txt) lines"
-            echo "First 5 lines:"
-            head -n 5 output_iran/all_valid_proxies_for_iran.txt
-          else
-            echo "Iran proxy file not found"
-          fi
-
-      - name: Start subconverter service with custom config
-        run: |
-          # Create a custom config for subconverter
-          mkdir -p /tmp/subconverter-config
-          
-          # Create a basic config file
-          cat > /tmp/subconverter-config/pref.yml << 'EOF'
-          version: 1
-          
-          common:
-            api_mode: true
-            api_access_token: ""
-            default_url_encoding: false
-            enable_base_gen: false
-            max_pending_connections: 10
-            max_concurrent_threads: 4
-            serve_file_root: ""
-          
-          userinfo:
-            stream_rule:
-              - {import: false}
-            time_rule:
-              - {import: false}
-          
-          node_pref:
-            udp_flag: false
-            tcp_fast_open_flag: false
-            skip_cert_verify_flag: false
-            tls13_flag: false
-          
-          managed_config:
-            write_managed_config: true
-            managed_config_prefix: "https://example.com"
-            config_update_interval: 86400
-            config_update_strict: false
-            quic_qname: ""
-          
-          surge_ruleset:
-            enabled: true
-            
-          clash_rule_base: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/GeneralClashConfig.yml"
-          
-          mellow_ruleset:
-            enabled: true
-          
-          surfboard_ruleset:
-            enabled: true
-          
-          rename:
-            - {import: false}
-          
-          template:
-            template_path: ""
-          
-          aliases:
-            uri: ""
-          
-          tasks: []
-          
-          server_port: 25500
-          default_external_config: ""
-          insert_url: true
-          prepend_insert_url: true
-          EOF
-          
-          # Start subconverter with custom config
-          docker run -d --name subconverter \
-            -p 25500:25500 \
-            -v /tmp/subconverter-config:/opt/subconverter \
-            tindy2013/subconverter:latest
-          
-          # Wait for service to be ready
-          sleep 20
-          
-          # Test if service is running
-          for i in {1..10}; do
-            if curl -f http://localhost:25500/version; then
-              echo "Subconverter is ready"
-              break
-            else
-              echo "Attempt $i: Waiting for subconverter..."
-              sleep 3
-            fi
-          done
-
-      - name: Start HTTP server in background
-        run: |
-          # Start HTTP server to serve proxy files
-          cd ${{ github.workspace }}
-          python3 -m http.server 8080 &
-          HTTP_PID=$!
-          echo "HTTP_PID=$HTTP_PID" >> $GITHUB_ENV
-          
-          # Wait for HTTP server to start
-          sleep 5
-          
-          # Test if HTTP server is accessible
-          curl -I http://localhost:8080/ || (echo "HTTP server failed to start" && exit 1)
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       ##############################
-      # Convert general proxies with corrected target names
+      # Convert general proxies
       ##############################
       - name: Convert general proxies
         run: |
-          mkdir -p ${{ github.workspace }}/output/converted
-          
-          # Check if proxy file exists
-          if [ ! -f "output/all_valid_proxies.txt" ]; then
-            echo "General proxy file not found, skipping conversion"
-            # Use correct target names based on subconverter documentation
-            for type in clash clash.meta quan quanx surge surfboard loon ss ssd v2ray mixed auto singbox; do
-              touch "${{ github.workspace }}/output/converted/$type.txt"
-            done
-          else
-            echo "Converting general proxies..."
-            
-            # URL for the proxy file
-            LOCAL_URL="http://localhost:8080/output/all_valid_proxies.txt"
-            ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")
-            
-            # Define target mappings (subconverter_target -> filename)
-            declare -A targets=(
-              ["clash"]="clash"
-              ["clash.meta"]="meta"
-              ["quan"]="quantumult"
-              ["quanx"]="quantumult-x"
-              ["surge"]="surge"
-              ["surfboard"]="surfboard"
-              ["loon"]="loon"
-              ["ss"]="ss"
-              ["v2ray"]="v2ray"
-              ["singbox"]="sing-box"
-              ["mixed"]="mixed"
-            )
-            
-            for target in "${!targets[@]}"; do
-              filename="${targets[$target]}"
-              echo "Converting to $target format (output: $filename.txt)..."
-              
-              # Try conversion with proper target name
-              API_URL="http://localhost:25500/sub?target=$target&url=$ENCODED_URL&config=https%3A//raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online.ini"
-              
-              curl -X GET "$API_URL" \
-                -o "${{ github.workspace }}/output/converted/$filename.txt" \
-                -H "User-Agent: ClashforWindows/0.19.23" \
-                --connect-timeout 60 \
-                --max-time 300 \
-                --silent --show-error
-              
-              CURL_EXIT_CODE=$?
-              
-              if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$filename.txt" ]; then
-                FILE_SIZE=$(wc -c < "${{ github.workspace }}/output/converted/$filename.txt")
-                
-                # Check for error messages
-                if grep -q "No nodes were found\|Invalid target\|Error\|404\|500" "${{ github.workspace }}/output/converted/$filename.txt"; then
-                  echo "⚠ Conversion returned error for $target, trying without config..."
-                  
-                  # Try without external config
-                  curl -X GET "http://localhost:25500/sub?target=$target&url=$ENCODED_URL" \
-                    -o "${{ github.workspace }}/output/converted/$filename.txt" \
-                    -H "User-Agent: ClashforWindows/0.19.23" \
-                    --connect-timeout 60 \
-                    --max-time 300 \
-                    --silent --show-error
-                  
-                  if [ -s "${{ github.workspace }}/output/converted/$filename.txt" ] && ! grep -q "No nodes were found\|Invalid target\|Error" "${{ github.workspace }}/output/converted/$filename.txt"; then
-                    echo "✓ Successfully converted to $target without config ($FILE_SIZE bytes)"
-                  else
-                    echo "✗ Failed to convert to $target, creating empty file"
-                    touch "${{ github.workspace }}/output/converted/$filename.txt"
-                  fi
-                else
-                  echo "✓ Successfully converted to $target ($FILE_SIZE bytes)"
-                fi
-              else
-                echo "✗ Failed to convert to $target (curl exit: $CURL_EXIT_CODE)"
-                touch "${{ github.workspace }}/output/converted/$filename.txt"
-              fi
-            done
-          fi
+          mkdir -p /data/output/converted
+          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
+            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
+              -g -f /data/output/all_valid_proxies.txt -t $type -o /data/output/converted/$type
+          done
 
       ##############################
-      # Convert Iran proxies with corrected target names
+      # Convert Iran proxies
       ##############################
       - name: Convert Iran proxies
         run: |
-          mkdir -p ${{ github.workspace }}/output_iran/converted
-          
-          # Check if Iran proxy file exists
-          if [ ! -f "output_iran/all_valid_proxies_for_iran.txt" ]; then
-            echo "Iran proxy file not found, skipping conversion"
-            for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box mixed; do
-              touch "${{ github.workspace }}/output_iran/converted/$type.txt"
-            done
-          else
-            echo "Converting Iran proxies..."
-            
-            # URL for the Iran proxy file
-            LOCAL_URL="http://localhost:8080/output_iran/all_valid_proxies_for_iran.txt"
-            ENCODED_URL=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")
-            
-            # Define target mappings (subconverter_target -> filename)
-            declare -A targets=(
-              ["clash"]="clash"
-              ["clash.meta"]="meta"
-              ["quan"]="quantumult"
-              ["quanx"]="quantumult-x"
-              ["surge"]="surge"
-              ["surfboard"]="surfboard"
-              ["loon"]="loon"
-              ["ss"]="ss"
-              ["v2ray"]="v2ray"
-              ["singbox"]="sing-box"
-              ["mixed"]="mixed"
-            )
-            
-            for target in "${!targets[@]}"; do
-              filename="${targets[$target]}"
-              echo "Converting Iran proxies to $target format (output: $filename.txt)..."
-              
-              # Try conversion with proper target name
-              API_URL="http://localhost:25500/sub?target=$target&url=$ENCODED_URL&config=https%3A//raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online.ini"
-              
-              curl -X GET "$API_URL" \
-                -o "${{ github.workspace }}/output_iran/converted/$filename.txt" \
-                -H "User-Agent: ClashforWindows/0.19.23" \
-                --connect-timeout 60 \
-                --max-time 300 \
-                --silent --show-error
-              
-              CURL_EXIT_CODE=$?
-              
-              if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$filename.txt" ]; then
-                FILE_SIZE=$(wc -c < "${{ github.workspace }}/output_iran/converted/$filename.txt")
-                
-                # Check for error messages
-                if grep -q "No nodes were found\|Invalid target\|Error\|404\|500" "${{ github.workspace }}/output_iran/converted/$filename.txt"; then
-                  echo "⚠ Conversion returned error for Iran $target, trying without config..."
-                  
-                  # Try without external config
-                  curl -X GET "http://localhost:25500/sub?target=$target&url=$ENCODED_URL" \
-                    -o "${{ github.workspace }}/output_iran/converted/$filename.txt" \
-                    -H "User-Agent: ClashforWindows/0.19.23" \
-                    --connect-timeout 60 \
-                    --max-time 300 \
-                    --silent --show-error
-                  
-                  if [ -s "${{ github.workspace }}/output_iran/converted/$filename.txt" ] && ! grep -q "No nodes were found\|Invalid target\|Error" "${{ github.workspace }}/output_iran/converted/$filename.txt"; then
-                    echo "✓ Successfully converted Iran proxies to $target without config ($FILE_SIZE bytes)"
-                  else
-                    echo "✗ Failed to convert Iran proxies to $target, creating empty file"
-                    touch "${{ github.workspace }}/output_iran/converted/$filename.txt"
-                  fi
-                else
-                  echo "✓ Successfully converted Iran proxies to $target ($FILE_SIZE bytes)"
-                fi
-              else
-                echo "✗ Failed to convert Iran proxies to $target (curl exit: $CURL_EXIT_CODE)"
-                touch "${{ github.workspace }}/output_iran/converted/$filename.txt"
-              fi
-            done
-          fi
-
-      - name: Debug converted files and validate content
-        run: |
-          echo "=== Final Conversion Results ==="
-          echo "General proxies:"
-          for file in output/converted/*.txt; do
-            if [ -f "$file" ]; then
-              SIZE=$(wc -c < "$file")
-              LINES=$(wc -l < "$file")
-              echo "  $(basename "$file"): $SIZE bytes, $LINES lines"
-              
-              if [ $SIZE -gt 100 ]; then
-                # Show meaningful content for larger files
-                echo "    Status: ✓ Contains data"
-                case "$(basename "$file")" in
-                  "clash.txt"|"meta.txt")
-                    if grep -q "proxies:" "$file"; then
-                      echo "    Format: Valid Clash configuration detected"
-                    fi
-                    ;;
-                  "v2ray.txt")
-                    if grep -q "vmess\|vless\|trojan" "$file"; then
-                      echo "    Format: Valid proxy URLs detected"
-                    fi
-                    ;;
-                  "surge.txt"|"surfboard.txt")
-                    if grep -q "\[Proxy\]" "$file"; then
-                      echo "    Format: Valid Surge/Surfboard configuration"
-                    fi
-                    ;;
-                esac
-              elif [ $SIZE -gt 0 ]; then
-                echo "    Content: $(cat "$file" | tr '\n' ' ' | head -c 100)"
-              else
-                echo "    Status: ✗ Empty file"
-              fi
-            fi
+          mkdir -p /data/output_iran/converted
+          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
+            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
+              -g -f /data/output_iran/all_valid_proxies_for_iran.txt -t $type -o /data/output_iran/converted/$type
           done
-          
-          echo ""
-          echo "Iran proxies:"
-          for file in output_iran/converted/*.txt; do
-            if [ -f "$file" ]; then
-              SIZE=$(wc -c < "$file")
-              LINES=$(wc -l < "$file")
-              echo "  $(basename "$file"): $SIZE bytes, $LINES lines"
-              
-              if [ $SIZE -gt 100 ]; then
-                echo "    Status: ✓ Contains data"
-              elif [ $SIZE -gt 0 ]; then
-                echo "    Content: $(cat "$file" | tr '\n' ' ' | head -c 100)"
-              else
-                echo "    Status: ✗ Empty file"
-              fi
-            fi
-          done
-
-      - name: Stop services and cleanup
-        run: |
-          # Stop HTTP server
-          if [ ! -z "$HTTP_PID" ]; then
-            kill $HTTP_PID || true
-          fi
-          
-          # Stop subconverter
-          docker stop subconverter || true
-          docker rm subconverter || true
-          
-          # Clean up config
-          rm -rf /tmp/subconverter-config
 
       ##############################
-      # Commit and push - Use same approach as working workflow
+      # Commit and push
       ##############################
       - name: Commit and push changes (force)
         run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
           git add output/converted/ output_iran/converted/
           git commit -m "Update converted proxy lists [skip ci]" || echo "No changes to commit"
           git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
