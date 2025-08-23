@@ -14,16 +14,35 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Setup Python for HTTP server
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Start temporary HTTP server for proxy files
+        run: |
+          # Start a simple HTTP server to serve proxy files
+          cd ${{ github.workspace }}
+          python3 -m http.server 8080 &
+          HTTP_PID=$!
+          echo "HTTP_PID=$HTTP_PID" >> $GITHUB_ENV
+          
+          # Wait for HTTP server to start
+          sleep 3
+          
+          # Test if HTTP server is running
+          curl -f http://localhost:8080/ || (echo "HTTP server failed to start" && exit 1)
+
       - name: Start subconverter service
         run: |
           # Start subconverter as a service
-          docker run -d --name subconverter -p 25500:25500 tindy2013/subconverter:latest
+          docker run -d --name subconverter -p 25500:25500 --add-host=host.docker.internal:host-gateway tindy2013/subconverter:latest
           
           # Wait for service to be ready
           sleep 10
           
           # Test if service is running
-          curl -f http://localhost:25500/version || (echo "Service failed to start" && exit 1)
+          curl -f http://localhost:25500/version || (echo "Subconverter service failed to start" && exit 1)
 
       ##############################
       # Convert general proxies
@@ -32,22 +51,24 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           
-          # Read the proxy file content
-          PROXY_CONTENT=$(cat output/all_valid_proxies.txt | base64 -w 0)
+          # URL encode the path to the proxy file
+          PROXY_URL="http://host.docker.internal:8080/output/all_valid_proxies.txt"
           
           for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting to $type format..."
             
             # Use subconverter API to convert proxies
-            curl -X GET "http://localhost:25500/sub?target=$type&url=data:text/plain;base64,$PROXY_CONTENT&config=" \
+            curl -X GET "http://localhost:25500/sub?target=$type&url=$(echo "$PROXY_URL" | sed 's/:/%3A/g; s|/|%2F|g')&config=" \
               -o "${{ github.workspace }}/output/converted/$type.txt" \
               -H "User-Agent: ClashforWindows/0.18.1" \
               --fail --silent --show-error
             
-            if [ $? -eq 0 ]; then
+            if [ $? -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
               echo "Successfully converted to $type"
             else
-              echo "Failed to convert to $type"
+              echo "Failed to convert to $type or file is empty"
+              # Create empty file if conversion failed
+              touch "${{ github.workspace }}/output/converted/$type.txt"
             fi
           done
 
@@ -58,29 +79,37 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           
-          # Read the Iran proxy file content
-          PROXY_CONTENT=$(cat output_iran/all_valid_proxies_for_iran.txt | base64 -w 0)
+          # URL encode the path to the Iran proxy file
+          PROXY_URL="http://host.docker.internal:8080/output_iran/all_valid_proxies_for_iran.txt"
           
           for type in clash clash-meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
             echo "Converting Iran proxies to $type format..."
             
             # Use subconverter API to convert proxies
-            curl -X GET "http://localhost:25500/sub?target=$type&url=data:text/plain;base64,$PROXY_CONTENT&config=" \
+            curl -X GET "http://localhost:25500/sub?target=$type&url=$(echo "$PROXY_URL" | sed 's/:/%3A/g; s|/|%2F|g')&config=" \
               -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
               -H "User-Agent: ClashforWindows/0.18.1" \
               --fail --silent --show-error
             
-            if [ $? -eq 0 ]; then
+            if [ $? -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
               echo "Successfully converted Iran proxies to $type"
             else
-              echo "Failed to convert Iran proxies to $type"
+              echo "Failed to convert Iran proxies to $type or file is empty"
+              # Create empty file if conversion failed
+              touch "${{ github.workspace }}/output_iran/converted/$type.txt"
             fi
           done
 
-      - name: Stop subconverter service
+      - name: Stop services
         run: |
-          docker stop subconverter
-          docker rm subconverter
+          # Stop subconverter
+          docker stop subconverter || true
+          docker rm subconverter || true
+          
+          # Stop HTTP server
+          if [ ! -z "$HTTP_PID" ]; then
+            kill $HTTP_PID || true
+          fi
 
       ##############################
       # Commit and push
