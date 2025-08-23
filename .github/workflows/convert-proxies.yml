@@ -7,12 +7,29 @@ on:
       - output_iran/all_valid_proxies_for_iran.txt
   workflow_dispatch:
 
+# Add permissions at workflow level
+permissions:
+  contents: write
+
 jobs:
   convert:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      # Use same checkout configuration as working workflow
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Use same Git configuration as working workflow
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Python for HTTP server
         uses: actions/setup-python@v4
@@ -160,12 +177,10 @@ jobs:
           fi
 
       ##############################
-      # Commit and push
+      # Commit and push - Use same approach as working workflow
       ##############################
       - name: Commit and push changes (force)
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
           git add output/converted/ output_iran/converted/
           git commit -m "Update converted proxy lists [skip ci]" || echo "No changes to commit"
           git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
