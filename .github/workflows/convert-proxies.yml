@@ -1,74 +1,48 @@
-name: Proxy Checker
+name: Convert Proxies
 
-# Trigger workflow
 on:
-  schedule:
-    # Run at minute 0 of every 2nd hour
-    - cron: '0 */2 * * *'
-  workflow_dispatch:  # Allow manual trigger
-
-# Permissions (top-level fallback)
-permissions:
-  contents: write
-
-concurrency:
-  group: proxy-checker-main
-  cancel-in-progress: false   # Queue new runs until the previous one finishes
+  push:
+    paths:
+      - output/all_valid_proxies.txt
+      - output_iran/all_valid_proxies_for_iran.txt
+  workflow_dispatch:
 
 jobs:
-  check-proxies:
+  convert:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
-    # Checkout repository with full history
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        persist-credentials: false
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Configure Git user
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+      ##############################
+      # Convert general proxies
+      ##############################
+      - name: Convert general proxies
+        run: |
+          mkdir -p /data/output/converted
+          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
+            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
+              -g -f /data/output/all_valid_proxies.txt -t $type -o /data/output/converted/$type
+          done
 
-    # Set up Python
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      ##############################
+      # Convert Iran proxies
+      ##############################
+      - name: Convert Iran proxies
+        run: |
+          mkdir -p /data/output_iran/converted
+          for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
+            docker run --rm -v ${{ github.workspace }}:/data tindy2013/subconverter \
+              -g -f /data/output_iran/all_valid_proxies_for_iran.txt -t $type -o /data/output_iran/converted/$type
+          done
 
-    # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install tqdm
-        pip install aiohttp
-        pip install aioping
-        pip install geoip2
-
-    # Install Xray core
-    - name: Install Xray core
-      run: |
-        # Download and install Xray (extract to isolated directory to avoid overwrite prompts)
-        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        mkdir -p xray-dist
-        unzip -q -n Xray-linux-64.zip -d xray-dist
-        chmod +x xray-dist/xray
-        sudo mv xray-dist/xray /usr/local/bin/
-        rm -rf xray-dist Xray-linux-64.zip
-        # Verify installation
-        xray version
-
-    # Run proxy checker script
-    - name: Run proxy checker
-      run: python -m src.main
-
-    # Commit and push changes directly to the main
-    - name: Commit and push changes (force)
-      run: |
-        git add .state/ output/
-        git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
-        git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+      ##############################
+      # Commit and push
+      ##############################
+      - name: Commit and push changes (force)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add output/converted/ output_iran/converted/
+          git commit -m "Update converted proxy lists [skip ci]" || echo "No changes to commit"
+          git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
