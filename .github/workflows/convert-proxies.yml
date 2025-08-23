@@ -36,17 +36,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Start subconverter service with volume mount
+      - name: Start subconverter service
         run: |
-          # Create a shared directory and copy proxy files there
-          mkdir -p /tmp/shared-data
-          cp output/all_valid_proxies.txt /tmp/shared-data/ 2>/dev/null || echo "General proxy file not found"
-          cp output_iran/all_valid_proxies_for_iran.txt /tmp/shared-data/ 2>/dev/null || echo "Iran proxy file not found"
-          
-          # Start subconverter with volume mount to access files directly
+          # Start subconverter service
           docker run -d --name subconverter \
             -p 25500:25500 \
-            -v /tmp/shared-data:/app/data \
             tindy2013/subconverter:latest
           
           # Wait for service to be ready
@@ -55,15 +49,29 @@ jobs:
           # Test if service is running
           curl -f http://localhost:25500/version || (echo "Subconverter service failed to start" && exit 1)
 
+      - name: Start HTTP server in background
+        run: |
+          # Start HTTP server to serve proxy files
+          cd ${{ github.workspace }}
+          python3 -m http.server 8080 &
+          HTTP_PID=$!
+          echo "HTTP_PID=$HTTP_PID" >> $GITHUB_ENV
+          
+          # Wait for HTTP server to start
+          sleep 5
+          
+          # Test if HTTP server is accessible from localhost
+          curl -I http://localhost:8080/ || (echo "HTTP server failed to start" && exit 1)
+
       ##############################
-      # Convert general proxies
+      # Convert general proxies using chunked approach
       ##############################
       - name: Convert general proxies
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           
           # Check if proxy file exists
-          if [ ! -f "/tmp/shared-data/all_valid_proxies.txt" ]; then
+          if [ ! -f "output/all_valid_proxies.txt" ]; then
             echo "General proxy file not found, skipping conversion"
             for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
               touch "${{ github.workspace }}/output/converted/$type.txt"
@@ -71,56 +79,94 @@ jobs:
           else
             echo "Converting general proxies..."
             
-            # Read proxy content and use it directly via POST
-            PROXY_CONTENT=$(cat /tmp/shared-data/all_valid_proxies.txt)
+            # Create a temporary file with proxy content
+            PROXY_FILE="/tmp/proxies_general.txt"
+            cp output/all_valid_proxies.txt "$PROXY_FILE"
+            
+            # Get file size for debugging
+            FILE_SIZE=$(wc -c < "$PROXY_FILE")
+            LINE_COUNT=$(wc -l < "$PROXY_FILE")
+            echo "Proxy file size: $FILE_SIZE bytes, $LINE_COUNT lines"
             
             for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
               echo "Converting to $type format..."
               
-              # Method 1: Try with base64 encoded content
-              ENCODED_CONTENT=$(echo "$PROXY_CONTENT" | base64 -w 0)
+              # Create base64 encoded version in chunks to avoid argument length limits
+              TEMP_B64="/tmp/proxies_b64.txt"
+              base64 -w 0 "$PROXY_FILE" > "$TEMP_B64"
               
+              # Try conversion using file upload
               curl -X POST "http://localhost:25500/sub?target=$type" \
                 -H "Content-Type: application/x-www-form-urlencoded" \
-                -d "config=$ENCODED_CONTENT" \
+                --data-urlencode "config@$TEMP_B64" \
                 -o "${{ github.workspace }}/output/converted/$type.txt" \
                 --connect-timeout 30 \
                 --max-time 120 \
                 --silent --show-error
               
-              if [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
-                echo "✓ Successfully converted to $type ($(wc -c < "${{ github.workspace }}/output/converted/$type.txt") bytes)"
+              CURL_EXIT_CODE=$?
+              
+              if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
+                FILE_SIZE=$(wc -c < "${{ github.workspace }}/output/converted/$type.txt")
+                echo "✓ Successfully converted to $type ($FILE_SIZE bytes)"
+                
+                # Check if it's an error response
+                if grep -q "Error\|error\|404\|500" "${{ github.workspace }}/output/converted/$type.txt"; then
+                  echo "⚠ Response contains error, trying alternative method..."
+                  rm -f "$TEMP_B64"
+                  
+                  # Alternative: Try with raw content via HTTP server
+                  LOCAL_URL="http://localhost:8080/output/all_valid_proxies.txt"
+                  curl -X GET "http://localhost:25500/sub?target=$type&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")" \
+                    -o "${{ github.workspace }}/output/converted/$type.txt" \
+                    --connect-timeout 30 \
+                    --max-time 120 \
+                    --silent --show-error
+                  
+                  if [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
+                    echo "✓ Alternative method succeeded for $type"
+                  else
+                    echo "✗ Both methods failed for $type, creating empty file"
+                    touch "${{ github.workspace }}/output/converted/$type.txt"
+                  fi
+                fi
               else
-                echo "✗ Failed to convert to $type, trying alternative method..."
+                echo "✗ Failed to convert to $type (curl exit: $CURL_EXIT_CODE), trying HTTP URL method..."
+                rm -f "$TEMP_B64"
                 
-                # Method 2: Try with raw content via GET with data parameter
-                ENCODED_URL_CONTENT=$(echo "$PROXY_CONTENT" | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read()))")
-                
-                curl -X GET "http://localhost:25500/sub?target=$type&config=$ENCODED_URL_CONTENT" \
+                # Try with URL method as fallback
+                LOCAL_URL="http://localhost:8080/output/all_valid_proxies.txt"
+                curl -X GET "http://localhost:25500/sub?target=$type&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")" \
                   -o "${{ github.workspace }}/output/converted/$type.txt" \
                   --connect-timeout 30 \
                   --max-time 120 \
                   --silent --show-error
                 
                 if [ -s "${{ github.workspace }}/output/converted/$type.txt" ]; then
-                  echo "✓ Successfully converted to $type via alternative method"
+                  echo "✓ URL method succeeded for $type"
                 else
                   echo "✗ All methods failed for $type, creating empty file"
                   touch "${{ github.workspace }}/output/converted/$type.txt"
                 fi
               fi
+              
+              # Clean up temporary files
+              rm -f "$TEMP_B64"
             done
+            
+            # Clean up main temp file
+            rm -f "$PROXY_FILE"
           fi
 
       ##############################
-      # Convert Iran proxies
+      # Convert Iran proxies using same chunked approach
       ##############################
       - name: Convert Iran proxies
         run: |
           mkdir -p ${{ github.workspace }}/output_iran/converted
           
           # Check if Iran proxy file exists
-          if [ ! -f "/tmp/shared-data/all_valid_proxies_for_iran.txt" ]; then
+          if [ ! -f "output_iran/all_valid_proxies_for_iran.txt" ]; then
             echo "Iran proxy file not found, skipping conversion"
             for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
               touch "${{ github.workspace }}/output_iran/converted/$type.txt"
@@ -128,45 +174,83 @@ jobs:
           else
             echo "Converting Iran proxies..."
             
-            # Read proxy content and use it directly via POST
-            PROXY_CONTENT=$(cat /tmp/shared-data/all_valid_proxies_for_iran.txt)
+            # Create a temporary file with proxy content
+            PROXY_FILE="/tmp/proxies_iran.txt"
+            cp output_iran/all_valid_proxies_for_iran.txt "$PROXY_FILE"
+            
+            # Get file size for debugging
+            FILE_SIZE=$(wc -c < "$PROXY_FILE")
+            LINE_COUNT=$(wc -l < "$PROXY_FILE")
+            echo "Iran proxy file size: $FILE_SIZE bytes, $LINE_COUNT lines"
             
             for type in clash meta quantumult quantumult-x surge surfboard loon ss v2ray sing-box; do
               echo "Converting Iran proxies to $type format..."
               
-              # Method 1: Try with base64 encoded content
-              ENCODED_CONTENT=$(echo "$PROXY_CONTENT" | base64 -w 0)
+              # Create base64 encoded version in chunks
+              TEMP_B64="/tmp/proxies_iran_b64.txt"
+              base64 -w 0 "$PROXY_FILE" > "$TEMP_B64"
               
+              # Try conversion using file upload
               curl -X POST "http://localhost:25500/sub?target=$type" \
                 -H "Content-Type: application/x-www-form-urlencoded" \
-                -d "config=$ENCODED_CONTENT" \
+                --data-urlencode "config@$TEMP_B64" \
                 -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
                 --connect-timeout 30 \
                 --max-time 120 \
                 --silent --show-error
               
-              if [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
-                echo "✓ Successfully converted Iran proxies to $type ($(wc -c < "${{ github.workspace }}/output_iran/converted/$type.txt") bytes)"
+              CURL_EXIT_CODE=$?
+              
+              if [ $CURL_EXIT_CODE -eq 0 ] && [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
+                FILE_SIZE=$(wc -c < "${{ github.workspace }}/output_iran/converted/$type.txt")
+                echo "✓ Successfully converted Iran proxies to $type ($FILE_SIZE bytes)"
+                
+                # Check if it's an error response
+                if grep -q "Error\|error\|404\|500" "${{ github.workspace }}/output_iran/converted/$type.txt"; then
+                  echo "⚠ Response contains error, trying alternative method..."
+                  rm -f "$TEMP_B64"
+                  
+                  # Alternative: Try with raw content via HTTP server
+                  LOCAL_URL="http://localhost:8080/output_iran/all_valid_proxies_for_iran.txt"
+                  curl -X GET "http://localhost:25500/sub?target=$type&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")" \
+                    -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
+                    --connect-timeout 30 \
+                    --max-time 120 \
+                    --silent --show-error
+                  
+                  if [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
+                    echo "✓ Alternative method succeeded for Iran $type"
+                  else
+                    echo "✗ Both methods failed for Iran $type, creating empty file"
+                    touch "${{ github.workspace }}/output_iran/converted/$type.txt"
+                  fi
+                fi
               else
-                echo "✗ Failed to convert Iran proxies to $type, trying alternative method..."
+                echo "✗ Failed to convert Iran proxies to $type (curl exit: $CURL_EXIT_CODE), trying HTTP URL method..."
+                rm -f "$TEMP_B64"
                 
-                # Method 2: Try with raw content via GET
-                ENCODED_URL_CONTENT=$(echo "$PROXY_CONTENT" | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read()))")
-                
-                curl -X GET "http://localhost:25500/sub?target=$type&config=$ENCODED_URL_CONTENT" \
+                # Try with URL method as fallback
+                LOCAL_URL="http://localhost:8080/output_iran/all_valid_proxies_for_iran.txt"
+                curl -X GET "http://localhost:25500/sub?target=$type&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCAL_URL', safe=''))")" \
                   -o "${{ github.workspace }}/output_iran/converted/$type.txt" \
                   --connect-timeout 30 \
                   --max-time 120 \
                   --silent --show-error
                 
                 if [ -s "${{ github.workspace }}/output_iran/converted/$type.txt" ]; then
-                  echo "✓ Successfully converted Iran proxies to $type via alternative method"
+                  echo "✓ URL method succeeded for Iran $type"
                 else
                   echo "✗ All methods failed for Iran $type, creating empty file"
                   touch "${{ github.workspace }}/output_iran/converted/$type.txt"
                 fi
               fi
+              
+              # Clean up temporary files
+              rm -f "$TEMP_B64"
             done
+            
+            # Clean up main temp file
+            rm -f "$PROXY_FILE"
           fi
 
       - name: Debug converted files
@@ -175,31 +259,45 @@ jobs:
           echo "General proxies:"
           for file in output/converted/*.txt; do
             if [ -f "$file" ]; then
-              echo "  $(basename "$file"): $(wc -c < "$file") bytes, $(wc -l < "$file") lines"
-              if [ -s "$file" ]; then
-                echo "    First few chars: $(head -c 100 "$file" | tr '\n' ' ')"
+              SIZE=$(wc -c < "$file")
+              LINES=$(wc -l < "$file")
+              echo "  $(basename "$file"): $SIZE bytes, $LINES lines"
+              if [ $SIZE -gt 0 ] && [ $SIZE -lt 500 ]; then
+                echo "    Content preview: $(head -c 200 "$file" | tr '\n' ' ' | tr -d '\r')"
+              elif [ $SIZE -gt 0 ]; then
+                echo "    First line: $(head -n 1 "$file" | tr -d '\r\n')"
               fi
             fi
           done
           
+          echo ""
           echo "Iran proxies:"
           for file in output_iran/converted/*.txt; do
             if [ -f "$file" ]; then
-              echo "  $(basename "$file"): $(wc -c < "$file") bytes, $(wc -l < "$file") lines"
-              if [ -s "$file" ]; then
-                echo "    First few chars: $(head -c 100 "$file" | tr '\n' ' ')"
+              SIZE=$(wc -c < "$file")
+              LINES=$(wc -l < "$file")
+              echo "  $(basename "$file"): $SIZE bytes, $LINES lines"
+              if [ $SIZE -gt 0 ] && [ $SIZE -lt 500 ]; then
+                echo "    Content preview: $(head -c 200 "$file" | tr '\n' ' ' | tr -d '\r')"
+              elif [ $SIZE -gt 0 ]; then
+                echo "    First line: $(head -n 1 "$file" | tr -d '\r\n')"
               fi
             fi
           done
 
       - name: Stop services and cleanup
         run: |
+          # Stop HTTP server
+          if [ ! -z "$HTTP_PID" ]; then
+            kill $HTTP_PID || true
+          fi
+          
           # Stop subconverter
           docker stop subconverter || true
           docker rm subconverter || true
           
-          # Clean up shared data
-          rm -rf /tmp/shared-data
+          # Clean up any remaining temp files
+          rm -f /tmp/proxies_*.txt
 
       ##############################
       # Commit and push - Use same approach as working workflow
