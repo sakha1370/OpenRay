@@ -13,45 +13,51 @@ permissions:
 jobs:
   convert:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Download Linux AMD64 Subconverter binary
+      # 2. Download and extract subconverter
+      - name: Download and extract subconverter
         run: |
-          curl -L -o subconverter https://github.com/tindy2013/subconverter/releases/latest/download/subconverter_linux_amd64
+          curl -L -o subconverter.tar.gz https://github.com/tindy2013/subconverter/releases/download/v0.9.0/subconverter_linux64.tar.gz
+          tar -zxvf subconverter.tar.gz
           chmod +x subconverter
-          file subconverter   # Verify it's a Linux executable
 
-      - name: Create output folders
+      # 3. Create output directories
+      - name: Create output directories
         run: |
           mkdir -p ${{ github.workspace }}/output/converted
           mkdir -p ${{ github.workspace }}/output_iran/converted
 
+      # 4. Convert general proxies
       - name: Convert general proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            ./subconverter sub -i output/all_valid_proxies.txt -t $type -o output/converted/general_${type}.yaml
-            if [ ! -s "output/converted/general_${type}.yaml" ]; then
+            ./subconverter -i file://${{ github.workspace }}/output/all_valid_proxies.txt -o $type -f yaml -c > "${{ github.workspace }}/output/converted/general_${type}.yaml"
+            # Fail if the file is empty
+            if [ ! -s "${{ github.workspace }}/output/converted/general_${type}.yaml" ]; then
               echo "Error: general_${type}.yaml is empty!"
               exit 1
             fi
           done
 
+      # 5. Convert Iran proxies
       - name: Convert Iran proxies
         run: |
           for type in clash clashmeta quantumult quantumultx surge surfboard loon ss v2ray singbox; do
-            ./subconverter sub -i output_iran/all_valid_proxies_for_iran.txt -t $type -o output_iran/converted/iran_${type}.yaml
-            if [ ! -s "output_iran/converted/iran_${type}.yaml" ]; then
+            ./subconverter -i file://${{ github.workspace }}/output_iran/all_valid_proxies_for_iran.txt -o $type -f yaml -c > "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml"
+            # Fail if the file is empty
+            if [ ! -s "${{ github.workspace }}/output_iran/converted/iran_${type}.yaml" ]; then
               echo "Error: iran_${type}.yaml is empty!"
               exit 1
             fi
           done
 
-      - name: Commit and push
+      # 6. Commit and push changes
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
