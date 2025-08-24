@@ -67,6 +67,14 @@ This is an **open-source project**, made for the community, to help those who si
 ## 📑 Proxy Lists (For Iran)
 
 <details>
+<summary>Top 100 Most Reliable Proxies</summary>
+
+
+👉 [**Iran – Top 100 Most Reliable Proxies**](https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/iran_top100_checked.txt)
+
+</details>
+
+<details>
 <summary>Full Proxy Collection</summary>
 
 
