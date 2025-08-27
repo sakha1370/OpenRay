@@ -7,6 +7,12 @@ source /mnt/d/projects/OpenRay/.venv/bin/activate
 # Go to repo
 cd /mnt/d/projects/OpenRay
 
+# Try git pull, fallback to --no-rebase if it fails
+if ! git pull origin main; then
+    echo "git pull failed, retrying with --no-rebase..."
+    git pull origin main --no-rebase
+fi
+
 # Run your Python script
 python3 -m src.main_for_iran
 
