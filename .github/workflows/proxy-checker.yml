@@ -69,7 +69,11 @@ jobs:
     # Commit and push changes directly to the main
     - name: Commit and push changes (force)
       run: |
-        git pull --rebase origin main
+        # Try normal pull first, fallback to no-rebase merge
+        if ! git pull --rebase origin main; then
+          echo "Rebase failed, retrying with merge..."
+          git pull origin main --no-rebase -m "Auto merge from pull"
+        fi
         git add .state/ output/
         git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
         git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
