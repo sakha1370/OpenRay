@@ -69,6 +69,7 @@ jobs:
     # Commit and push changes directly to the main
     - name: Commit and push changes (force)
       run: |
+        git pull --rebase origin main
         git add .state/ output/
         git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
-        git push --force https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
+        git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
