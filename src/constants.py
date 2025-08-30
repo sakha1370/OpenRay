@@ -156,7 +156,7 @@ STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS',
                          _adaptive_stage3_workers(), 4, 256)
 
 # Limit for number of new URIs processed per run (overridable)
-NEW_URIS_LIMIT_ENABLED = _env_int('OPENRAY_NEW_URIS_LIMIT_ENABLED', 0, 0, 1)
+NEW_URIS_LIMIT_ENABLED = _env_int('OPENRAY_NEW_URIS_LIMIT_ENABLED', 1, 0, 1)
 NEW_URIS_LIMIT = _env_int('OPENRAY_NEW_URIS_LIMIT', 10000, 1, 1000000)
 
 def _auto_find_v2ray_core() -> str:

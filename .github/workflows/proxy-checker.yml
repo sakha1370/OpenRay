@@ -2,9 +2,9 @@ name: Proxy Checker
 
 # Trigger workflow
 on:
-  # schedule:
-  #   # Run at minute 0 of every 3rd hour
-  #   - cron: '0 * * * *'
+  schedule:
+    # Run at minute 0 of every 3rd hour
+    - cron: '0 */3 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 # Permissions (top-level fallback)
