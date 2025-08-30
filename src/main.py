@@ -82,7 +82,7 @@ def main() -> int:
 
     # Optionally re-validate current available proxies to drop broken ones
     host_success_run: Dict[str, bool] = {}
-    recheck_env = os.environ.get('OPENRAY_RECHECK_EXISTING', '0').strip().lower()
+    recheck_env = os.environ.get('OPENRAY_RECHECK_EXISTING', '1').strip().lower()
     do_recheck = recheck_env not in ('0', 'false', 'no')
     alive: List[str] = []
     host_map_existing: Dict[str, Optional[str]] = {}
