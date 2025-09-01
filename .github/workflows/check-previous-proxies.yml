@@ -1,4 +1,4 @@
-name: Proxy Checker
+name: Check Previous Proxies
 
 # Trigger workflow
 on:
@@ -12,11 +12,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: proxy-checker-main
+  group: check-previous-proxies
   cancel-in-progress: false   # Queue new runs until the previous one finishes
 
 jobs:
-  check-proxies:
+  check-previous-proxies:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -62,9 +62,9 @@ jobs:
         # Verify installation
         xray version
 
-    # Run proxy checker script
-    - name: Run proxy checker
-      run: python -m src.main
+    # Run proxy checker script for previous proxies only
+    - name: Run previous proxies checker
+      run: python -m src.main_existing_only
 
     # Commit and push changes directly to the main
     - name: Commit and push changes (force)
@@ -80,7 +80,7 @@ jobs:
 
         # Add and commit updated files
         git add .state/ output/
-        git commit -m "Update proxy lists [skip ci]" || echo "No changes to commit"
+        git commit -m "Update previous proxy lists [skip ci]" || echo "No changes to commit"
 
         # Push changes
         git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
