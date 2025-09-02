@@ -2,7 +2,9 @@ import os
 import sys
 import shutil
 import multiprocessing
-from typing import Optional, List
+import time
+from typing import Optional, List, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Determine repository root as parent of this src directory
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +32,31 @@ def _env_int(name: str, default: int, min_v: Optional[int] = None, max_v: Option
     if max_v is not None and n > max_v:
         n = max_v
     return n
+
+
+def _is_ci_env() -> bool:
+    """Detect common CI environments beyond just GitHub Actions.
+
+    Recognizes a broad set of CI-specific environment indicators.
+    """
+    try:
+        ci_vars = (
+            'CI', 'GITHUB_ACTIONS', 'GITLAB_CI', 'BUILD_ID', 'BUILD_NUMBER', 'TF_BUILD',
+            'CIRCLECI', 'TRAVIS', 'APPVEYOR', 'JENKINS_URL', 'TEAMCITY_VERSION',
+            'BITBUCKET_BUILD_NUMBER', 'DRONE', 'WOODPECKER', 'BUILDKITE'
+        )
+        for k in ci_vars:
+            v = os.environ.get(k)
+            if isinstance(v, str) and v.strip():
+                # Some providers set explicit boolean-like strings
+                if v.strip().lower() in ('1', 'true', 'yes', 'on'):
+                    return True
+                # Others just set a non-empty marker (e.g., Jenkins URL)
+                if k not in ('CI',):  # 'CI' is often set to 'true' specifically
+                    return True
+        return False
+    except Exception:
+        return False
 
 
 def _get_sources_file() -> str:
@@ -67,7 +94,7 @@ def _get_system_specs():
         memory_gb = psutil.virtual_memory().total / (1024 ** 3)
     except ImportError:
         # Fallback without psutil - estimate based on common CI environments
-        memory_gb = 16 if os.environ.get('GITHUB_ACTIONS') else 8
+        memory_gb = 16 if _is_ci_env() else 8
     except Exception:
         memory_gb = 8  # conservative fallback
 
@@ -97,7 +124,7 @@ def _adaptive_timeout(base_ms: int, is_network: bool = True) -> int:
     cpu_factor = 1.0 if cpu_cores >= 4 else 1.3
 
     # CI environments typically have better network
-    env_factor = 0.8 if os.environ.get('GITHUB_ACTIONS') else 1.0
+    env_factor = 0.8 if _is_ci_env() else 1.0
 
     if is_network:
         env_factor *= 0.9  # Network is usually good in CI
@@ -105,21 +132,154 @@ def _adaptive_timeout(base_ms: int, is_network: bool = True) -> int:
     return int(base_ms * cpu_factor * env_factor)
 
 
+def _benchmark_worker_pool(worker_counts: List[int], test_duration: float = 2.0) -> Tuple[int, float]:
+    """Benchmark different worker counts to find optimal performance.
+    
+    Returns: (optimal_worker_count, performance_score)
+    """
+    try:
+        # Simple benchmark: create/destroy thread pools and measure overhead
+        results = []
+        
+        for worker_count in worker_counts:
+            start_time = time.time()
+            
+            # Test pool creation and basic task execution
+            with ThreadPoolExecutor(max_workers=worker_count) as pool:
+                # Submit dummy tasks to warm up the pool
+                futures = [pool.submit(lambda: time.sleep(0.001)) for _ in range(min(worker_count * 2, 100))]
+                
+                # Wait for completion
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except Exception:
+                        pass
+            
+            end_time = time.time()
+            overhead = end_time - start_time
+            
+            # Score: lower overhead is better, but we want some workers
+            # Penalize very low worker counts (too slow) and very high (too much overhead)
+            if worker_count < 4:
+                score = overhead * 2  # Penalty for too few workers
+            elif worker_count > 128:
+                score = overhead * 1.5  # Penalty for too many workers
+            else:
+                score = overhead
+            
+            results.append((worker_count, score))
+        
+        # Find the worker count with best score
+        best_worker, best_score = min(results, key=lambda x: x[1])
+        return best_worker, best_score
+        
+    except Exception:
+        # Fallback to heuristic if benchmarking fails
+        return _adaptive_workers(16, 128, 32), 1.0
+
+def _discover_optimal_workers() -> Tuple[int, int]:
+    """Automatically discover optimal worker counts for current environment."""
+    try:
+        cpu_cores, memory_gb = _get_system_specs()
+        
+        # Test different worker ranges based on system specs
+        if _is_ci_env():
+            # CI environments: test higher ranges
+            test_ranges = [
+                list(range(16, 33, 4)),      # 16, 20, 24, 28, 32
+                list(range(32, 65, 8)),      # 32, 40, 48, 56, 64
+                list(range(64, 129, 16)),    # 64, 80, 96, 112, 128
+            ]
+        else:
+            # Local environments: test conservative ranges
+            test_ranges = [
+                list(range(4, 13, 2)),       # 4, 6, 8, 10, 12
+                list(range(8, 25, 4)),       # 8, 12, 16, 20, 24
+                list(range(16, 49, 8)),      # 16, 24, 32, 40, 48
+            ]
+        
+        # Find optimal for each type
+        optimal_fetch = _benchmark_worker_pool(test_ranges[0])[0]
+        optimal_ping = _benchmark_worker_pool(test_ranges[1])[0]
+        
+        # Apply memory constraints
+        max_by_memory = int(memory_gb * 1024 / 100)  # 100MB per worker estimate
+        
+        optimal_fetch = min(optimal_fetch, max_by_memory // 2)  # Fetch uses less memory
+        optimal_ping = min(optimal_ping, max_by_memory)
+        
+        return optimal_fetch, optimal_ping
+        
+    except Exception:
+        # Fallback to adaptive heuristics
+        return _adaptive_workers(6, 64, 8), _adaptive_workers(16, 128, 32)
+
+def _discover_optimal_timeouts() -> Tuple[int, int, int]:
+    """Automatically discover optimal timeout values for current environment."""
+    try:
+        cpu_cores, memory_gb = _get_system_specs()
+        
+        # Test network responsiveness
+        test_hosts = ['1.1.1.1', '8.8.8.8', '208.67.222.222']
+        timeouts = []
+        
+        for host in test_hosts:
+            try:
+                import socket
+                start = time.time()
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(5.0)
+                sock.connect((host, 443))
+                sock.close()
+                response_time = (time.time() - start) * 1000  # Convert to ms
+                timeouts.append(response_time)
+            except Exception:
+                timeouts.append(1000)  # Default 1 second
+        
+        # Calculate optimal timeouts based on network performance
+        avg_response = sum(timeouts) / len(timeouts) if timeouts else 1000
+        
+        # Base timeouts with network adaptation
+        ping_timeout = max(500, min(2000, int(avg_response * 2)))
+        connect_timeout = max(800, min(3000, int(avg_response * 3)))
+        probe_timeout = max(600, min(2500, int(avg_response * 2.5)))
+        
+        return ping_timeout, connect_timeout, probe_timeout
+        
+    except Exception:
+        # Fallback to adaptive timeouts
+        return _adaptive_timeout(1000, True), _adaptive_timeout(1500, True), _adaptive_timeout(1200, True)
 
 # Tuning (overridable by environment)
-# Adaptive parameter calculation
+# Auto-discovered optimal parameters with fallbacks
+_CI = _is_ci_env()
+
+# Auto-discover optimal parameters
+try:
+    _opt_fetch, _opt_ping = _discover_optimal_workers()
+    _opt_ping_timeout, _opt_connect_timeout, _opt_probe_timeout = _discover_optimal_timeouts()
+    print(f"Auto-discovered optimal parameters: FETCH={_opt_fetch}, PING={_opt_ping}, "
+          f"PING_TIMEOUT={_opt_ping_timeout}ms, CONNECT_TIMEOUT={_opt_connect_timeout}ms, "
+          f"PROBE_TIMEOUT={_opt_probe_timeout}ms")
+except Exception as e:
+    print(f"Auto-discovery failed, using heuristics: {e}")
+    _opt_fetch, _opt_ping = _adaptive_workers(8 if _CI else 6, 96 if _CI else 64, 16 if _CI else 8), _adaptive_workers(24 if _CI else 16, 192 if _CI else 256, 48 if _CI else 32)
+    _opt_ping_timeout, _opt_connect_timeout, _opt_probe_timeout = _adaptive_timeout(1000, True), _adaptive_timeout(1500, True), _adaptive_timeout(1200, True)
+
+# Timeouts
 FETCH_TIMEOUT = _env_int('OPENRAY_FETCH_TIMEOUT',
                         _adaptive_timeout(20000, True) // 1000, 1, 120)
-FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS',
-                        _adaptive_workers(6, 64, 8), 1, 256)
-PING_WORKERS = _env_int('OPENRAY_PING_WORKERS',
-                       _adaptive_workers(16, 256, 32), 1, 1024)
 PING_TIMEOUT_MS = _env_int('OPENRAY_PING_TIMEOUT_MS',
-                          _adaptive_timeout(1000, True), 100, 10000)
+                          _opt_ping_timeout, 100, 10000)
+
+# Workers (auto-discovered optimal values)
+FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS', _opt_fetch, 1, 256)
+PING_WORKERS = _env_int('OPENRAY_PING_WORKERS', _opt_ping, 1, 1024)
 
 # TCP connect timeout for checking specific proxy ports (ms)
 CONNECT_TIMEOUT_MS = _env_int('OPENRAY_CONNECT_TIMEOUT_MS',
-                             _adaptive_timeout(1500, True), 100, 10000)
+                             _opt_connect_timeout, 100, 10000)
 # Ports to try for TCP connectivity fallback (when ICMP ping is blocked, e.g., in CI)
 TCP_FALLBACK_PORTS: List[int] = [80, 443, 8080, 8443, 2052, 2082, 2086, 2095]
 USER_AGENT = (
@@ -130,7 +290,7 @@ USER_AGENT = (
 
 # Stage 2/3 controls (overridable by environment)
 ENABLE_STAGE2 = _env_int('OPENRAY_ENABLE_STAGE2', 1, 0, 1)  # 1=enable TLS probe after TCP
-PROBE_TIMEOUT_MS = _env_int('OPENRAY_PROBE_TIMEOUT_MS', 1200, 100, 10000)
+PROBE_TIMEOUT_MS = _env_int('OPENRAY_PROBE_TIMEOUT_MS', _opt_probe_timeout, 100, 10000)
 ENABLE_STAGE3 = _env_int('OPENRAY_ENABLE_STAGE3', 1, 0, 1)  # default enable
 # Validate up to many proxies with core by default (can be reduced via env)
 STAGE3_MAX = _env_int('OPENRAY_STAGE3_MAX', 5000, 1, 100000)
@@ -149,6 +309,11 @@ def _adaptive_stage3_workers() -> int:
 
     # Apply reasonable bounds
     workers = min(base_workers, max_by_memory)
+
+    # In CI environments, keep this modest to avoid OOM and process thrash
+    if _is_ci_env():
+        workers = min(workers, 12)
+
     return max(4, min(workers, 64))  # Range: 4-64 workers
 
 # Stage 3 adaptive workers
