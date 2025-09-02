@@ -8,33 +8,23 @@ from typing import Dict, List, Optional, Set, Tuple
 from .common import log, progress, sha1_hex
 from .constants import (
     AVAILABLE_FILE,
-    CONSECUTIVE_REQUIRED,
     PING_WORKERS,
     ENABLE_STAGE2,
     ENABLE_STAGE3,
     STAGE3_MAX,
-    OUTPUT_DIR,
     STAGE3_WORKERS,
 )
-from .geo import _build_country_counters, _country_flag
-from .grouping import regroup_available_by_country, write_grouped_outputs
+from .grouping import write_grouped_outputs
 from .io_ops import (
-    append_lines,
     ensure_dirs,
-    load_existing_available,
     load_streaks,
-    load_tested_hashes,
     read_lines,
     save_streaks,
 )
-from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
+from .net import ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core
 from .parsing import (
-    _set_remark,
     extract_host,
     extract_port,
-    extract_uris,
-    maybe_decode_subscription,
-    parse_source_line,
 )
 
 
@@ -176,14 +166,8 @@ def main() -> int:
 
     # Group and write outputs
     if alive:
-        # Get country codes for alive proxies
-        country_codes = get_country_codes_batch(alive)
-        
-        # Group by country
-        country_groups = regroup_available_by_country(alive, country_codes)
-        
-        # Write grouped outputs
-        write_grouped_outputs(country_groups)
+        # Write grouped outputs (this will read from AVAILABLE_FILE which we just updated)
+        write_grouped_outputs()
         
         log(f"Successfully processed {len(alive)} existing proxies")
     else:
