@@ -38,7 +38,7 @@ import tempfile
 class FastXrayVlessTester:
     def __init__(self, vless_urls=None,
                  test_url="https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-                 output_file="working_proxies.txt", max_workers=10):
+                 output_file="src/Custome Proxies/working_proxies.txt", max_workers=10):
         """
         Initialize Fast Xray VLESS tester
 
