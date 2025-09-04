@@ -597,6 +597,14 @@ proxies:
   network: grpc
   tls: true
   servername: pqh30v3.hiddendom.shop
+- name: OpenRay Dynamic-2835
+  type: vless
+  server: all.tellmethetrue.shop
+  port: 443
+  uuid: 401374e6-df77-41fb-f638-dad8184f175b
+  network: grpc
+  tls: true
+  servername: pqh30v3.hiddendom.shop
 
 proxy-groups:
 - name: AUTO
@@ -674,6 +682,7 @@ proxy-groups:
   - OpenRay Dynamic-2783
   - OpenRay Dynamic-2784
   - OpenRay Dynamic-2834
+  - OpenRay Dynamic-2835
 - name: PROXY
   type: select
   proxies:
@@ -747,6 +756,7 @@ proxy-groups:
   - OpenRay Dynamic-2783
   - OpenRay Dynamic-2784
   - OpenRay Dynamic-2834
+  - OpenRay Dynamic-2835
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
