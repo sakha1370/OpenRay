@@ -183,37 +183,60 @@ def _discover_optimal_workers() -> Tuple[int, int]:
     try:
         cpu_cores, memory_gb = _get_system_specs()
         
-        # Test different worker ranges based on system specs
+        # Test different worker ranges based on system specs - MAXIMUM PERFORMANCE
         if _is_ci_env():
-            # CI environments: test higher ranges
+            # CI environments: test maximum ranges
             test_ranges = [
-                list(range(16, 33, 4)),      # 16, 20, 24, 28, 32
-                list(range(32, 65, 8)),      # 32, 40, 48, 56, 64
-                list(range(64, 129, 16)),    # 64, 80, 96, 112, 128
+                list(range(24, 73, 8)),      # 24, 32, 40, 48, 56, 64, 72
+                list(range(48, 145, 16)),    # 48, 64, 80, 96, 112, 128, 144
+                list(range(96, 257, 32)),    # 96, 128, 160, 192, 224, 256
             ]
         else:
-            # Local environments: test conservative ranges
-            test_ranges = [
-                list(range(4, 13, 2)),       # 4, 6, 8, 10, 12
-                list(range(8, 25, 4)),       # 8, 12, 16, 20, 24
-                list(range(16, 49, 8)),      # 16, 24, 32, 40, 48
-            ]
+            # Local environments: test aggressive performance ranges
+            if cpu_cores >= 8:
+                # High-end systems: maximum performance ranges
+                test_ranges = [
+                    list(range(16, cpu_cores * 4 + 1, 4)),    # 16, 20, 24, 28, 32, 36, 40, 44, 48
+                    list(range(32, cpu_cores * 6 + 1, 8)),    # 32, 40, 48, 56, 64, 72
+                    list(range(64, cpu_cores * 8 + 1, 16)),   # 64, 80, 96, 112, 128
+                ]
+            else:
+                # Standard systems: aggressive ranges
+                test_ranges = [
+                    list(range(12, 41, 4)),   # 12, 16, 20, 24, 28, 32, 36, 40
+                    list(range(24, 81, 8)),   # 24, 32, 40, 48, 56, 64, 72, 80
+                    list(range(48, 145, 16)), # 48, 64, 80, 96, 112, 128, 144
+                ]
         
         # Find optimal for each type
         optimal_fetch = _benchmark_worker_pool(test_ranges[0])[0]
         optimal_ping = _benchmark_worker_pool(test_ranges[1])[0]
         
-        # Apply memory constraints
-        max_by_memory = int(memory_gb * 1024 / 100)  # 100MB per worker estimate
-        
-        optimal_fetch = min(optimal_fetch, max_by_memory // 2)  # Fetch uses less memory
-        optimal_ping = min(optimal_ping, max_by_memory)
+        # Apply memory constraints - more aggressive for performance
+        if cpu_cores >= 8 and memory_gb >= 16:
+            # High-end systems: allow higher memory usage for maximum performance
+            max_by_memory = int(memory_gb * 1024 / 70)  # 70MB per worker (aggressive)
+            optimal_fetch = min(optimal_fetch, max_by_memory // 2)
+            optimal_ping = min(optimal_ping, max_by_memory)
+        elif cpu_cores >= 4 and memory_gb >= 8:
+            # Medium systems: moderate memory usage
+            max_by_memory = int(memory_gb * 1024 / 85)  # 85MB per worker
+            optimal_fetch = min(optimal_fetch, max_by_memory // 2)
+            optimal_ping = min(optimal_ping, max_by_memory)
+        else:
+            # Standard systems: balanced memory usage
+            max_by_memory = int(memory_gb * 1024 / 100)  # 100MB per worker
+            optimal_fetch = min(optimal_fetch, max_by_memory // 2)
+            optimal_ping = min(optimal_ping, max_by_memory)
         
         return optimal_fetch, optimal_ping
         
     except Exception:
-        # Fallback to adaptive heuristics
-        return _adaptive_workers(6, 64, 8), _adaptive_workers(16, 128, 32)
+        # Fallback to aggressive heuristics for maximum performance
+        if cpu_cores >= 8:
+            return _adaptive_workers(16, 128, 24), _adaptive_workers(32, 256, 48)
+        else:
+            return _adaptive_workers(12, 96, 16), _adaptive_workers(24, 192, 32)
 
 def _discover_optimal_timeouts() -> Tuple[int, int, int]:
     """Automatically discover optimal timeout values for current environment."""
@@ -240,16 +263,29 @@ def _discover_optimal_timeouts() -> Tuple[int, int, int]:
         # Calculate optimal timeouts based on network performance
         avg_response = sum(timeouts) / len(timeouts) if timeouts else 1000
         
-        # Base timeouts with network adaptation
-        ping_timeout = max(500, min(2000, int(avg_response * 2)))
-        connect_timeout = max(800, min(3000, int(avg_response * 3)))
-        probe_timeout = max(600, min(2500, int(avg_response * 2.5)))
+        # Base timeouts with network adaptation - MAXIMUM PERFORMANCE
+        if avg_response < 50:  # Very fast network (<50ms)
+            ping_timeout = max(300, min(800, int(avg_response * 4)))
+            connect_timeout = max(400, min(1200, int(avg_response * 6)))
+            probe_timeout = max(350, min(1000, int(avg_response * 5)))
+        elif avg_response < 100:  # Fast network (<100ms)
+            ping_timeout = max(350, min(1000, int(avg_response * 3)))
+            connect_timeout = max(500, min(1500, int(avg_response * 5)))
+            probe_timeout = max(400, min(1200, int(avg_response * 4)))
+        elif avg_response < 200:  # Moderate network (<200ms)
+            ping_timeout = max(400, min(1200, int(avg_response * 2.5)))
+            connect_timeout = max(600, min(1800, int(avg_response * 4)))
+            probe_timeout = max(500, min(1500, int(avg_response * 3)))
+        else:  # Slower network
+            ping_timeout = max(500, min(1500, int(avg_response * 2)))
+            connect_timeout = max(700, min(2500, int(avg_response * 3)))
+            probe_timeout = max(600, min(2000, int(avg_response * 2.5)))
         
         return ping_timeout, connect_timeout, probe_timeout
         
     except Exception:
-        # Fallback to adaptive timeouts
-        return _adaptive_timeout(1000, True), _adaptive_timeout(1500, True), _adaptive_timeout(1200, True)
+        # Fallback to aggressive timeouts for maximum performance
+        return _adaptive_timeout(800, True), _adaptive_timeout(1200, True), _adaptive_timeout(1000, True)
 
 # Tuning (overridable by environment)
 # Auto-discovered optimal parameters with fallbacks
@@ -259,27 +295,27 @@ _CI = _is_ci_env()
 try:
     _opt_fetch, _opt_ping = _discover_optimal_workers()
     _opt_ping_timeout, _opt_connect_timeout, _opt_probe_timeout = _discover_optimal_timeouts()
-    print(f"Auto-discovered optimal parameters: FETCH={_opt_fetch}, PING={_opt_ping}, "
-          f"PING_TIMEOUT={_opt_ping_timeout}ms, CONNECT_TIMEOUT={_opt_connect_timeout}ms, "
-          f"PROBE_TIMEOUT={_opt_probe_timeout}ms")
+    # print(f"Auto-discovered optimal parameters: FETCH={_opt_fetch}, PING={_opt_ping}, "
+    #       f"PING_TIMEOUT={_opt_ping_timeout}ms, CONNECT_TIMEOUT={_opt_connect_timeout}ms, "
+    #       f"PROBE_TIMEOUT={_opt_probe_timeout}ms")
 except Exception as e:
-    print(f"Auto-discovery failed, using heuristics: {e}")
+    # print(f"Auto-discovery failed, using heuristics: {e}")
     _opt_fetch, _opt_ping = _adaptive_workers(8 if _CI else 6, 96 if _CI else 64, 16 if _CI else 8), _adaptive_workers(24 if _CI else 16, 192 if _CI else 256, 48 if _CI else 32)
     _opt_ping_timeout, _opt_connect_timeout, _opt_probe_timeout = _adaptive_timeout(1000, True), _adaptive_timeout(1500, True), _adaptive_timeout(1200, True)
 
-# Timeouts
+# Timeouts (optimized for speed - reduced for faster failure detection)
 FETCH_TIMEOUT = _env_int('OPENRAY_FETCH_TIMEOUT',
-                        _adaptive_timeout(20000, True) // 1000, 1, 120)
+                        _adaptive_timeout(15000, True) // 1000, 1, 120)
 PING_TIMEOUT_MS = _env_int('OPENRAY_PING_TIMEOUT_MS',
-                          _opt_ping_timeout, 100, 10000)
+                          min(_opt_ping_timeout, 350), 50, 10000)
 
-# Workers (auto-discovered optimal values)
-FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS', _opt_fetch, 1, 256)
-PING_WORKERS = _env_int('OPENRAY_PING_WORKERS', _opt_ping, 1, 1024)
+# Workers (maximum performance with safety limits)
+FETCH_WORKERS = _env_int('OPENRAY_FETCH_WORKERS', max(_opt_fetch, 16), 1, 512)
+PING_WORKERS = _env_int('OPENRAY_PING_WORKERS', max(_opt_ping, 32), 1, 2048)
 
-# TCP connect timeout for checking specific proxy ports (ms)
+# TCP connect timeout for checking specific proxy ports (ms) - maximum performance
 CONNECT_TIMEOUT_MS = _env_int('OPENRAY_CONNECT_TIMEOUT_MS',
-                             _opt_connect_timeout, 100, 10000)
+                             min(_opt_connect_timeout, 500), 50, 10000)
 # Ports to try for TCP connectivity fallback (when ICMP ping is blocked, e.g., in CI)
 TCP_FALLBACK_PORTS: List[int] = [80, 443, 8080, 8443, 2052, 2082, 2086, 2095]
 USER_AGENT = (
@@ -290,35 +326,40 @@ USER_AGENT = (
 
 # Stage 2/3 controls (overridable by environment)
 ENABLE_STAGE2 = _env_int('OPENRAY_ENABLE_STAGE2', 1, 0, 1)  # 1=enable TLS probe after TCP
-PROBE_TIMEOUT_MS = _env_int('OPENRAY_PROBE_TIMEOUT_MS', _opt_probe_timeout, 100, 10000)
+PROBE_TIMEOUT_MS = _env_int('OPENRAY_PROBE_TIMEOUT_MS', min(_opt_probe_timeout, 450), 50, 10000)
 ENABLE_STAGE3 = _env_int('OPENRAY_ENABLE_STAGE3', 1, 0, 1)  # default enable
 # Validate up to many proxies with core by default (can be reduced via env)
 STAGE3_MAX = _env_int('OPENRAY_STAGE3_MAX', 5000, 1, 100000)
 
 
 def _adaptive_stage3_workers() -> int:
-    """Calculate optimal Stage 3 worker count (V2Ray core validation)."""
+    """Calculate optimal Stage 3 worker count (V2Ray core validation) - MAXIMUM PERFORMANCE."""
     cpu_cores, memory_gb = _get_system_specs()
 
     # Stage 3 is CPU+memory intensive (spawning V2Ray processes)
-    # More conservative than ping workers
-    base_workers = cpu_cores * 2  # 2x cores for CPU-bound tasks
+    # Aggressive approach for maximum performance
+    if cpu_cores >= 8:
+        base_workers = cpu_cores * 3  # 3x cores for high-end systems
+        memory_per_process = 65  # More aggressive memory estimate
+    else:
+        base_workers = cpu_cores * 2  # 2x cores for standard systems
+        memory_per_process = 75  # Balanced memory estimate
 
-    # Memory constraint: V2Ray processes use ~50-100MB each
-    max_by_memory = int(memory_gb * 1024 / 75)  # Conservative 75MB per process
+    # Memory constraint: V2Ray processes use ~65-100MB each
+    max_by_memory = int(memory_gb * 1024 / memory_per_process)
 
     # Apply reasonable bounds
     workers = min(base_workers, max_by_memory)
 
     # In CI environments, keep this modest to avoid OOM and process thrash
     if _is_ci_env():
-        workers = min(workers, 12)
+        workers = min(workers, 16)
 
-    return max(4, min(workers, 64))  # Range: 4-64 workers
+    return max(8, min(workers, 128))  # Range: 8-128 workers (increased for performance)
 
-# Stage 3 adaptive workers
-STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS', 
-                         _adaptive_stage3_workers(), 4, 256)
+# Stage 3 adaptive workers (maximum performance)
+STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS',
+                         max(_adaptive_stage3_workers(), 24), 4, 512)
 
 # Limit for number of new URIs processed per run (overridable)
 NEW_URIS_LIMIT_ENABLED = _env_int('OPENRAY_NEW_URIS_LIMIT_ENABLED', 1, 0, 1)
@@ -368,3 +409,23 @@ V2RAY_CORE_PATH = _auto_find_v2ray_core()
 
 # Streak selection parameters (overridable)
 CONSECUTIVE_REQUIRED = _env_int('OPENRAY_STREAK_REQUIRED', 5, 1, 100)
+
+# Debug mode - set OPENRAY_DEBUG=1 to enable detailed parameter logging
+if os.environ.get('OPENRAY_DEBUG', '').strip() in ('1', 'true', 'yes'):
+    print("\n" + "="*70)
+    print("🚀 OPENRAY MAXIMUM PERFORMANCE PARAMETERS")
+    print("="*70)
+    print("⚙️  WORKERS:")
+    print(f"   FETCH_WORKERS: {FETCH_WORKERS} (was: {_opt_fetch})")
+    print(f"   PING_WORKERS: {PING_WORKERS} (was: {_opt_ping})")
+    print(f"   STAGE3_WORKERS: {STAGE3_WORKERS}")
+    print("⏱️  TIMEOUTS:")
+    print(f"   PING_TIMEOUT_MS: {PING_TIMEOUT_MS}ms (auto: {_opt_ping_timeout}ms)")
+    print(f"   CONNECT_TIMEOUT_MS: {CONNECT_TIMEOUT_MS}ms (auto: {_opt_connect_timeout}ms)")
+    print(f"   PROBE_TIMEOUT_MS: {PROBE_TIMEOUT_MS}ms (auto: {_opt_probe_timeout}ms)")
+    print("📊 SYSTEM INFO:")
+    cpu_cores, memory_gb = _get_system_specs()
+    print(f"   CPU Cores: {cpu_cores}")
+    print(f"   Memory: {memory_gb:.1f}GB")
+    print(f"   Environment: {'CI' if _CI else 'Local'}")
+    print("="*70 + "\n")
