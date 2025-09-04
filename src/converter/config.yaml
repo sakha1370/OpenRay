@@ -1,0 +1,137 @@
+# Recommended Clash Meta configuration for Iran - anti-DNS hijack, fake-ip, auto rule-providers, robust region rules
+
+mixed-port: 7892
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: info
+ipv6: false
+
+external-controller: 0.0.0.0:9090
+external-ui: ui
+external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+secret: ""
+
+# Performance Settings
+unified-delay: false
+tcp-concurrent: true
+find-process-mode: strict
+
+# Profile Settings
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# TUN Configuration for Iran
+tun:
+  enable: true
+  stack: system
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  device: utun0
+  mtu: 9000
+  strict-route: true
+  gso: true
+  gso-max-size: 65536
+
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - '*.ir'
+    - '+.aparat.com'
+    - '+.rubika.ir'
+    - '+.digikala.com'
+    - '+.eitaa.com'
+    - '+.telewebion.ir'
+    - '+.snapp.ir'
+    - '+.shad.ir'
+    - '+.zarinpal.com'
+    - '+.parsian.com'
+    - '+.mellat.ir'
+    - '+.bmi.ir'
+    - '+.postbank.ir'
+    - '+.shetab.ir'
+    - '+.sep.ir'
+    - '+.irna.ir'
+    - '+.isna.ir'
+  use-hosts: true
+  use-system-hosts: false
+  respect-rules: true
+  default-nameserver:
+    - tls://1.1.1.1:853
+    - tls://9.9.9.9:853
+  nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+    - https://9.9.9.9/dns-query
+  proxy-server-nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - 1.1.1.1
+
+proxies: [ ]
+
+proxy-groups:
+  - name: AUTO
+    type: url-test
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies: [ ]
+  - name: PROXY
+    type: select
+    proxies: [ AUTO ]
+
+rules:
+  - DOMAIN-SUFFIX,ir,DIRECT
+  - DOMAIN-SUFFIX,aparat.com,DIRECT
+  - DOMAIN-SUFFIX,digikala.com,DIRECT
+  - DOMAIN-SUFFIX,divar.ir,DIRECT
+  - DOMAIN-SUFFIX,eitaa.com,DIRECT
+  - DOMAIN-SUFFIX,rubika.ir,DIRECT
+  - DOMAIN-SUFFIX,snapp.ir,DIRECT
+  - DOMAIN-SUFFIX,zarinpal.com,DIRECT
+  - DOMAIN-SUFFIX,parsian.com,DIRECT
+  - DOMAIN-SUFFIX,mellat.ir,DIRECT
+  - DOMAIN-SUFFIX,bmi.ir,DIRECT
+  - DOMAIN-SUFFIX,postbank.ir,DIRECT
+  - DOMAIN-SUFFIX,shetab.ir,DIRECT
+  - DOMAIN-SUFFIX,sep.ir,DIRECT
+  - DOMAIN-SUFFIX,irna.ir,DIRECT
+  - DOMAIN-SUFFIX,isna.ir,DIRECT
+  - GEOSITE,GOOGLE,PROXY
+  - GEOSITE,YOUTUBE,PROXY
+  - GEOSITE,FACEBOOK,PROXY
+  - GEOSITE,INSTAGRAM,PROXY
+  - GEOSITE,TWITTER,PROXY
+  - GEOSITE,TELEGRAM,PROXY
+  - GEOSITE,GITHUB,PROXY
+  - GEOSITE,CLOUDFLARE,PROXY
+  - GEOSITE,NETFLIX,PROXY
+  - GEOSITE,SPOTIFY,PROXY
+  - GEOSITE,CATEGORY-ADS-ALL,REJECT
+  - GEOSITE,GEOLOCATION-!CN,PROXY
+  - MATCH,PROXY
+
+hosts:
+  'dns.google': [ 8.8.8.8, 8.8.4.4 ]
+  'cloudflare-dns.com': [ 1.1.1.1, 1.0.0.1 ]
+  '1dot1dot1dot1.cloudflare-dns.com': [ 1.1.1.1, 1.0.0.1 ]
+  'www.google.com': [ 142.250.191.36 ]
+  'youtube.com': [ 142.250.191.14 ]
+  'www.youtube.com': [ 142.250.191.14 ]
+  'facebook.com': [ 157.240.11.35 ]
+  'www.facebook.com': [ 157.240.11.35 ]
+  'twitter.com': [ 104.244.42.193 ]
+  'www.twitter.com': [ 104.244.42.193 ]
+  'x.com': [ 104.244.42.193 ]

@@ -16,6 +16,10 @@ fi
 # Run your Python script
 python3 -m src.main_for_iran
 
+# Convert subscription to Clash and Singbox formats
+echo "Converting Iran subscription to config formats..."
+python src/converter/sub2clash_singbox.py ./output_iran/iran_top100_checked.txt src/converter/config.yaml src/converter/singbox.json ./output_iran/converted/iran_clash_config.yaml ./output_iran/converted/iran_singbox_config.json
+
 # Check if there are changes before committing
 if [ -n "$(git status --porcelain)" ]; then
     git add .
