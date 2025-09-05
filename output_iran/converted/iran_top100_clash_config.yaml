@@ -524,6 +524,19 @@ proxies:
       /Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam?ed=2056
     headers:
       Host: Fi.Parsashonam.CfD.
+- name: OpenRay Dynamic-11
+  type: vless
+  server: ru.sfasti.ru
+  port: 443
+  uuid: 1a6fe500-59da-4598-8576-256f06765ffb
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ru.sfasti.ru
+  reality-opts:
+    public-key: J_jQq9-SWQZjiMhuPaFV7V2MaJ4pkKgVRaz7x6tmvy8
+    short-id: 16895459a2c7768d
+  client-fingerprint: chrome
 - name: OpenRay  US-9007
   type: vless
   server: 185.236.232.116
@@ -712,6 +725,19 @@ proxies:
       /Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam-Parsashonam?ed=2056
     headers:
       Host: Fi.Parsashonam.CfD.
+- name: OpenRay Dynamic-8
+  type: vless
+  server: ru.sfasti.ru
+  port: 443
+  uuid: 6fae85ca-395a-4f27-9eb2-75123befc475
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ru.sfasti.ru
+  reality-opts:
+    public-key: J_jQq9-SWQZjiMhuPaFV7V2MaJ4pkKgVRaz7x6tmvy8
+    short-id: 16895459a2c7768d
+  client-fingerprint: chrome
 - name: OpenRay  US-10647
   type: vless
   server: 185.236.232.116
@@ -907,28 +933,6 @@ proxies:
       /@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480
     headers:
       Host: Vmessorg.paradoxone.ir
-- name: OpenRay  CA-4713
-  type: vless
-  server: 104.17.147.22
-  port: 2052
-  uuid: 95260b6%61-%65711-455c-d273-3439c%61210d44
-  network: ws
-  ws-opts:
-    path: 
-      /@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480
-    headers:
-      Host: Vmessorg.paradoxone.ir
-- name: OpenRay  CA-4717
-  type: vless
-  server: 104.26.5.112
-  port: 2052
-  uuid: 95260b6a-e711-455c-d273-3439ca210d44
-  network: ws
-  ws-opts:
-    path: 
-      /@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480
-    headers:
-      Host: Vmessorg.paradoxone.ir
 
 proxy-groups:
 - name: AUTO
@@ -980,6 +984,7 @@ proxy-groups:
   - OpenRay  US-9307
   - OpenRay  CA-3713
   - OpenRay  CA-3714
+  - OpenRay Dynamic-11
   - OpenRay  US-9007
   - OpenRay  US-9034
   - OpenRay  US-9277
@@ -1003,6 +1008,7 @@ proxy-groups:
   - OpenRay  US-10819
   - OpenRay  CA-4231
   - OpenRay  CA-4232
+  - OpenRay Dynamic-8
   - OpenRay  US-10647
   - OpenRay  US-10682
   - OpenRay  US-10704
@@ -1023,8 +1029,6 @@ proxy-groups:
   - OpenRay  CA-4673
   - OpenRay  CA-4675
   - OpenRay  CA-4698
-  - OpenRay  CA-4713
-  - OpenRay  CA-4717
 - name: PROXY
   type: select
   proxies:
@@ -1072,6 +1076,7 @@ proxy-groups:
   - OpenRay  US-9307
   - OpenRay  CA-3713
   - OpenRay  CA-3714
+  - OpenRay Dynamic-11
   - OpenRay  US-9007
   - OpenRay  US-9034
   - OpenRay  US-9277
@@ -1095,6 +1100,7 @@ proxy-groups:
   - OpenRay  US-10819
   - OpenRay  CA-4231
   - OpenRay  CA-4232
+  - OpenRay Dynamic-8
   - OpenRay  US-10647
   - OpenRay  US-10682
   - OpenRay  US-10704
@@ -1115,8 +1121,6 @@ proxy-groups:
   - OpenRay  CA-4673
   - OpenRay  CA-4675
   - OpenRay  CA-4698
-  - OpenRay  CA-4713
-  - OpenRay  CA-4717
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
