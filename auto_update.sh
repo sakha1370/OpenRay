@@ -10,7 +10,7 @@ cd /mnt/d/projects/OpenRay
 # Try git pull, fallback to merge if it fails
 if ! git pull origin main; then
     echo "git pull failed, retrying with merge..."
-    git pull origin main --no-rebase
+    git pull --no-edit origin main --no-rebase
 fi
 
 # Run your Python script
