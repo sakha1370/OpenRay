@@ -100,22 +100,53 @@ def main() -> int:
 
             def check_existing(item: Tuple[str, str]) -> Optional[str]:
                 u, h = item
-                try:
-                    if not ping_host(h):
+
+                def _check_proxy_operation():
+                    try:
+                        # Quick ping check with very short timeout
+                        if not ping_host(h):
+                            return None
+                        scheme = u.split('://', 1)[0].lower()
+                        if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
+                            p = extract_port(u)
+                            if p is not None:
+                                # Connect check with short timeout
+                                ok = connect_host_port(h, int(p))
+                                if not ok:
+                                    return None
+                                if int(ENABLE_STAGE2) == 1:
+                                    # Protocol probe with short timeout
+                                    return u if quick_protocol_probe(u, h, int(p)) else None
+                                return u
+                        return u
+                    except Exception as e:
+                        # Log any exceptions that occur
+                        print(f"Warning: Exception checking proxy {h}: {e}", flush=True)
                         return None
-                    scheme = u.split('://', 1)[0].lower()
-                    if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
-                        p = extract_port(u)
-                        if p is not None:
-                            ok = connect_host_port(h, int(p))
-                            if not ok:
-                                return None
-                            if int(ENABLE_STAGE2) == 1:
-                                return u if quick_protocol_probe(u, h, int(p)) else None
-                            return u
-                    return u
-                except Exception:
+
+                # Use timeout wrapper with hard 10-second limit per proxy
+                import threading
+                result = [None]
+                exception = [None]
+
+                def target():
+                    try:
+                        result[0] = _check_proxy_operation()
+                    except Exception as e:
+                        exception[0] = e
+
+                thread = threading.Thread(target=target, daemon=True)
+                thread.start()
+                thread.join(10.0)  # Hard 10-second timeout per proxy
+
+                if thread.is_alive():
+                    print(f"Warning: Proxy {h} timed out after 10 seconds", flush=True)
                     return None
+
+                if exception[0]:
+                    raise exception[0]
+
+                return result[0]
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
                 print("Start Stage 2 for existing proxies")
@@ -244,22 +275,48 @@ def main() -> int:
 
     def check_one(item: Tuple[str, str]) -> Tuple[str, str, bool]:
         uri, host = item
-        try:
-            # First, ensure host is reachable (ICMP/TCP fallback)
-            if not ping_host(host):
+
+        def _check_new_proxy_operation():
+            try:
+                # First, ensure host is reachable (ICMP/TCP fallback)
+                if not ping_host(host):
+                    return (uri, host, False)
+                # Then, for TCP-based schemes, also ensure we can connect to the specific port
+                scheme = uri.split('://', 1)[0].lower()
+                if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
+                    p = extract_port(uri)
+                    if p is not None:
+                        ok2 = connect_host_port(host, int(p))
+                        if ok2 and int(ENABLE_STAGE2) == 1:
+                            ok2 = quick_protocol_probe(uri, host, int(p))
+                        return (uri, host, ok2)
+                return (uri, host, True)
+            except Exception:
                 return (uri, host, False)
-            # Then, for TCP-based schemes, also ensure we can connect to the specific port
-            scheme = uri.split('://', 1)[0].lower()
-            if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr'):
-                p = extract_port(uri)
-                if p is not None:
-                    ok2 = connect_host_port(host, int(p))
-                    if ok2 and int(ENABLE_STAGE2) == 1:
-                        ok2 = quick_protocol_probe(uri, host, int(p))
-                    return (uri, host, ok2)
-            return (uri, host, True)
-        except Exception:
+
+        # Use timeout wrapper with hard 10-second limit per proxy
+        import threading
+        result = [None]
+        exception = [None]
+
+        def target():
+            try:
+                result[0] = _check_new_proxy_operation()
+            except Exception as e:
+                exception[0] = e
+
+        thread = threading.Thread(target=target, daemon=True)
+        thread.start()
+        thread.join(10.0)  # Hard 10-second timeout per proxy
+
+        if thread.is_alive():
+            print(f"Warning: New proxy {host} timed out after 10 seconds", flush=True)
             return (uri, host, False)
+
+        if exception[0]:
+            return (uri, host, False)
+
+        return result[0] if result[0] else (uri, host, False)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
         print("Start Stage 2 for new proxies")
