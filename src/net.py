@@ -93,7 +93,13 @@ def ping_host(host: str) -> bool:
     # TCP fallback: try to connect to a few common ports with a short timeout
     try:
         # Resolve host (prefer IPv4 first)
-        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        # Set DNS timeout
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(max(0.5, min(3.0, timeout_ms / 1000.0)))
+        try:
+            infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        finally:
+            socket.setdefaulttimeout(original_timeout)
         # Order: IPv4 first, then others
         addrs: List[str] = []
         for fam, _, _, _, sockaddr in infos:
@@ -130,7 +136,13 @@ def connect_host_port(host: str, port: int, timeout_ms: int = CONNECT_TIMEOUT_MS
         timeout_sec = 1.5
     try:
         # Resolve both IPv4/IPv6; prefer IPv4 order like in ping_host
-        infos = socket.getaddrinfo(host_ascii, port, proto=socket.IPPROTO_TCP)
+        # Set DNS timeout
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(max(0.5, min(3.0, timeout_ms / 1000.0)))
+        try:
+            infos = socket.getaddrinfo(host_ascii, port, proto=socket.IPPROTO_TCP)
+        finally:
+            socket.setdefaulttimeout(original_timeout)
         addrs = []
         for fam, _, _, _, sockaddr in infos:
             ip = sockaddr[0]
@@ -179,7 +191,13 @@ def is_dynamic_host(host: str) -> bool:
             return _dynamic_cache[key]
         host_ascii = _idna(host)
         # Resolve without specific port, prefer TCP info for consistency
-        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        # Set DNS timeout (use reasonable default since function has no timeout parameter)
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(3.0)
+        try:
+            infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        finally:
+            socket.setdefaulttimeout(original_timeout)
         ips: Set[str] = set()
         for _, _, _, _, sockaddr in infos:
             try:
@@ -596,7 +614,13 @@ def ping_host(host: str) -> bool:
     # TCP fallback: try to connect to a few common ports with a short timeout
     try:
         # Resolve host (prefer IPv4 first)
-        infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        # Set DNS timeout
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(max(0.5, min(3.0, timeout_ms / 1000.0)))
+        try:
+            infos = socket.getaddrinfo(host_ascii, None, proto=socket.IPPROTO_TCP)
+        finally:
+            socket.setdefaulttimeout(original_timeout)
         # Order: IPv4 first, then others
         addrs: List[str] = []
         for fam, _, _, _, sockaddr in infos:
@@ -638,8 +662,14 @@ def get_country_codes_batch(hosts: List[str], timeout: int = 5, batch_size: int 
             if _is_ip_address(host):
                 ip = host
             else:
-                infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
-                ip = None
+                # Set DNS timeout
+                original_timeout = socket.getdefaulttimeout()
+                socket.setdefaulttimeout(max(0.5, min(3.0, timeout)))
+                try:
+                    infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+                    ip = None
+                finally:
+                    socket.setdefaulttimeout(original_timeout)
                 for fam, _, _, _, sockaddr in infos:
                     if fam == socket.AF_INET:
                         ip = sockaddr[0]
