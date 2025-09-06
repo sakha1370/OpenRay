@@ -68,6 +68,16 @@ jobs:
         OPENRAY_RECHECK_EXISTING: "0"
       run: python -m src.main
 
+    # Run the converter scripts
+    - name: Convert proxy lists to Clash and Singbox formats
+      run: |
+        python src/converter/sub2clash_singbox.py \
+          ./output/all_valid_proxies.txt \
+          src/converter/config.yaml \
+          src/converter/singbox.json \
+          ./output/converted/all_valid_proxies_clash_config.yaml \
+          ./output/converted/all_valid_proxies_singbox_config.json
+
     # Commit and push changes directly to the main
     - name: Commit and push changes (force)
       run: |
