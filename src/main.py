@@ -29,6 +29,8 @@ from .io_ops import (
     load_existing_available,
     load_streaks,
     load_tested_hashes,
+    load_tested_hashes_optimized,
+    append_tested_hashes_optimized,
     read_lines,
     save_streaks,
 )
@@ -203,7 +205,7 @@ def main() -> int:
                 log("Revalidated existing available proxies: all still reachable")
 
     # Load persistence early to filter as we parse
-    tested_hashes = load_tested_hashes()
+    tested_hashes = load_tested_hashes_optimized()
     existing_available = load_existing_available()
 
     # Fetch and process sources concurrently; deduplicate URIs and collect only new ones
@@ -435,8 +437,8 @@ def main() -> int:
     # Persist tested hashes (append all newly tested regardless of success)
     from .constants import TESTED_FILE
 
-    append_lines(TESTED_FILE, new_hashes)
-    log(f"Recorded {len(new_hashes)} newly tested proxies to {TESTED_FILE}")
+    append_tested_hashes_optimized(new_hashes)
+    log(f"Recorded {len(new_hashes)} newly tested proxies to optimized storage")
 
     # Update streaks based on this run's host successes
     try:
