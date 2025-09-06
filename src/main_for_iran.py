@@ -69,6 +69,24 @@ def _load_check_counts() -> Dict[str, int]:
     return {}
 
 
+def _cleanup_check_counts(active_proxies: List[str]) -> None:
+    """Remove check counts for proxies that are no longer active."""
+    if not active_proxies:
+        return
+
+    counts = _load_check_counts()
+    active_set = set(active_proxies)
+
+    # Filter counts to only include active proxies
+    cleaned_counts = {proxy: count for proxy, count in counts.items() if proxy in active_set}
+
+    # Only save if there are changes
+    if len(cleaned_counts) != len(counts):
+        removed_count = len(counts) - len(cleaned_counts)
+        log(f"Cleaned up check counts: removed {removed_count} inactive proxies")
+        _save_check_counts(cleaned_counts)
+
+
 def _save_check_counts(counts: Dict[str, int]) -> None:
     try:
         ensure_dirs()
@@ -81,12 +99,19 @@ def _save_check_counts(counts: Dict[str, int]) -> None:
         log(f"Failed to save check counts: {e}")
 
 
-def _update_check_counts_for_proxies(proxies: List[str]) -> None:
+def _update_check_counts_for_proxies(proxies: List[str], active_proxies: List[str] = None) -> None:
     if not proxies:
         return
     counts = _load_check_counts()
+
+    # If active_proxies is provided, only update counts for active proxies
+    active_set = set(active_proxies) if active_proxies else None
+
     for p in proxies:
         if not p:
+            continue
+        # Skip if proxy is not in active list (when provided)
+        if active_set is not None and p not in active_set:
             continue
         counts[p] = int(counts.get(p, 0)) + 1
     _save_check_counts(counts)
@@ -128,20 +153,22 @@ def main() -> int:
     rc = main_pipeline.main()
 
     if rc == 0:
-        # After pipeline finishes, update check counts for proxies that were revalidated
-        try:
-            _update_check_counts_for_proxies(pre_existing)
-        except Exception as e:
-            log(f"Post-run check count update failed: {e}")
-
         # Build top 100 among currently active proxies
         try:
             active_now: List[str] = []
             if os.path.exists(C.AVAILABLE_FILE):
                 active_now = [ln.strip() for ln in read_lines(C.AVAILABLE_FILE) if ln.strip()]
+
+            # Clean up check counts to only include active proxies
+            _cleanup_check_counts(active_now)
+
+            # After pipeline finishes, update check counts for proxies that were revalidated
+            # Only update counts for proxies that are still active
+            _update_check_counts_for_proxies(pre_existing, active_now)
+
             _write_top100_by_checks(active_now)
         except Exception as e:
-            log(f"Top100 generation failed: {e}")
+            log(f"Active proxies processing failed: {e}")
     else:
         log(f"Skipping check-count update and top100 generation due to pipeline return code {rc}")
 
