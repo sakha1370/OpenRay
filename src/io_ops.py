@@ -122,6 +122,11 @@ def bytes_to_hash(hash_bytes: bytes) -> str:
 
 def load_tested_hashes_optimized() -> Set[str]:
     """Load tested hashes from all tested files (multi-file support)."""
+    # Check for rotation before loading
+    if should_rotate_tested_file():
+        print(f"File rotation needed before loading. Current file size: {os.path.getsize(get_current_tested_file()) / (1024 * 1024):.1f}MB")
+        rotate_tested_file()
+
     tested: Set[str] = set()
 
     # Get all tested files
@@ -209,8 +214,9 @@ def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
 
     # Check if we need to rotate first
     if should_rotate_tested_file():
-        # Don't do anything here - rotation will happen on next write
-        pass
+        # Rotate immediately if current file is already at/over limit
+        print(f"Current file is {os.path.getsize(get_current_tested_file()) / (1024 * 1024):.1f}MB >= 50MB, rotating...")
+        rotate_tested_file()
 
     # Get current active file
     current_file = get_current_tested_file()

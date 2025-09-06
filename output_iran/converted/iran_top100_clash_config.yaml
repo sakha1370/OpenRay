@@ -199,12 +199,6 @@ proxies:
   port: 8880
   uuid: e4824193-4f54-453b-d037-88368e85ef0e
   network: grpc
-- name: OpenRay  US-17261
-  type: vless
-  server: 185.236.232.72
-  port: 8880
-  uuid: e4824193-4f54-453b-d037-88368e85ef0e
-  network: grpc
 - name: OpenRay  CA-5347
   type: vless
   server: 51.222.158.206
@@ -577,12 +571,6 @@ proxies:
   port: 8880
   uuid: e4824193-4f54-453b-d037-88368e85ef0e
   network: grpc
-- name: OpenRay  US-17917
-  type: vless
-  server: 185.236.232.199
-  port: 8880
-  uuid: e4824193-4f54-453b-d037-88368e85ef0e
-  network: grpc
 - name: OpenRay  US-18019
   type: vless
   server: pqh38v3.avoipok.shop
@@ -643,6 +631,18 @@ proxies:
   port: 8880
   uuid: e4824193-4f54-453b-d037-88368e85ef0e
   network: grpc
+- name: OpenRay  US-18358
+  type: vless
+  server: 185.236.232.148
+  port: 8880
+  uuid: e4824193-4f54-453b-d037-88368e85ef0e
+  network: grpc
+- name: OpenRay  US-18360
+  type: vless
+  server: 185.236.232.148
+  port: 8880
+  uuid: e4824193-4f54-453b-d037-88368e85ef0e
+  network: grpc
 
 proxy-groups:
 - name: AUTO
@@ -670,7 +670,6 @@ proxy-groups:
   - OpenRay  US-17235
   - OpenRay  US-17237
   - OpenRay  US-17258
-  - OpenRay  US-17261
   - OpenRay  CA-5347
   - OpenRay Dynamic-5856
   - OpenRay  US-17422
@@ -712,7 +711,6 @@ proxy-groups:
   - OpenRay  US-17904
   - OpenRay  US-17915
   - OpenRay  US-17916
-  - OpenRay  US-17917
   - OpenRay  US-18019
   - OpenRay  US-18022
   - OpenRay  US-18039
@@ -723,6 +721,8 @@ proxy-groups:
   - OpenRay  US-18224
   - OpenRay  US-18254
   - OpenRay  US-18276
+  - OpenRay  US-18358
+  - OpenRay  US-18360
 - name: PROXY
   type: select
   proxies:
@@ -746,7 +746,6 @@ proxy-groups:
   - OpenRay  US-17235
   - OpenRay  US-17237
   - OpenRay  US-17258
-  - OpenRay  US-17261
   - OpenRay  CA-5347
   - OpenRay Dynamic-5856
   - OpenRay  US-17422
@@ -788,7 +787,6 @@ proxy-groups:
   - OpenRay  US-17904
   - OpenRay  US-17915
   - OpenRay  US-17916
-  - OpenRay  US-17917
   - OpenRay  US-18019
   - OpenRay  US-18022
   - OpenRay  US-18039
@@ -799,6 +797,8 @@ proxy-groups:
   - OpenRay  US-18224
   - OpenRay  US-18254
   - OpenRay  US-18276
+  - OpenRay  US-18358
+  - OpenRay  US-18360
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
