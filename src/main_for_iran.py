@@ -142,6 +142,7 @@ def check_internet_socket(host="8.8.8.8", port=53, timeout=3):
 
 def main() -> int:
     _seed_available_from_input()
+
     # Capture the list of proxies that will be rechecked by the main pipeline this run
     pre_existing: List[str] = []
     try:

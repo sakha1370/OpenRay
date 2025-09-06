@@ -121,32 +121,48 @@ def bytes_to_hash(hash_bytes: bytes) -> str:
     return hash_bytes.hex()
 
 def load_tested_hashes_optimized() -> Set[str]:
-    """Load tested hashes from optimized binary storage with fallback to text."""
+    """Load tested hashes from all tested files (multi-file support)."""
     tested: Set[str] = set()
 
-    # Try optimized binary format first
-    if os.path.exists(TESTED_BIN_FILE):
-        try:
-            with open(TESTED_BIN_FILE, 'rb') as f:
-                # Read file in chunks for memory efficiency
-                while True:
-                    # Read timestamp (8 bytes) + hash (20 bytes) = 28 bytes per entry
-                    entry = f.read(28)
-                    if not entry:
-                        break
-                    if len(entry) != 28:
-                        continue  # Skip malformed entries
-                    timestamp, hash_bytes = struct.unpack('>Q20s', entry)
-                    tested.add(bytes_to_hash(hash_bytes))
-            return tested
-        except Exception:
-            # Fallback to text format if binary is corrupted
-            pass
+    # Get all tested files
+    tested_files = get_all_tested_files()
 
-    # Fallback to text format
-    tested.update(load_tested_hashes())
+    # Try optimized binary format first for each file
+    for tested_file in tested_files:
+        bin_file = tested_file + '.bin'
+        if os.path.exists(bin_file):
+            try:
+                with open(bin_file, 'rb') as f:
+                    # Read file in chunks for memory efficiency
+                    while True:
+                        # Read timestamp (8 bytes) + hash (20 bytes) = 28 bytes per entry
+                        entry = f.read(28)
+                        if not entry:
+                            break
+                        if len(entry) != 28:
+                            continue  # Skip malformed entries
+                        timestamp, hash_bytes = struct.unpack('>Q20s', entry)
+                        tested.add(bytes_to_hash(hash_bytes))
+            except Exception:
+                # Fallback to text format for this file if binary is corrupted
+                try:
+                    for line in read_lines(tested_file):
+                        h = line.strip()
+                        if h:
+                            tested.add(h)
+                except Exception:
+                    pass  # Skip corrupted files
+        else:
+            # Load from text format
+            try:
+                for line in read_lines(tested_file):
+                    h = line.strip()
+                    if h:
+                        tested.add(h)
+            except Exception:
+                pass  # Skip corrupted files
 
-    # Migrate to optimized format in background
+    # Migrate to optimized format in background if we have data
     if tested:
         try:
             migrate_to_optimized_format(tested)
@@ -187,11 +203,20 @@ def migrate_to_optimized_format(hashes: Set[str]) -> None:
             pass  # Migration failure is non-critical
 
 def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
-    """Append new hashes to optimized storage with deduplication."""
+    """Append new hashes to current active tested file with rotation support."""
     if not new_hashes:
         return
 
-    # Load existing hashes to check for duplicates
+    # Check if we need to rotate first
+    if should_rotate_tested_file():
+        # Don't do anything here - rotation will happen on next write
+        pass
+
+    # Get current active file
+    current_file = get_current_tested_file()
+    bin_file = current_file + '.bin'
+
+    # Load existing hashes to check for duplicates (from all files)
     existing_hashes = load_tested_hashes_optimized()
     current_time = int(time.time())
     new_entries = []
@@ -210,12 +235,38 @@ def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
 
     if new_entries:
         try:
-            with open(TESTED_BIN_FILE, 'ab') as f:
+            # Check file size before writing
+            if os.path.exists(current_file):
+                current_size_mb = os.path.getsize(current_file) / (1024 * 1024)
+                # Estimate size increase (each entry is ~41 bytes in text format)
+                estimated_new_size_mb = current_size_mb + (len(new_entries) * 41) / (1024 * 1024)
+
+                if estimated_new_size_mb >= 99:
+                    # Rotate to new file
+                    new_file = rotate_tested_file()
+                    current_file = new_file
+                    bin_file = new_file + '.bin'
+
+            with open(bin_file, 'ab') as f:
                 for entry in new_entries:
                     f.write(entry)
         except Exception:
             # Fallback to text format
-            append_lines(TESTED_FILE, (h for h in new_hashes if h.strip()))
+            try:
+                # Check file size for text format too
+                if os.path.exists(current_file):
+                    current_size_mb = os.path.getsize(current_file) / (1024 * 1024)
+                    # Estimate size increase (each hash is ~41 bytes)
+                    estimated_new_size_mb = current_size_mb + (len(new_entries) * 41) / (1024 * 1024)
+
+                    if estimated_new_size_mb >= 99:
+                        # Rotate to new file
+                        new_file = rotate_tested_file()
+                        current_file = new_file
+
+                append_lines(current_file, (h for h in new_hashes if h.strip()))
+            except Exception as e:
+                print(f"Failed to append hashes: {e}")
 
 def cleanup_old_hashes(days_to_keep: int = 30) -> int:
     """Remove hashes older than specified days. Returns number of removed entries."""
@@ -279,3 +330,71 @@ def get_storage_stats() -> Dict[str, int]:
         stats['binary_entries'] = stats['binary_file_size'] // 28  # 28 bytes per entry
 
     return stats
+
+
+def get_current_tested_file() -> str:
+    """Get the current active tested file (tested.txt, tested_1.txt, tested_2.txt, etc.)."""
+    state_dir = os.path.dirname(TESTED_FILE)
+    base_name = os.path.basename(TESTED_FILE)  # "tested.txt"
+
+    # Find all tested files
+    tested_files = []
+    if os.path.exists(state_dir):
+        for file in os.listdir(state_dir):
+            if file.startswith("tested") and file.endswith(".txt"):
+                tested_files.append(file)
+
+    if not tested_files:
+        # No files exist, return the base file
+        return TESTED_FILE
+
+    # Sort files to find the highest numbered one
+    tested_files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]) if '_' in x else 0)
+
+    # Get the last (highest numbered) file
+    current_file = tested_files[-1]
+    return os.path.join(state_dir, current_file)
+
+
+def should_rotate_tested_file(max_size_mb: int = 99) -> bool:
+    """Check if current tested file should be rotated based on size."""
+    current_file = get_current_tested_file()
+    if not os.path.exists(current_file):
+        return False
+    size_mb = os.path.getsize(current_file) / (1024 * 1024)
+    return size_mb >= max_size_mb
+
+
+def rotate_tested_file() -> str:
+    """Rotate to next numbered tested file. Returns the new file path."""
+    current_file = get_current_tested_file()
+    state_dir = os.path.dirname(current_file)
+    base_name = os.path.basename(TESTED_FILE)  # "tested.txt"
+
+    # Determine next file number
+    if current_file == TESTED_FILE:
+        next_file = os.path.join(state_dir, "tested_1.txt")
+    else:
+        # Extract number from current file (e.g., "tested_2.txt" -> 2)
+        current_num = int(os.path.basename(current_file).split('_')[1].split('.')[0])
+        next_num = current_num + 1
+        next_file = os.path.join(state_dir, f"tested_{next_num}.txt")
+
+    print(f"Rotated to new file: {os.path.basename(next_file)}")
+    return next_file
+
+
+def get_all_tested_files() -> List[str]:
+    """Get all tested files in order (tested.txt, tested_1.txt, tested_2.txt, etc.)."""
+    state_dir = os.path.dirname(TESTED_FILE)
+    tested_files = []
+
+    if os.path.exists(state_dir):
+        for file in os.listdir(state_dir):
+            if file.startswith("tested") and file.endswith(".txt"):
+                tested_files.append(os.path.join(state_dir, file))
+
+    # Sort files by number (tested.txt first, then tested_1.txt, tested_2.txt, etc.)
+    tested_files.sort(key=lambda x: int(os.path.basename(x).split('_')[1].split('.')[0]) if '_' in os.path.basename(x) else 0)
+
+    return tested_files
