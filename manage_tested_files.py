@@ -5,7 +5,7 @@ Tested Files Management Script
 This script helps manage tested.txt files that can grow large over time.
 It provides functionality to:
 - Check file sizes
-- Rotate files when they exceed 99MB
+- Rotate files when they exceed 50MB
 - View archived files
 - Clean up old archives
 """
@@ -94,7 +94,7 @@ def show_file_status():
                 print(f"   {os.path.basename(tested_file)}: {size_mb:.1f}MB{current_marker}")
 
         print(f"   Total: {file_count} files, {total_size:.1f}MB")
-        print(f"   Status: {'⚠️ Large files' if total_size >= 80 else '✅ Normal size'}")
+        print(f"   Status: {'⚠️ Large files' if total_size >= 50 else '✅ Normal size'}")
     else:
         print("   Status: No tested files found")
 
@@ -106,7 +106,7 @@ def show_file_status():
     if os.path.exists(iran_tested_file):
         size_mb = get_file_size_mb(iran_tested_file)
         print(f"   tested.txt: {size_mb:.1f}MB")
-        print(f"   Status: {'⚠️ Large file' if size_mb >= 80 else '✅ Normal size'}")
+        print(f"   Status: {'⚠️ Large file' if size_mb >= 50 else '✅ Normal size'}")
     else:
         print("   Status: File does not exist")
 
@@ -145,7 +145,7 @@ def monitor_files():
                 current_marker = " (CURRENT)" if tested_file == get_current_tested_file() else ""
                 print(f"   {os.path.basename(tested_file)}: {size_mb:.1f}MB{current_marker}")
 
-                if size_mb >= 100:
+                if size_mb >= 50:
                     large_files.append(os.path.basename(tested_file))
                     warnings.append(f"Main {os.path.basename(tested_file)}: {size_mb:.1f}MB")
 
@@ -153,7 +153,7 @@ def monitor_files():
 
         if large_files:
             print(f"   ⚠️  Large files detected: {', '.join(large_files)}")
-        elif total_size >= 200:  # Warning for total size across all files
+        elif total_size >= 100:  # Warning for total size across all files
             print("   ⚠️  WARNING: Total size across all files is large")
             warnings.append(f"Main total: {total_size:.1f}MB")
         else:
@@ -164,16 +164,16 @@ def monitor_files():
         size_mb = get_file_size_mb(iran_tested_file)
         print(f"\n📁 Iran tested.txt: {size_mb:.1f}MB")
 
-        if size_mb >= 100:
-            print("   ⚠️  WARNING: File is over 100MB!")
+        if size_mb >= 50:
+            print("   ⚠️  WARNING: File is over 50MB!")
             warnings.append(f"Iran file: {size_mb:.1f}MB")
-        elif size_mb >= 80:
-            print("   ⚠️  WARNING: File is approaching 100MB limit")
+        elif size_mb >= 40:
+            print("   ⚠️  WARNING: File is approaching 50MB limit")
         else:
             print("   ✅ Size is within normal range")
     if warnings:
         print("\n🚨 ACTION REQUIRED:")
-        print("   • System will automatically create new files when current file reaches 99MB")
+        print("   • System will automatically create new files when current file reaches 50MB")
         print("   • All data is preserved across multiple files")
         print("   • Monitor disk space usage")
         print(f"\n📊 Files needing attention: {len(warnings)}")

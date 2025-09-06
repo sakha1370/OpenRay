@@ -241,7 +241,7 @@ def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
                 # Estimate size increase (each entry is ~41 bytes in text format)
                 estimated_new_size_mb = current_size_mb + (len(new_entries) * 41) / (1024 * 1024)
 
-                if estimated_new_size_mb >= 99:
+                if estimated_new_size_mb >= 50:
                     # Rotate to new file
                     new_file = rotate_tested_file()
                     current_file = new_file
@@ -259,7 +259,7 @@ def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
                     # Estimate size increase (each hash is ~41 bytes)
                     estimated_new_size_mb = current_size_mb + (len(new_entries) * 41) / (1024 * 1024)
 
-                    if estimated_new_size_mb >= 99:
+                    if estimated_new_size_mb >= 50:
                         # Rotate to new file
                         new_file = rotate_tested_file()
                         current_file = new_file
@@ -356,7 +356,7 @@ def get_current_tested_file() -> str:
     return os.path.join(state_dir, current_file)
 
 
-def should_rotate_tested_file(max_size_mb: int = 99) -> bool:
+def should_rotate_tested_file(max_size_mb: int = 50) -> bool:
     """Check if current tested file should be rotated based on size."""
     current_file = get_current_tested_file()
     if not os.path.exists(current_file):

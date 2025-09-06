@@ -30,7 +30,7 @@ def test_multi_file_system():
     """Test the multi-file system functionality."""
     print("=== Multi-File System Test ===")
     print("Note: This is a demonstration of how the system works.")
-    print("Actual rotation occurs when files reach 99MB in production.\n")
+    print("Actual rotation occurs when files reach 50MB in production.\n")
 
     # Show current state
     print("📁 Current tested files:")
@@ -44,25 +44,25 @@ def test_multi_file_system():
 
     # Test rotation logic
     if should_rotate_tested_file():
-        print("\n🔄 Would rotate: Current file has reached 99MB limit")
+        print("\n🔄 Would rotate: Current file has reached 50MB limit")
         next_file = rotate_tested_file()
         print(f"   New current file would be: {os.path.basename(next_file)}")
     else:
         current_file = get_current_tested_file()
         size_mb = os.path.getsize(current_file) / (1024 * 1024) if os.path.exists(current_file) else 0
-        print(f"\n✅ No rotation needed: {os.path.basename(current_file)} is {size_mb:.1f}MB (< 99MB)")
+        print(f"\n✅ No rotation needed: {os.path.basename(current_file)} is {size_mb:.1f}MB (< 50MB)")
 
     print("\n🎯 Multi-File System Benefits:")
     print("   • All historical proxy data is preserved")
-    print("   • Automatic file rotation when 99MB limit is reached")
+    print("   • Automatic file rotation when 50MB limit is reached")
     print("   • All files are read when checking proxy status")
     print("   • No data loss during rotation")
     print("   • Efficient storage with multiple manageable files")
 
     print("\n📝 How it works:")
-    print("   1. tested.txt grows until it reaches 99MB")
+    print("   1. tested.txt grows until it reaches 50MB")
     print("   2. New file tested_1.txt is created for new data")
-    print("   3. tested_1.txt grows until it reaches 99MB")
+    print("   3. tested_1.txt grows until it reaches 50MB")
     print("   4. New file tested_2.txt is created, and so on...")
     print("   5. When reading data, ALL files are checked")
 
