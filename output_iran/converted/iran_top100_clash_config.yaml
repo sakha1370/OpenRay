@@ -269,12 +269,6 @@ proxies:
     path: /vmessws
     headers:
       Host: AZERB.NET
-- name: OpenRay  US-10828
-  type: vless
-  server: 45.82.251.208
-  port: 8880
-  uuid: 8dc7722c-2767-4eea-a28b-2f8daacc07e3
-  network: grpc
 - name: OpenRay  JP-433
   type: vless
   server: 45.89.109.25
@@ -287,6 +281,12 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
+- name: OpenRay  US-10828
+  type: vless
+  server: 45.82.251.208
+  port: 8880
+  uuid: 8dc7722c-2767-4eea-a28b-2f8daacc07e3
+  network: grpc
 - name: OpenRay  CA-9952
   type: vless
   server: 104.16.9.20
@@ -1094,8 +1094,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  US-10828
   - OpenRay  JP-433
+  - OpenRay  US-10828
   - OpenRay  CA-9952
   - OpenRay  US-11505
   - OpenRay  US-11387
@@ -1181,8 +1181,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  US-10828
   - OpenRay  JP-433
+  - OpenRay  US-10828
   - OpenRay  CA-9952
   - OpenRay  US-11505
   - OpenRay  US-11387
