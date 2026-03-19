@@ -558,6 +558,14 @@ proxies:
     path: /
     headers:
       Host: ca.adobe-connect.top
+- name: OpenRay  US-11672
+  type: vmess
+  server: 172.233.229.91
+  port: 14102
+  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  CA-12383
   type: vless
   server: 104.18.185.26
@@ -570,14 +578,6 @@ proxies:
     path: /
     headers:
       Host: ca.adobe-connect.top
-- name: OpenRay  US-11672
-  type: vmess
-  server: 172.233.229.91
-  port: 14102
-  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  MY-6
   type: vmess
   server: 47.250.45.234
@@ -1120,8 +1120,8 @@ proxy-groups:
   - OpenRay  US-11498
   - OpenRay  US-11668
   - OpenRay Dynamic-12217
-  - OpenRay  CA-12383
   - OpenRay  US-11672
+  - OpenRay  CA-12383
   - OpenRay  MY-6
   - OpenRay Dynamic-11777
   - OpenRay  AM-4
@@ -1207,8 +1207,8 @@ proxy-groups:
   - OpenRay  US-11498
   - OpenRay  US-11668
   - OpenRay Dynamic-12217
-  - OpenRay  CA-12383
   - OpenRay  US-11672
+  - OpenRay  CA-12383
   - OpenRay  MY-6
   - OpenRay Dynamic-11777
   - OpenRay  AM-4
