@@ -269,6 +269,14 @@ proxies:
     path: /vmessws
     headers:
       Host: AZERB.NET
+- name: OpenRay  CA-9952
+  type: vless
+  server: 104.16.9.20
+  port: 443
+  uuid: e4824193-4f54-453b-d037-88368e85ef0e
+  network: grpc
+  tls: true
+  servername: pqh30v5.carwashipdir.shop
 - name: OpenRay  JP-433
   type: vless
   server: 45.89.109.25
@@ -281,20 +289,6 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
-- name: OpenRay  CA-9952
-  type: vless
-  server: 104.16.9.20
-  port: 443
-  uuid: e4824193-4f54-453b-d037-88368e85ef0e
-  network: grpc
-  tls: true
-  servername: pqh30v5.carwashipdir.shop
-- name: OpenRay  US-10828
-  type: vless
-  server: 45.82.251.208
-  port: 8880
-  uuid: 8dc7722c-2767-4eea-a28b-2f8daacc07e3
-  network: grpc
 - name: OpenRay  US-11387
   type: vless
   server: 95.164.85.109
@@ -307,12 +301,6 @@ proxies:
     public-key: ZsswZuBV8bEGQWFrpShCilSytnDUj0kwHFhTSLXzOwc
     short-id: d21e7c
   client-fingerprint: chrome
-- name: OpenRay  US-11505
-  type: vless
-  server: pqh29v4.globalfymain.com
-  port: 8880
-  uuid: 8dc7722c-2767-4eea-a28b-2f8daacc07e3
-  network: grpc
 - name: OpenRay Dynamic-11336
   type: vless
   server: s1.db-link.in
@@ -1071,6 +1059,28 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.185.17
+- name: OpenRay  KZ-62
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 
 proxy-groups:
 - name: AUTO
@@ -1094,11 +1104,9 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  JP-433
   - OpenRay  CA-9952
-  - OpenRay  US-10828
+  - OpenRay  JP-433
   - OpenRay  US-11387
-  - OpenRay  US-11505
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
   - OpenRay  CA-11815
@@ -1162,6 +1170,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
+  - OpenRay  KZ-62
+  - OpenRay  FR-513
 - name: PROXY
   type: select
   proxies:
@@ -1181,11 +1191,9 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  JP-433
   - OpenRay  CA-9952
-  - OpenRay  US-10828
+  - OpenRay  JP-433
   - OpenRay  US-11387
-  - OpenRay  US-11505
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
   - OpenRay  CA-11815
@@ -1249,6 +1257,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
+  - OpenRay  KZ-62
+  - OpenRay  FR-513
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
