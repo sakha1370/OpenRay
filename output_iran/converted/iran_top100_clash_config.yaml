@@ -1071,16 +1071,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
+- name: OpenRay  HU-7
   type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
+  server: 5.182.38.91
+  port: 17267
+  uuid: 1c7fcc38-e6be-43c5-875f-b8de2516b9f2
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
+    short-id: 4ae260
+  client-fingerprint: chrome
 
 proxy-groups:
 - name: AUTO
@@ -1171,7 +1173,7 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
-  - OpenRay  FR-513
+  - OpenRay  HU-7
 - name: PROXY
   type: select
   proxies:
@@ -1258,7 +1260,7 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
-  - OpenRay  FR-513
+  - OpenRay  HU-7
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
