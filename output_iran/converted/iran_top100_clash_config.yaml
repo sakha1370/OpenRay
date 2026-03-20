@@ -269,6 +269,14 @@ proxies:
     path: /vmessws
     headers:
       Host: AZERB.NET
+- name: OpenRay  CA-9952
+  type: vless
+  server: 104.16.9.20
+  port: 443
+  uuid: e4824193-4f54-453b-d037-88368e85ef0e
+  network: grpc
+  tls: true
+  servername: pqh30v5.carwashipdir.shop
 - name: OpenRay  JP-433
   type: vless
   server: 45.89.109.25
@@ -281,14 +289,6 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
-- name: OpenRay  CA-9952
-  type: vless
-  server: 104.16.9.20
-  port: 443
-  uuid: e4824193-4f54-453b-d037-88368e85ef0e
-  network: grpc
-  tls: true
-  servername: pqh30v5.carwashipdir.shop
 - name: OpenRay  US-11387
   type: vless
   server: 95.164.85.109
@@ -1104,8 +1104,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  JP-433
   - OpenRay  CA-9952
+  - OpenRay  JP-433
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
@@ -1191,8 +1191,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  JP-433
   - OpenRay  CA-9952
+  - OpenRay  JP-433
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
