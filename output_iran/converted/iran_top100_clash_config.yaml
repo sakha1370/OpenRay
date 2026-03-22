@@ -326,18 +326,6 @@ proxies:
     public-key: lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0
     short-id: ''
   client-fingerprint: chrome
-- name: OpenRay  CA-11815
-  type: vmess
-  server: 15.235.41.200
-  port: 80
-  uuid: 58fe1542-5290-40ad-815a-77707a81afe5
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /IOebhLMhl1CTbFHbL95myfRX2
-    headers:
-      Host: 15.235.41.200
 - name: OpenRay  FR-445
   type: vless
   server: 157.173.127.225
@@ -350,6 +338,18 @@ proxies:
     public-key: v3EwzA9RIIh5Ndxm-gypRY6RCJhOpQ-2WO7KaH8nsC8
     short-id: eab26c4a32
   client-fingerprint: random
+- name: OpenRay  CA-11815
+  type: vmess
+  server: 15.235.41.200
+  port: 80
+  uuid: 58fe1542-5290-40ad-815a-77707a81afe5
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /IOebhLMhl1CTbFHbL95myfRX2
+    headers:
+      Host: 15.235.41.200
 - name: OpenRay  US-11414
   type: vless
   server: 159.89.87.21
@@ -1109,8 +1109,8 @@ proxy-groups:
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
-  - OpenRay  CA-11815
   - OpenRay  FR-445
+  - OpenRay  CA-11815
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay Dynamic-11598
@@ -1196,8 +1196,8 @@ proxy-groups:
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
-  - OpenRay  CA-11815
   - OpenRay  FR-445
+  - OpenRay  CA-11815
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay Dynamic-11598
