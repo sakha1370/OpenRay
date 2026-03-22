@@ -534,6 +534,14 @@ proxies:
     public-key: cDaDzPr3PlS3NM8lreHZbdo-Mhqz8vMBzMSkHXhGIUA
     short-id: e8ab71d0
   client-fingerprint: chrome
+- name: OpenRay  US-11672
+  type: vmess
+  server: 172.233.229.91
+  port: 14102
+  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay Dynamic-12217
   type: vless
   server: vip2.kaixincloud.top
@@ -546,14 +554,6 @@ proxies:
     path: /
     headers:
       Host: ca.adobe-connect.top
-- name: OpenRay  US-11672
-  type: vmess
-  server: 172.233.229.91
-  port: 14102
-  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  CA-12383
   type: vless
   server: 104.18.185.26
@@ -690,18 +690,6 @@ proxies:
     public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
     short-id: 8bcfe256cf216fd8
   client-fingerprint: chrome
-- name: OpenRay  FR-389
-  type: vless
-  server: 94.232.247.168
-  port: 41360
-  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
-    short-id: 1aab45
-  client-fingerprint: chrome
 - name: OpenRay  KZ-57
   type: vmess
   server: 38.107.234.57
@@ -714,6 +702,18 @@ proxies:
     path: /vmess/
     headers:
       Host: google.com
+- name: OpenRay  FR-389
+  type: vless
+  server: 94.232.247.168
+  port: 41360
+  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
+    short-id: 1aab45
+  client-fingerprint: chrome
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -1127,8 +1127,8 @@ proxy-groups:
   - OpenRay  FR-507
   - OpenRay  US-11498
   - OpenRay  US-11668
-  - OpenRay Dynamic-12217
   - OpenRay  US-11672
+  - OpenRay Dynamic-12217
   - OpenRay  CA-12383
   - OpenRay  MY-6
   - OpenRay Dynamic-11777
@@ -1140,8 +1140,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  FR-389
   - OpenRay  KZ-57
+  - OpenRay  FR-389
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -1214,8 +1214,8 @@ proxy-groups:
   - OpenRay  FR-507
   - OpenRay  US-11498
   - OpenRay  US-11668
-  - OpenRay Dynamic-12217
   - OpenRay  US-11672
+  - OpenRay Dynamic-12217
   - OpenRay  CA-12383
   - OpenRay  MY-6
   - OpenRay Dynamic-11777
@@ -1227,8 +1227,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  FR-389
   - OpenRay  KZ-57
+  - OpenRay  FR-389
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
