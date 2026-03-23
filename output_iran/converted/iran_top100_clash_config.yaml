@@ -458,6 +458,14 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay  US-11416
+  type: vmess
+  server: 172.233.229.91
+  port: 14102
+  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  HK-222
   type: vmess
   server: 47.243.244.164
@@ -472,14 +480,6 @@ proxies:
     path: /
     headers:
       Host: n1761214908.wpg27.xyz
-- name: OpenRay  US-11416
-  type: vmess
-  server: 172.233.229.91
-  port: 14102
-  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  FR-507
   type: vless
   server: 152.228.162.19
@@ -1106,8 +1106,8 @@ proxy-groups:
   - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
   - OpenRay  FR-489
-  - OpenRay  HK-222
   - OpenRay  US-11416
+  - OpenRay  HK-222
   - OpenRay  FR-507
   - OpenRay  US-11498
   - OpenRay  US-11668
@@ -1192,8 +1192,8 @@ proxy-groups:
   - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
   - OpenRay  FR-489
-  - OpenRay  HK-222
   - OpenRay  US-11416
+  - OpenRay  HK-222
   - OpenRay  FR-507
   - OpenRay  US-11498
   - OpenRay  US-11668
