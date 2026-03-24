@@ -269,14 +269,6 @@ proxies:
     path: /vmessws
     headers:
       Host: AZERB.NET
-- name: OpenRay  CA-9952
-  type: vless
-  server: 104.16.9.20
-  port: 443
-  uuid: e4824193-4f54-453b-d037-88368e85ef0e
-  network: grpc
-  tls: true
-  servername: pqh30v5.carwashipdir.shop
 - name: OpenRay  JP-433
   type: vless
   server: 45.89.109.25
@@ -289,6 +281,14 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
+- name: OpenRay  CA-9952
+  type: vless
+  server: 104.16.9.20
+  port: 443
+  uuid: e4824193-4f54-453b-d037-88368e85ef0e
+  network: grpc
+  tls: true
+  servername: pqh30v5.carwashipdir.shop
 - name: OpenRay  US-11387
   type: vless
   server: 95.164.85.109
@@ -630,18 +630,6 @@ proxies:
     public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
     short-id: 8bcfe256cf216fd8
   client-fingerprint: chrome
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -654,6 +642,18 @@ proxies:
     public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
     short-id: 1aab45
   client-fingerprint: chrome
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -1090,8 +1090,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  CA-9952
   - OpenRay  JP-433
+  - OpenRay  CA-9952
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
@@ -1121,8 +1121,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  KZ-57
   - OpenRay  FR-389
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -1176,8 +1176,8 @@ proxy-groups:
   - OpenRay  HK-186
   - OpenRay  US-11402
   - OpenRay  US-11431
-  - OpenRay  CA-9952
   - OpenRay  JP-433
+  - OpenRay  CA-9952
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
@@ -1207,8 +1207,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  KZ-57
   - OpenRay  FR-389
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
