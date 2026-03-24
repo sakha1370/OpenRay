@@ -630,18 +630,6 @@ proxies:
     public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
     short-id: 8bcfe256cf216fd8
   client-fingerprint: chrome
-- name: OpenRay  FR-389
-  type: vless
-  server: 94.232.247.168
-  port: 41360
-  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
-    short-id: 1aab45
-  client-fingerprint: chrome
 - name: OpenRay  KZ-57
   type: vmess
   server: 38.107.234.57
@@ -654,6 +642,18 @@ proxies:
     path: /vmess/
     headers:
       Host: google.com
+- name: OpenRay  FR-389
+  type: vless
+  server: 94.232.247.168
+  port: 41360
+  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
+    short-id: 1aab45
+  client-fingerprint: chrome
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -1121,8 +1121,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  FR-389
   - OpenRay  KZ-57
+  - OpenRay  FR-389
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -1207,8 +1207,8 @@ proxy-groups:
   - OpenRay Dynamic-11820
   - OpenRay  AL-7
   - OpenRay  TR-67
-  - OpenRay  FR-389
   - OpenRay  KZ-57
+  - OpenRay  FR-389
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
