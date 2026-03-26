@@ -874,6 +874,18 @@ proxies:
     path: /db10240eb751d6ab
     headers:
       Host: chatgpt.com
+- name: OpenRay  US-11678
+  type: vmess
+  server: 209.126.84.189
+  port: 443
+  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmessws
+    headers:
+      Host: 209.126.84.189
 - name: OpenRay  JP-454
   type: vmess
   server: n1753598452.wpg27.xyz
@@ -888,18 +900,6 @@ proxies:
     path: /
     headers:
       Host: n1753598452.wpg27.xyz
-- name: OpenRay  US-11678
-  type: vmess
-  server: 209.126.84.189
-  port: 443
-  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmessws
-    headers:
-      Host: 209.126.84.189
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -951,6 +951,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.185.17
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -963,16 +973,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -1116,14 +1116,14 @@ proxy-groups:
   - OpenRay Dynamic-10797
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
-  - OpenRay  JP-454
   - OpenRay  US-11678
+  - OpenRay  JP-454
   - OpenRay Dynamic-11535
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
-  - OpenRay  KZ-62
   - OpenRay  FR-513
+  - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -1199,14 +1199,14 @@ proxy-groups:
   - OpenRay Dynamic-10797
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
-  - OpenRay  JP-454
   - OpenRay  US-11678
+  - OpenRay  JP-454
   - OpenRay Dynamic-11535
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
-  - OpenRay  KZ-62
   - OpenRay  FR-513
+  - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  HU-7
   - OpenRay  DK-1
