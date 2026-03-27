@@ -788,6 +788,19 @@ proxies:
     path: /vmessws
     headers:
       Host: 209.126.84.189
+- name: OpenRay  NL-530
+  type: vless
+  server: midorinote.ru
+  port: 8443
+  uuid: a5e746f7-328f-4b65-a65f-e2e2a4a5b1a9
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: tradingview.com
+  reality-opts:
+    public-key: wNcFqVd4_PkgJbfgJJeouSU6Pn_Swuce4q4Chw5T0hY
+    short-id: f7aa9e61197d3ac6
+  client-fingerprint: random
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -802,19 +815,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  NL-530
-  type: vless
-  server: midorinote.ru
-  port: 8443
-  uuid: a5e746f7-328f-4b65-a65f-e2e2a4a5b1a9
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: tradingview.com
-  reality-opts:
-    public-key: wNcFqVd4_PkgJbfgJJeouSU6Pn_Swuce4q4Chw5T0hY
-    short-id: f7aa9e61197d3ac6
-  client-fingerprint: random
 - name: OpenRay  PH-6
   type: vmess
   server: 61.245.11.60
@@ -1065,8 +1065,8 @@ proxy-groups:
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
-  - OpenRay Dynamic-11535
   - OpenRay  NL-530
+  - OpenRay Dynamic-11535
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
@@ -1146,8 +1146,8 @@ proxy-groups:
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
-  - OpenRay Dynamic-11535
   - OpenRay  NL-530
+  - OpenRay Dynamic-11535
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
