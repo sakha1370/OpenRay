@@ -788,19 +788,6 @@ proxies:
     path: /vmessws
     headers:
       Host: 209.126.84.189
-- name: OpenRay  NL-530
-  type: vless
-  server: midorinote.ru
-  port: 8443
-  uuid: a5e746f7-328f-4b65-a65f-e2e2a4a5b1a9
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: tradingview.com
-  reality-opts:
-    public-key: wNcFqVd4_PkgJbfgJJeouSU6Pn_Swuce4q4Chw5T0hY
-    short-id: f7aa9e61197d3ac6
-  client-fingerprint: random
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -815,6 +802,19 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  NL-530
+  type: vless
+  server: midorinote.ru
+  port: 8443
+  uuid: a5e746f7-328f-4b65-a65f-e2e2a4a5b1a9
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: tradingview.com
+  reality-opts:
+    public-key: wNcFqVd4_PkgJbfgJJeouSU6Pn_Swuce4q4Chw5T0hY
+    short-id: f7aa9e61197d3ac6
+  client-fingerprint: random
 - name: OpenRay  PH-6
   type: vmess
   server: 61.245.11.60
@@ -851,16 +851,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -873,6 +863,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -1065,13 +1065,13 @@ proxy-groups:
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
-  - OpenRay  NL-530
   - OpenRay Dynamic-11535
+  - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  AL-10
+  - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
@@ -1146,13 +1146,13 @@ proxy-groups:
   - OpenRay  DE-4592
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
-  - OpenRay  NL-530
   - OpenRay Dynamic-11535
+  - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  AL-10
+  - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
