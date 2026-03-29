@@ -764,18 +764,6 @@ proxies:
     path: /db10240eb751d6ab
     headers:
       Host: chatgpt.com
-- name: OpenRay  DE-4592
-  type: vless
-  server: 192.76.160.216
-  port: 2280
-  uuid: 3fa2f5cd-0cbc-4e4f-bce1-a59ae090eef4
-  network: tcp
-  tls: true
-  servername: tgju.org
-  reality-opts:
-    public-key: 3O9CVvzD_0omAKw17VJoL0NlezpzxRAHNIbOWGBto2I
-    short-id: faf804ddc2e49f6c
-  client-fingerprint: firefox
 - name: OpenRay  US-11678
   type: vmess
   server: 209.126.84.189
@@ -998,6 +986,16 @@ proxies:
     path: /?ed=2560
     headers:
       Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
+- name: OpenRay  CA-11586
+  type: vless
+  server: 104.26.3.125
+  port: 2052
+  uuid: e8d06b09-acd9-448c-9874-3c36151d36ee
+  network: ws
+  ws-opts:
+    path: /🔒 [By EbraSha]
+    headers:
+      Host: icy-wildflower-2590.lihuifeng595.workers.dev
 
 proxy-groups:
 - name: AUTO
@@ -1063,7 +1061,6 @@ proxy-groups:
   - OpenRay  HK-163
   - OpenRay Dynamic-10797
   - OpenRay Dynamic-11798
-  - OpenRay  DE-4592
   - OpenRay  US-11678
   - OpenRay  NL-530
   - OpenRay Dynamic-11535
@@ -1083,6 +1080,7 @@ proxy-groups:
   - OpenRay  CA-11587
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
+  - OpenRay  CA-11586
 - name: PROXY
   type: select
   proxies:
@@ -1144,7 +1142,6 @@ proxy-groups:
   - OpenRay  HK-163
   - OpenRay Dynamic-10797
   - OpenRay Dynamic-11798
-  - OpenRay  DE-4592
   - OpenRay  US-11678
   - OpenRay  NL-530
   - OpenRay Dynamic-11535
@@ -1164,6 +1161,7 @@ proxy-groups:
   - OpenRay  CA-11587
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
+  - OpenRay  CA-11586
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
