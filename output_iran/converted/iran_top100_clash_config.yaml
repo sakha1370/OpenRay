@@ -340,6 +340,16 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  FR-489
+  type: vless
+  server: ov-france1.09vpn.com
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-france1.09vpn.com
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -354,16 +364,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  FR-489
-  type: vless
-  server: ov-france1.09vpn.com
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-france1.09vpn.com
 - name: OpenRay  US-11416
   type: vmess
   server: 172.233.229.91
@@ -851,6 +851,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -863,16 +873,6 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  DK-1
   type: vless
   server: 45.148.31.0
@@ -996,6 +996,19 @@ proxies:
     path: /🔒 [By EbraSha]
     headers:
       Host: icy-wildflower-2590.lihuifeng595.workers.dev
+- name: OpenRay  CA-11780
+  type: vless
+  server: irancell.buzzmuzzpanel.online
+  port: 443
+  uuid: 73a4456a-0442-4550-8b4f-c719871a4eeb
+  network: ws
+  tls: true
+  servername: 011.ELecTROCeLLCo-cf-011.WOrKerS.DEV
+  ws-opts:
+    path: 
+      /eyJqdW5rIjoicFhKOXNLOTA3TnFBTWhiIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eWlwIiwicGFuZWxJUHMiOlsiMjE3LjE0Mi4yMzYuOTMiXX0=?ed=2560
+    headers:
+      Host: 011.electrocellco-cf-011.workers.dev
 
 proxy-groups:
 - name: AUTO
@@ -1025,8 +1038,8 @@ proxy-groups:
   - OpenRay Dynamic-11334
   - OpenRay  US-11298
   - OpenRay Dynamic-11612
-  - OpenRay Dynamic-11818
   - OpenRay  FR-489
+  - OpenRay Dynamic-11818
   - OpenRay  US-11416
   - OpenRay  FR-507
   - OpenRay  US-11498
@@ -1068,8 +1081,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  KZ-62
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  FR-513
+  - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  MY-7
@@ -1081,6 +1094,7 @@ proxy-groups:
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-11586
+  - OpenRay  CA-11780
 - name: PROXY
   type: select
   proxies:
@@ -1106,8 +1120,8 @@ proxy-groups:
   - OpenRay Dynamic-11334
   - OpenRay  US-11298
   - OpenRay Dynamic-11612
-  - OpenRay Dynamic-11818
   - OpenRay  FR-489
+  - OpenRay Dynamic-11818
   - OpenRay  US-11416
   - OpenRay  FR-507
   - OpenRay  US-11498
@@ -1149,8 +1163,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  KZ-62
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  FR-513
+  - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  MY-7
@@ -1162,6 +1176,7 @@ proxy-groups:
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-11586
+  - OpenRay  CA-11780
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
