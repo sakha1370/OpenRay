@@ -340,6 +340,16 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  FR-489
+  type: vless
+  server: ov-france1.09vpn.com
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-france1.09vpn.com
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -354,16 +364,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  FR-489
-  type: vless
-  server: ov-france1.09vpn.com
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-france1.09vpn.com
 - name: OpenRay  US-11416
   type: vmess
   server: 172.233.229.91
@@ -895,18 +895,6 @@ proxies:
     path: /
     headers:
       Host: ir1.airpanel.top
-- name: OpenRay  MY-7
-  type: vmess
-  server: 47.250.45.234
-  port: 43063
-  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.250.45.234
 - name: OpenRay  KZ-76
   type: vmess
   server: 38.107.234.57
@@ -919,6 +907,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 38.107.234.57
+- name: OpenRay  MY-7
+  type: vmess
+  server: 47.250.45.234
+  port: 43063
+  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki?ed=2048
+    headers:
+      Host: 47.250.45.234
 - name: OpenRay Dynamic-11763
   type: vless
   server: tiny-leaf-f59f.my-lla-s-a-njo-s-e.workers.dev
@@ -1038,8 +1038,8 @@ proxy-groups:
   - OpenRay Dynamic-11334
   - OpenRay  US-11298
   - OpenRay Dynamic-11612
-  - OpenRay Dynamic-11818
   - OpenRay  FR-489
+  - OpenRay Dynamic-11818
   - OpenRay  US-11416
   - OpenRay  FR-507
   - OpenRay  US-11498
@@ -1085,8 +1085,8 @@ proxy-groups:
   - OpenRay  FR-513
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
-  - OpenRay  MY-7
   - OpenRay  KZ-76
+  - OpenRay  MY-7
   - OpenRay Dynamic-11763
   - OpenRay  CA-12448
   - OpenRay  CA-12450
@@ -1120,8 +1120,8 @@ proxy-groups:
   - OpenRay Dynamic-11334
   - OpenRay  US-11298
   - OpenRay Dynamic-11612
-  - OpenRay Dynamic-11818
   - OpenRay  FR-489
+  - OpenRay Dynamic-11818
   - OpenRay  US-11416
   - OpenRay  FR-507
   - OpenRay  US-11498
@@ -1167,8 +1167,8 @@ proxy-groups:
   - OpenRay  FR-513
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
-  - OpenRay  MY-7
   - OpenRay  KZ-76
+  - OpenRay  MY-7
   - OpenRay Dynamic-11763
   - OpenRay  CA-12448
   - OpenRay  CA-12450
