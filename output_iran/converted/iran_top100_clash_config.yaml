@@ -226,6 +226,18 @@ proxies:
     public-key: lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0
     short-id: ''
   client-fingerprint: chrome
+- name: OpenRay  FR-445
+  type: vless
+  server: 157.173.127.225
+  port: 443
+  uuid: 11beaf11-726d-4c11-8ce9-27308c1c608c
+  network: tcp
+  tls: true
+  servername: analytics.google.com
+  reality-opts:
+    public-key: v3EwzA9RIIh5Ndxm-gypRY6RCJhOpQ-2WO7KaH8nsC8
+    short-id: eab26c4a32
+  client-fingerprint: random
 - name: OpenRay  US-11414
   type: vless
   server: 159.89.87.21
@@ -239,18 +251,6 @@ proxies:
     public-key: ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno
     short-id: ''
   client-fingerprint: chrome
-- name: OpenRay  FR-445
-  type: vless
-  server: 157.173.127.225
-  port: 443
-  uuid: 11beaf11-726d-4c11-8ce9-27308c1c608c
-  network: tcp
-  tls: true
-  servername: analytics.google.com
-  reality-opts:
-    public-key: v3EwzA9RIIh5Ndxm-gypRY6RCJhOpQ-2WO7KaH8nsC8
-    short-id: eab26c4a32
-  client-fingerprint: random
 - name: OpenRay  HK-53
   type: vless
   server: 47.83.153.19
@@ -809,6 +809,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -821,16 +831,6 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  DK-1
   type: vless
   server: 45.148.31.0
@@ -1020,8 +1020,8 @@ proxy-groups:
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
-  - OpenRay  US-11414
   - OpenRay  FR-445
+  - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay Dynamic-11598
   - OpenRay  DE-3505
@@ -1069,8 +1069,8 @@ proxy-groups:
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  FR-513
+  - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  KZ-76
@@ -1102,8 +1102,8 @@ proxy-groups:
   - OpenRay  US-11387
   - OpenRay Dynamic-11336
   - OpenRay  US-11241
-  - OpenRay  US-11414
   - OpenRay  FR-445
+  - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay Dynamic-11598
   - OpenRay  DE-3505
@@ -1151,8 +1151,8 @@ proxy-groups:
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  FR-513
+  - OpenRay  HU-7
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  KZ-76
