@@ -785,18 +785,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  KZ-62
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -809,6 +797,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  KZ-62
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  FR-513
   type: vless
   server: 152.228.162.19
@@ -924,16 +924,6 @@ proxies:
       /eyJqdW5rIjoiUG43S1ZuZGxVOWo5IiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eWlwIiwicGFuZWxJUHMiOltdfQ==?ed=2560
     headers:
       Host: 018.electrocellco-cf-018.workers.dev
-- name: OpenRay  CA-11829
-  type: vless
-  server: 104.18.2.11
-  port: 2082
-  uuid: cb213db5-803d-49dd-a7e2-46d938af0751
-  network: ws
-  ws-opts:
-    path: /?ed=2560
-    headers:
-      Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
 - name: OpenRay  CA-11586
   type: vless
   server: 104.26.3.125
@@ -944,6 +934,16 @@ proxies:
     path: /🔒 [By EbraSha]
     headers:
       Host: icy-wildflower-2590.lihuifeng595.workers.dev
+- name: OpenRay  CA-11829
+  type: vless
+  server: 104.18.2.11
+  port: 2082
+  uuid: cb213db5-803d-49dd-a7e2-46d938af0751
+  network: ws
+  ws-opts:
+    path: /?ed=2560
+    headers:
+      Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
 - name: OpenRay Dynamic-11769
   type: vless
   server: www.visaeurope.at
@@ -1067,8 +1067,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -1079,8 +1079,8 @@ proxy-groups:
   - OpenRay  CA-12448
   - OpenRay  CA-12450
   - OpenRay  CA-11587
-  - OpenRay  CA-11829
   - OpenRay  CA-11586
+  - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-11780
   - OpenRay Dynamic-12432
@@ -1149,8 +1149,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -1161,8 +1161,8 @@ proxy-groups:
   - OpenRay  CA-12448
   - OpenRay  CA-12450
   - OpenRay  CA-11587
-  - OpenRay  CA-11829
   - OpenRay  CA-11586
+  - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-11780
   - OpenRay Dynamic-12432
