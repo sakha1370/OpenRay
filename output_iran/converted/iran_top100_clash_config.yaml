@@ -350,14 +350,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  US-11416
-  type: vmess
-  server: 172.233.229.91
-  port: 14102
-  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  FR-507
   type: vless
   server: 152.228.162.19
@@ -368,6 +360,14 @@ proxies:
     path: /vless/
     headers:
       Host: akamaized.net
+- name: OpenRay  US-11416
+  type: vmess
+  server: 172.233.229.91
+  port: 14102
+  uuid: 27ba87fc-583f-4763-9060-83cf0b9264db
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  US-11498
   type: vmess
   server: 172.233.229.91
@@ -1030,8 +1030,8 @@ proxy-groups:
   - OpenRay  FR-489
   - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
-  - OpenRay  US-11416
   - OpenRay  FR-507
+  - OpenRay  US-11416
   - OpenRay  US-11498
   - OpenRay  US-11668
   - OpenRay  US-11672
@@ -1112,8 +1112,8 @@ proxy-groups:
   - OpenRay  FR-489
   - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
-  - OpenRay  US-11416
   - OpenRay  FR-507
+  - OpenRay  US-11416
   - OpenRay  US-11498
   - OpenRay  US-11668
   - OpenRay  US-11672
