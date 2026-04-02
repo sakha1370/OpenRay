@@ -785,18 +785,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  KZ-62
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -809,6 +797,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  KZ-62
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  FR-513
   type: vless
   server: 152.228.162.19
@@ -1067,8 +1067,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -1149,8 +1149,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  HU-7
   - OpenRay  DK-1
