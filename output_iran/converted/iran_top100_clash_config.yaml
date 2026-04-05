@@ -418,19 +418,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  TR-67
-  type: vless
-  server: 94.131.123.167
-  port: 443
-  uuid: a44e0875-210f-4941-9062-89b6361a14c6
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: apple.com
-  reality-opts:
-    public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
-    short-id: 8bcfe256cf216fd8
-  client-fingerprint: chrome
 - name: OpenRay Dynamic-11820
   type: vmess
   server: cf.090227.xyz
@@ -445,6 +432,19 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  TR-67
+  type: vless
+  server: 94.131.123.167
+  port: 443
+  uuid: a44e0875-210f-4941-9062-89b6361a14c6
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: apple.com
+  reality-opts:
+    public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
+    short-id: 8bcfe256cf216fd8
+  client-fingerprint: chrome
 - name: OpenRay  KZ-57
   type: vmess
   server: 38.107.234.57
@@ -748,16 +748,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -770,6 +760,16 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -840,18 +840,6 @@ proxies:
     path: ws
     headers:
       Host: tiny-leaf-f59f.my-lla-s-a-njo-s-e.workers.dev
-- name: OpenRay  CA-12450
-  type: vless
-  server: 188.114.98.134
-  port: 443
-  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
-  network: ws
-  tls: true
-  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
-  ws-opts:
-    path: /yraL4HRbwB8cMc0F?ed=2560
-    headers:
-      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-12448
   type: vless
   server: 188.114.96.7
@@ -862,6 +850,18 @@ proxies:
   servername: o94yv7lIF0-AnXiSd9EFeHVVS7mxn6Bh.z-ULe-IKA-d-e-Ne-k-E.WORKERs.DEv
   ws-opts:
     path: /dbJqwUHWfrXV0Z3Q?ed=2560
+    headers:
+      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
+- name: OpenRay  CA-12450
+  type: vless
+  server: 188.114.98.134
+  port: 443
+  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
+  network: ws
+  tls: true
+  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
+  ws-opts:
+    path: /yraL4HRbwB8cMc0F?ed=2560
     headers:
       Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-11587
@@ -1045,8 +1045,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  US-11494
   - OpenRay  AL-7
-  - OpenRay  TR-67
   - OpenRay Dynamic-11820
+  - OpenRay  TR-67
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
@@ -1072,16 +1072,16 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  CA-11587
   - OpenRay  CA-11586
   - OpenRay  CA-11829
@@ -1127,8 +1127,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  US-11494
   - OpenRay  AL-7
-  - OpenRay  TR-67
   - OpenRay Dynamic-11820
+  - OpenRay  TR-67
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
@@ -1154,16 +1154,16 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  CA-11587
   - OpenRay  CA-11586
   - OpenRay  CA-11829
