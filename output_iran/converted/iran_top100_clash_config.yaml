@@ -544,18 +544,6 @@ proxies:
     path: /
     headers:
       Host: ir1.airpanel.top
-- name: OpenRay  MY-20
-  type: vmess
-  server: 47.250.45.234
-  port: 43063
-  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki
-    headers:
-      Host: 47.250.45.234
 - name: OpenRay  CA-12587
   type: vless
   server: 104.16.250.22
@@ -568,6 +556,18 @@ proxies:
     path: /
     headers:
       Host: ir1.airpanel.top
+- name: OpenRay  MY-20
+  type: vmess
+  server: 47.250.45.234
+  port: 43063
+  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki
+    headers:
+      Host: 47.250.45.234
 - name: OpenRay  CA-12446
   type: vless
   server: 188.114.97.7
@@ -748,16 +748,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -770,6 +760,16 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -1055,8 +1055,8 @@ proxy-groups:
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  CA-12562
-  - OpenRay  MY-20
   - OpenRay  CA-12587
+  - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
   - OpenRay  CA-11741
@@ -1072,8 +1072,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
@@ -1137,8 +1137,8 @@ proxy-groups:
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  CA-12562
-  - OpenRay  MY-20
   - OpenRay  CA-12587
+  - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
   - OpenRay  CA-11741
@@ -1154,8 +1154,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay Dynamic-12496
