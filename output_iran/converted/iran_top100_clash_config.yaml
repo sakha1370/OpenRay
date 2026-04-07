@@ -544,18 +544,6 @@ proxies:
     path: /
     headers:
       Host: ir1.airpanel.top
-- name: OpenRay  MY-20
-  type: vmess
-  server: 47.250.45.234
-  port: 43063
-  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki
-    headers:
-      Host: 47.250.45.234
 - name: OpenRay  CA-12587
   type: vless
   server: 104.16.250.22
@@ -568,6 +556,18 @@ proxies:
     path: /
     headers:
       Host: ir1.airpanel.top
+- name: OpenRay  MY-20
+  type: vmess
+  server: 47.250.45.234
+  port: 43063
+  uuid: c77f48f5-4be3-4461-b52b-49998e7b897b
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki
+    headers:
+      Host: 47.250.45.234
 - name: OpenRay  CA-12446
   type: vless
   server: 188.114.97.7
@@ -1055,8 +1055,8 @@ proxy-groups:
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  CA-12562
-  - OpenRay  MY-20
   - OpenRay  CA-12587
+  - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
   - OpenRay  CA-11741
@@ -1137,8 +1137,8 @@ proxy-groups:
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  CA-12562
-  - OpenRay  MY-20
   - OpenRay  CA-12587
+  - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
   - OpenRay  CA-11741
