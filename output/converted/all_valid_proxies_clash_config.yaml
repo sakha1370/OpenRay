@@ -3366,6 +3366,20 @@ proxies:
     path: /gbt
     headers:
       Host: 188.114.96.3
+- name: OpenRay  CA-17057
+  type: vmess
+  server: 188.114.96.3
+  port: 8443
+  uuid: 19e52bf4-1b7d-4bd4-ae66-6ca024436c17
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: frsys.fl-dl.com
+  ws-opts:
+    path: /gbt
+    headers:
+      Host: 188.114.96.3
 - name: OpenRay Dynamic-10797
   type: vless
   server: dabaius2.sylu.net
@@ -11212,18 +11226,6 @@ proxies:
     path: /a9b0a63d
     headers:
       Host: 216.167.36.69
-- name: OpenRay  US-14729
-  type: vmess
-  server: 52.37.231.43
-  port: 8686
-  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: end-gfw.com
 - name: OpenRay  US-14730
   type: vmess
   server: 54.201.150.202
@@ -19988,18 +19990,6 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  KR-1139
-  type: vmess
-  server: 43.200.244.65
-  port: 8686
-  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: end-gfw.com
 - name: OpenRay  KR-1140
   type: vmess
   server: 13.125.115.75
@@ -20075,6 +20065,18 @@ proxies:
 - name: OpenRay  KR-1149
   type: vmess
   server: 3.35.13.112
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: end-gfw.com
+- name: OpenRay  KR-1150
+  type: vmess
+  server: 52.79.139.67
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   alterId: 0
@@ -20832,6 +20834,18 @@ proxies:
 - name: OpenRay  JP-1887
   type: vmess
   server: 52.199.103.101
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: end-gfw.com
+- name: OpenRay  JP-1889
+  type: vmess
+  server: 52.192.63.113
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   alterId: 0
@@ -25647,6 +25661,14 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
+- name: OpenRay  HK-1069
+  type: vmess
+  server: 151.242.180.91
+  port: 30812
+  uuid: cbb3f877-d1fb-344c-87a9-d153bffd5484
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  CH-6
   type: vless
   server: 5.182.36.56
@@ -28464,6 +28486,7 @@ proxy-groups:
   - OpenRay  CA-17052
   - OpenRay  CA-17053
   - OpenRay  CA-17056
+  - OpenRay  CA-17057
   - OpenRay Dynamic-10797
   - OpenRay Dynamic-11334
   - OpenRay Dynamic-11336
@@ -29137,7 +29160,6 @@ proxy-groups:
   - OpenRay  US-14721
   - OpenRay  US-14723
   - OpenRay  US-14724
-  - OpenRay  US-14729
   - OpenRay  US-14730
   - OpenRay  US-14731
   - OpenRay  US-14732
@@ -29847,7 +29869,6 @@ proxy-groups:
   - OpenRay  KR-1105
   - OpenRay  KR-1106
   - OpenRay  KR-1128
-  - OpenRay  KR-1139
   - OpenRay  KR-1140
   - OpenRay  KR-1141
   - OpenRay  KR-1145
@@ -29855,6 +29876,7 @@ proxy-groups:
   - OpenRay  KR-1147
   - OpenRay  KR-1148
   - OpenRay  KR-1149
+  - OpenRay  KR-1150
   - OpenRay  JP-433
   - OpenRay  JP-608
   - OpenRay  JP-668
@@ -29918,6 +29940,7 @@ proxy-groups:
   - OpenRay  JP-1884
   - OpenRay  JP-1886
   - OpenRay  JP-1887
+  - OpenRay  JP-1889
   - OpenRay  FR-389
   - OpenRay  FR-449
   - OpenRay  FR-450
@@ -30324,6 +30347,7 @@ proxy-groups:
   - OpenRay  HK-1063
   - OpenRay  HK-1064
   - OpenRay  HK-1065
+  - OpenRay  HK-1069
   - OpenRay  CH-6
   - OpenRay  CH-12
   - OpenRay  CH-140
@@ -30837,6 +30861,7 @@ proxy-groups:
   - OpenRay  CA-17052
   - OpenRay  CA-17053
   - OpenRay  CA-17056
+  - OpenRay  CA-17057
   - OpenRay Dynamic-10797
   - OpenRay Dynamic-11334
   - OpenRay Dynamic-11336
@@ -31510,7 +31535,6 @@ proxy-groups:
   - OpenRay  US-14721
   - OpenRay  US-14723
   - OpenRay  US-14724
-  - OpenRay  US-14729
   - OpenRay  US-14730
   - OpenRay  US-14731
   - OpenRay  US-14732
@@ -32220,7 +32244,6 @@ proxy-groups:
   - OpenRay  KR-1105
   - OpenRay  KR-1106
   - OpenRay  KR-1128
-  - OpenRay  KR-1139
   - OpenRay  KR-1140
   - OpenRay  KR-1141
   - OpenRay  KR-1145
@@ -32228,6 +32251,7 @@ proxy-groups:
   - OpenRay  KR-1147
   - OpenRay  KR-1148
   - OpenRay  KR-1149
+  - OpenRay  KR-1150
   - OpenRay  JP-433
   - OpenRay  JP-608
   - OpenRay  JP-668
@@ -32291,6 +32315,7 @@ proxy-groups:
   - OpenRay  JP-1884
   - OpenRay  JP-1886
   - OpenRay  JP-1887
+  - OpenRay  JP-1889
   - OpenRay  FR-389
   - OpenRay  FR-449
   - OpenRay  FR-450
@@ -32697,6 +32722,7 @@ proxy-groups:
   - OpenRay  HK-1063
   - OpenRay  HK-1064
   - OpenRay  HK-1065
+  - OpenRay  HK-1069
   - OpenRay  CH-6
   - OpenRay  CH-12
   - OpenRay  CH-140
