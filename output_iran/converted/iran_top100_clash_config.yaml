@@ -724,6 +724,16 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -736,16 +746,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -1044,8 +1044,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  HU-7
-  - OpenRay  KZ-62
   - OpenRay  FR-513
+  - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
@@ -1124,8 +1124,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay Dynamic-11535
   - OpenRay  HU-7
-  - OpenRay  KZ-62
   - OpenRay  FR-513
+  - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
