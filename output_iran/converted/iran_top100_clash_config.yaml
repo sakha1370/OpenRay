@@ -482,18 +482,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  HK-188
-  type: vmess
-  server: 47.244.120.197
-  port: 44867
-  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.244.120.197
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -506,6 +494,18 @@ proxies:
     public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
     short-id: 1aab45
   client-fingerprint: chrome
+- name: OpenRay  HK-188
+  type: vmess
+  server: 47.244.120.197
+  port: 44867
+  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki?ed=2048
+    headers:
+      Host: 47.244.120.197
 - name: OpenRay  DE-2971
   type: vless
   server: 188.34.193.153
@@ -1024,8 +1024,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  FR-389
+  - OpenRay  HK-188
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1104,8 +1104,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  FR-389
+  - OpenRay  HK-188
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
