@@ -674,18 +674,6 @@ proxies:
     public-key: wNcFqVd4_PkgJbfgJJeouSU6Pn_Swuce4q4Chw5T0hY
     short-id: f7aa9e61197d3ac6
   client-fingerprint: random
-- name: OpenRay  PH-6
-  type: vmess
-  server: 61.245.11.60
-  port: 80
-  uuid: a3e3a710-79f8-4ae0-b83c-607aab40d197
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 61.245.11.60
 - name: OpenRay  AU-3
   type: vmess
   server: 45.15.185.17
@@ -698,6 +686,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.185.17
+- name: OpenRay  PH-6
+  type: vmess
+  server: 61.245.11.60
+  port: 80
+  uuid: a3e3a710-79f8-4ae0-b83c-607aab40d197
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 61.245.11.60
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -712,18 +712,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  KZ-62
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -736,6 +724,18 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  KZ-62
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  FR-513
   type: vless
   server: 152.228.162.19
@@ -1040,11 +1040,11 @@ proxy-groups:
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
   - OpenRay  NL-530
-  - OpenRay  PH-6
   - OpenRay  AU-3
+  - OpenRay  PH-6
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  HU-7
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
@@ -1120,11 +1120,11 @@ proxy-groups:
   - OpenRay Dynamic-11798
   - OpenRay  US-11678
   - OpenRay  NL-530
-  - OpenRay  PH-6
   - OpenRay  AU-3
+  - OpenRay  PH-6
   - OpenRay Dynamic-11535
-  - OpenRay  KZ-62
   - OpenRay  HU-7
+  - OpenRay  KZ-62
   - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
