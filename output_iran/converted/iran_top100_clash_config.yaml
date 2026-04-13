@@ -482,18 +482,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  HK-188
-  type: vmess
-  server: 47.244.120.197
-  port: 44867
-  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.244.120.197
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -506,6 +494,18 @@ proxies:
     public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
     short-id: 1aab45
   client-fingerprint: chrome
+- name: OpenRay  HK-188
+  type: vmess
+  server: 47.244.120.197
+  port: 44867
+  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki?ed=2048
+    headers:
+      Host: 47.244.120.197
 - name: OpenRay  DE-2971
   type: vless
   server: 188.34.193.153
@@ -724,16 +724,6 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -746,6 +736,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -804,18 +804,6 @@ proxies:
     path: ws
     headers:
       Host: tiny-leaf-f59f.my-lla-s-a-njo-s-e.workers.dev
-- name: OpenRay  CA-12450
-  type: vless
-  server: 188.114.98.134
-  port: 443
-  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
-  network: ws
-  tls: true
-  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
-  ws-opts:
-    path: /yraL4HRbwB8cMc0F?ed=2560
-    headers:
-      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-12448
   type: vless
   server: 188.114.96.7
@@ -826,6 +814,18 @@ proxies:
   servername: o94yv7lIF0-AnXiSd9EFeHVVS7mxn6Bh.z-ULe-IKA-d-e-Ne-k-E.WORKERs.DEv
   ws-opts:
     path: /dbJqwUHWfrXV0Z3Q?ed=2560
+    headers:
+      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
+- name: OpenRay  CA-12450
+  type: vless
+  server: 188.114.98.134
+  port: 443
+  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
+  network: ws
+  tls: true
+  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
+  ws-opts:
+    path: /yraL4HRbwB8cMc0F?ed=2560
     headers:
       Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-11587
@@ -849,16 +849,6 @@ proxies:
     path: /🔒 [By EbraSha]
     headers:
       Host: icy-wildflower-2590.lihuifeng595.workers.dev
-- name: OpenRay  CA-11829
-  type: vless
-  server: 104.18.2.11
-  port: 2082
-  uuid: cb213db5-803d-49dd-a7e2-46d938af0751
-  network: ws
-  ws-opts:
-    path: /?ed=2560
-    headers:
-      Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
 - name: OpenRay  CA-11780
   type: vless
   server: irancell.buzzmuzzpanel.online
@@ -872,6 +862,16 @@ proxies:
       /eyJqdW5rIjoicFhKOXNLOTA3TnFBTWhiIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eWlwIiwicGFuZWxJUHMiOlsiMjE3LjE0Mi4yMzYuOTMiXX0=?ed=2560
     headers:
       Host: 011.electrocellco-cf-011.workers.dev
+- name: OpenRay  CA-11829
+  type: vless
+  server: 104.18.2.11
+  port: 2082
+  uuid: cb213db5-803d-49dd-a7e2-46d938af0751
+  network: ws
+  ws-opts:
+    path: /?ed=2560
+    headers:
+      Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
 - name: OpenRay Dynamic-11769
   type: vless
   server: www.visaeurope.at
@@ -1024,8 +1024,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  FR-389
+  - OpenRay  HK-188
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1044,19 +1044,19 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay Dynamic-11535
   - OpenRay  HU-7
-  - OpenRay  FR-513
   - OpenRay  KZ-62
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  CA-11587
   - OpenRay  CA-11586
-  - OpenRay  CA-11829
   - OpenRay  CA-11780
+  - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-12439
   - OpenRay  CA-12438
@@ -1104,8 +1104,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  FR-389
+  - OpenRay  HK-188
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1124,19 +1124,19 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay Dynamic-11535
   - OpenRay  HU-7
-  - OpenRay  FR-513
   - OpenRay  KZ-62
+  - OpenRay  FR-513
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  CA-11587
   - OpenRay  CA-11586
-  - OpenRay  CA-11829
   - OpenRay  CA-11780
+  - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-12439
   - OpenRay  CA-12438
