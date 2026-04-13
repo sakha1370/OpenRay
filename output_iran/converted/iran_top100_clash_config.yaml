@@ -482,18 +482,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  FR-389
-  type: vless
-  server: 94.232.247.168
-  port: 41360
-  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
-    short-id: 1aab45
-  client-fingerprint: chrome
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -506,6 +494,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  FR-389
+  type: vless
+  server: 94.232.247.168
+  port: 41360
+  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
+    short-id: 1aab45
+  client-fingerprint: chrome
 - name: OpenRay  DE-2971
   type: vless
   server: 188.34.193.153
@@ -1024,8 +1024,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  FR-389
   - OpenRay  HK-188
+  - OpenRay  FR-389
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1104,8 +1104,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  FR-389
   - OpenRay  HK-188
+  - OpenRay  FR-389
   - OpenRay  DE-2971
   - OpenRay  KZ-67
   - OpenRay  MY-20
