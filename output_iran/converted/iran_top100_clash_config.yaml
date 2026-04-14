@@ -418,19 +418,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  TR-67
-  type: vless
-  server: 94.131.123.167
-  port: 443
-  uuid: a44e0875-210f-4941-9062-89b6361a14c6
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: apple.com
-  reality-opts:
-    public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
-    short-id: 8bcfe256cf216fd8
-  client-fingerprint: chrome
 - name: OpenRay Dynamic-11820
   type: vmess
   server: cf.090227.xyz
@@ -445,6 +432,19 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  TR-67
+  type: vless
+  server: 94.131.123.167
+  port: 443
+  uuid: a44e0875-210f-4941-9062-89b6361a14c6
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: apple.com
+  reality-opts:
+    public-key: i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4
+    short-id: 8bcfe256cf216fd8
+  client-fingerprint: chrome
 - name: OpenRay  KZ-57
   type: vmess
   server: 38.107.234.57
@@ -1019,8 +1019,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  US-11494
   - OpenRay  AL-7
-  - OpenRay  TR-67
   - OpenRay Dynamic-11820
+  - OpenRay  TR-67
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
@@ -1099,8 +1099,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  US-11494
   - OpenRay  AL-7
-  - OpenRay  TR-67
   - OpenRay Dynamic-11820
+  - OpenRay  TR-67
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
