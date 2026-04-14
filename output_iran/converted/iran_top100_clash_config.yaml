@@ -698,6 +698,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 61.245.11.60
+- name: OpenRay  HU-7
+  type: vless
+  server: 5.182.38.91
+  port: 17267
+  uuid: 1c7fcc38-e6be-43c5-875f-b8de2516b9f2
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
+    short-id: 4ae260
+  client-fingerprint: chrome
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -712,18 +724,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  HU-7
-  type: vless
-  server: 5.182.38.91
-  port: 17267
-  uuid: 1c7fcc38-e6be-43c5-875f-b8de2516b9f2
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
-    short-id: 4ae260
-  client-fingerprint: chrome
 - name: OpenRay  FR-513
   type: vless
   server: 152.228.162.19
@@ -1042,8 +1042,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay Dynamic-11535
   - OpenRay  HU-7
+  - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  KZ-62
   - OpenRay  AL-10
@@ -1122,8 +1122,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay Dynamic-11535
   - OpenRay  HU-7
+  - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  KZ-62
   - OpenRay  AL-10
