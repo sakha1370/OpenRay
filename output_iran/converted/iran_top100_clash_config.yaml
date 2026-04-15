@@ -494,18 +494,6 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
-- name: OpenRay  FR-389
-  type: vless
-  server: 94.232.247.168
-  port: 41360
-  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
-    short-id: 1aab45
-  client-fingerprint: chrome
 - name: OpenRay  DE-2971
   type: vless
   server: 188.34.193.153
@@ -518,6 +506,18 @@ proxies:
   reality-opts:
     public-key: gZGVp5PUdafgsmi1gawa1yLuha_XhXRc_W9SvPiGmTY
     short-id: 7cad5040
+  client-fingerprint: chrome
+- name: OpenRay  FR-389
+  type: vless
+  server: 94.232.247.168
+  port: 41360
+  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
+    short-id: 1aab45
   client-fingerprint: chrome
 - name: OpenRay  KZ-67
   type: vmess
@@ -892,6 +892,16 @@ proxies:
     path: /
     headers:
       Host: vpnpro.eshghiabolfazl2009.workers.dev
+- name: OpenRay  CA-12438
+  type: vless
+  server: 172.67.172.86
+  port: 80
+  uuid: 14e1775b-d92c-455b-8db3-e6c6d61909e0
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: vpnpro.eshghiabolfazl2009.workers.dev
 - name: OpenRay Dynamic-12432
   type: vless
   server: 026.electrocellco-cf-026.workers.dev
@@ -905,16 +915,6 @@ proxies:
       /eyJqdW5rIjoieUVOZzhGTTh2OWdLcVYzRCIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbXX0
     headers:
       Host: 026.electrocellco-cf-026.workers.dev
-- name: OpenRay  CA-12438
-  type: vless
-  server: 172.67.172.86
-  port: 80
-  uuid: 14e1775b-d92c-455b-8db3-e6c6d61909e0
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: vpnpro.eshghiabolfazl2009.workers.dev
 - name: OpenRay  CA-11717
   type: vless
   server: 104.18.13.229
@@ -1025,8 +1025,8 @@ proxy-groups:
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
-  - OpenRay  FR-389
   - OpenRay  DE-2971
+  - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
   - OpenRay  CA-12446
@@ -1059,8 +1059,8 @@ proxy-groups:
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-12439
-  - OpenRay Dynamic-12432
   - OpenRay  CA-12438
+  - OpenRay Dynamic-12432
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
   - OpenRay  CA-11734
@@ -1105,8 +1105,8 @@ proxy-groups:
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
-  - OpenRay  FR-389
   - OpenRay  DE-2971
+  - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
   - OpenRay  CA-12446
@@ -1139,8 +1139,8 @@ proxy-groups:
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
   - OpenRay  CA-12439
-  - OpenRay Dynamic-12432
   - OpenRay  CA-12438
+  - OpenRay Dynamic-12432
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
   - OpenRay  CA-11734
