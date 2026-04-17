@@ -672,20 +672,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 61.245.11.60
-- name: OpenRay Dynamic-11535
-  type: vmess
-  server: cf.090227.xyz
-  port: 443
-  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: sgal.dagrate.eu.org
-  ws-opts:
-    path: /
-    headers:
-      Host: sgal.dagrate.eu.org
 - name: OpenRay  FR-513
   type: vless
   server: 152.228.162.19
@@ -708,6 +694,20 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay Dynamic-11535
+  type: vmess
+  server: cf.090227.xyz
+  port: 443
+  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: sgal.dagrate.eu.org
+  ws-opts:
+    path: /
+    headers:
+      Host: sgal.dagrate.eu.org
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -977,18 +977,16 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  KZ-58
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  IN-14
+  type: vless
+  server: pq-india1.09vpn.com
   port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
+  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
   network: ws
   ws-opts:
-    path: /vmess/
+    path: /vless/
     headers:
-      Host: 3h-kazakhstan1.09vpn.com
+      Host: pq-india1.09vpn.com
 
 proxy-groups:
 - name: AUTO
@@ -1046,9 +1044,9 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  DK-1
@@ -1073,7 +1071,7 @@ proxy-groups:
   - OpenRay  AL-8
   - OpenRay  FR-496
   - OpenRay Dynamic-11837
-  - OpenRay  KZ-58
+  - OpenRay  IN-14
 - name: PROXY
   type: select
   proxies:
@@ -1127,9 +1125,9 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
   - OpenRay  DK-1
@@ -1154,7 +1152,7 @@ proxy-groups:
   - OpenRay  AL-8
   - OpenRay  FR-496
   - OpenRay Dynamic-11837
-  - OpenRay  KZ-58
+  - OpenRay  IN-14
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
