@@ -672,16 +672,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 61.245.11.60
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -694,6 +684,16 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -1045,8 +1045,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
@@ -1126,8 +1126,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  FR-513
   - OpenRay  HU-7
+  - OpenRay  FR-513
   - OpenRay Dynamic-11535
   - OpenRay  KZ-62
   - OpenRay  AL-10
