@@ -708,18 +708,6 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
-- name: OpenRay  AL-10
-  type: vmess
-  server: 45.15.170.237
-  port: 80
-  uuid: 820d4b4f-3357-4dc7-9381-6e5fd52b5f39
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -732,6 +720,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  AL-10
+  type: vmess
+  server: 45.15.170.237
+  port: 80
+  uuid: 820d4b4f-3357-4dc7-9381-6e5fd52b5f39
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 45.15.170.237
 - name: OpenRay  DK-1
   type: vless
   server: 45.148.31.0
@@ -887,6 +887,18 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  LV-16
+  type: vless
+  server: 37.233.82.140
+  port: 40478
+  uuid: e977d854-33f3-4345-abee-bf3fa9a6d880
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: lcJ0LSh015XRfz5-7wB_hln3-bq5ZatFgPugSUCrdR0
+    short-id: 3c
+  client-fingerprint: chrome
 - name: OpenRay  DE-3506
   type: vless
   server: 57.129.53.182
@@ -899,18 +911,6 @@ proxies:
   reality-opts:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  LV-16
-  type: vless
-  server: 37.233.82.140
-  port: 40478
-  uuid: e977d854-33f3-4345-abee-bf3fa9a6d880
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: lcJ0LSh015XRfz5-7wB_hln3-bq5ZatFgPugSUCrdR0
-    short-id: 3c
   client-fingerprint: chrome
 - name: OpenRay  DE-3220
   type: vless
@@ -1048,8 +1048,8 @@ proxy-groups:
   - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  HU-7
-  - OpenRay  AL-10
   - OpenRay  KZ-62
+  - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
   - OpenRay  MY-7
@@ -1064,8 +1064,8 @@ proxy-groups:
   - OpenRay  CA-12438
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
-  - OpenRay  DE-3506
   - OpenRay  LV-16
+  - OpenRay  DE-3506
   - OpenRay  DE-3220
   - OpenRay  DE-3173
   - OpenRay  AL-8
@@ -1129,8 +1129,8 @@ proxy-groups:
   - OpenRay Dynamic-11535
   - OpenRay  FR-513
   - OpenRay  HU-7
-  - OpenRay  AL-10
   - OpenRay  KZ-62
+  - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-76
   - OpenRay  MY-7
@@ -1145,8 +1145,8 @@ proxy-groups:
   - OpenRay  CA-12438
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
-  - OpenRay  DE-3506
   - OpenRay  LV-16
+  - OpenRay  DE-3506
   - OpenRay  DE-3220
   - OpenRay  DE-3173
   - OpenRay  AL-8
