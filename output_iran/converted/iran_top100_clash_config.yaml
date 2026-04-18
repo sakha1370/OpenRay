@@ -656,18 +656,6 @@ proxies:
     path: /vless/
     headers:
       Host: 152.228.162.19
-- name: OpenRay  AL-10
-  type: vmess
-  server: 45.15.170.237
-  port: 80
-  uuid: 820d4b4f-3357-4dc7-9381-6e5fd52b5f39
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -680,6 +668,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  AL-10
+  type: vmess
+  server: 45.15.170.237
+  port: 80
+  uuid: 820d4b4f-3357-4dc7-9381-6e5fd52b5f39
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 45.15.170.237
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -1005,8 +1005,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AL-10
   - OpenRay  KZ-62
+  - OpenRay  AL-10
   - OpenRay  HU-7
   - OpenRay Dynamic-11535
   - OpenRay  DK-1
@@ -1083,8 +1083,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AL-10
   - OpenRay  KZ-62
+  - OpenRay  AL-10
   - OpenRay  HU-7
   - OpenRay Dynamic-11535
   - OpenRay  DK-1
