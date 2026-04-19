@@ -286,6 +286,18 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay Dynamic-11612
+  type: vmess
+  server: cf.090227.xyz
+  port: 443
+  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: sgal.dagrate.eu.org
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -296,18 +308,6 @@ proxies:
   network: ws
   tls: true
   servername: sgal.dagrate.eu.org
-  ws-opts:
-    path: /
-    headers:
-      Host: sgal.dagrate.eu.org
-- name: OpenRay Dynamic-11612
-  type: vmess
-  server: cf.090227.xyz
-  port: 443
-  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
-  alterId: 0
-  cipher: auto
-  network: ws
   ws-opts:
     path: /
     headers:
@@ -656,18 +656,6 @@ proxies:
     path: /vless/
     headers:
       Host: 152.228.162.19
-- name: OpenRay  KZ-62
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -680,6 +668,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  KZ-62
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 3h-kazakhstan1.09vpn.com
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -927,16 +927,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  IN-14
-  type: vless
-  server: pq-india1.09vpn.com
-  port: 80
-  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: pq-india1.09vpn.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -949,6 +939,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  IN-14
+  type: vless
+  server: pq-india1.09vpn.com
+  port: 80
+  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: pq-india1.09vpn.com
 
 proxy-groups:
 - name: AUTO
@@ -974,8 +974,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay Dynamic-11334
   - OpenRay  FR-489
-  - OpenRay Dynamic-11818
   - OpenRay Dynamic-11612
+  - OpenRay Dynamic-11818
   - OpenRay  FR-507
   - OpenRay  US-11668
   - OpenRay  MY-6
@@ -1005,8 +1005,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay Dynamic-11535
   - OpenRay  DK-1
@@ -1029,8 +1029,8 @@ proxy-groups:
   - OpenRay  AL-8
   - OpenRay  FR-496
   - OpenRay Dynamic-11837
-  - OpenRay  IN-14
   - OpenRay  KZ-58
+  - OpenRay  IN-14
 - name: PROXY
   type: select
   proxies:
@@ -1052,8 +1052,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay Dynamic-11334
   - OpenRay  FR-489
-  - OpenRay Dynamic-11818
   - OpenRay Dynamic-11612
+  - OpenRay Dynamic-11818
   - OpenRay  FR-507
   - OpenRay  US-11668
   - OpenRay  MY-6
@@ -1083,8 +1083,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  KZ-62
   - OpenRay  AL-10
+  - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay Dynamic-11535
   - OpenRay  DK-1
@@ -1107,8 +1107,8 @@ proxy-groups:
   - OpenRay  AL-8
   - OpenRay  FR-496
   - OpenRay Dynamic-11837
-  - OpenRay  IN-14
   - OpenRay  KZ-58
+  - OpenRay  IN-14
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
