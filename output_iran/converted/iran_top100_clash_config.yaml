@@ -286,6 +286,18 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay Dynamic-11612
+  type: vmess
+  server: cf.090227.xyz
+  port: 443
+  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: sgal.dagrate.eu.org
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -296,18 +308,6 @@ proxies:
   network: ws
   tls: true
   servername: sgal.dagrate.eu.org
-  ws-opts:
-    path: /
-    headers:
-      Host: sgal.dagrate.eu.org
-- name: OpenRay Dynamic-11612
-  type: vmess
-  server: cf.090227.xyz
-  port: 443
-  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
-  alterId: 0
-  cipher: auto
-  network: ws
   ws-opts:
     path: /
     headers:
@@ -974,8 +974,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay Dynamic-11334
   - OpenRay  FR-489
-  - OpenRay Dynamic-11818
   - OpenRay Dynamic-11612
+  - OpenRay Dynamic-11818
   - OpenRay  FR-507
   - OpenRay  US-11668
   - OpenRay  MY-6
@@ -1052,8 +1052,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay Dynamic-11334
   - OpenRay  FR-489
-  - OpenRay Dynamic-11818
   - OpenRay Dynamic-11612
+  - OpenRay Dynamic-11818
   - OpenRay  FR-507
   - OpenRay  US-11668
   - OpenRay  MY-6
