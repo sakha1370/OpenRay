@@ -260,18 +260,6 @@ proxies:
     path: /vless/
     headers:
       Host: akamaized.net
-- name: OpenRay Dynamic-11612
-  type: vmess
-  server: cf.090227.xyz
-  port: 443
-  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: sgal.dagrate.eu.org
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -282,6 +270,18 @@ proxies:
   network: ws
   tls: true
   servername: sgal.dagrate.eu.org
+  ws-opts:
+    path: /
+    headers:
+      Host: sgal.dagrate.eu.org
+- name: OpenRay Dynamic-11612
+  type: vmess
+  server: cf.090227.xyz
+  port: 443
+  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
+  alterId: 0
+  cipher: auto
+  network: ws
   ws-opts:
     path: /
     headers:
@@ -867,16 +867,6 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
-- name: OpenRay  IN-14
-  type: vless
-  server: pq-india1.09vpn.com
-  port: 80
-  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: pq-india1.09vpn.com
 - name: OpenRay Dynamic-11837
   type: vmess
   server: cf.090227.xyz
@@ -891,6 +881,16 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  IN-14
+  type: vless
+  server: pq-india1.09vpn.com
+  port: 80
+  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: pq-india1.09vpn.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -938,8 +938,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay  FR-489
   - OpenRay  FR-507
-  - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
+  - OpenRay Dynamic-11612
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
@@ -990,8 +990,8 @@ proxy-groups:
   - OpenRay  DE-3173
   - OpenRay  AL-8
   - OpenRay  FR-496
-  - OpenRay  IN-14
   - OpenRay Dynamic-11837
+  - OpenRay  IN-14
   - OpenRay  KZ-58
   - OpenRay  HK-301
 - name: PROXY
@@ -1013,8 +1013,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay  FR-489
   - OpenRay  FR-507
-  - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
+  - OpenRay Dynamic-11612
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
@@ -1065,8 +1065,8 @@ proxy-groups:
   - OpenRay  DE-3173
   - OpenRay  AL-8
   - OpenRay  FR-496
-  - OpenRay  IN-14
   - OpenRay Dynamic-11837
+  - OpenRay  IN-14
   - OpenRay  KZ-58
   - OpenRay  HK-301
 rules:
