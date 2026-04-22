@@ -260,18 +260,6 @@ proxies:
     path: /vless/
     headers:
       Host: akamaized.net
-- name: OpenRay Dynamic-11612
-  type: vmess
-  server: cf.090227.xyz
-  port: 443
-  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: sgal.dagrate.eu.org
 - name: OpenRay Dynamic-11818
   type: vmess
   server: cf.090227.xyz
@@ -282,6 +270,18 @@ proxies:
   network: ws
   tls: true
   servername: sgal.dagrate.eu.org
+  ws-opts:
+    path: /
+    headers:
+      Host: sgal.dagrate.eu.org
+- name: OpenRay Dynamic-11612
+  type: vmess
+  server: cf.090227.xyz
+  port: 443
+  uuid: 290cc691-3ac6-4387-98a1-25c8eb8ca2ea
+  alterId: 0
+  cipher: auto
+  network: ws
   ws-opts:
     path: /
     headers:
@@ -407,18 +407,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  HK-188
-  type: vmess
-  server: 47.244.120.197
-  port: 44867
-  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.244.120.197
 - name: OpenRay  DE-2971
   type: vless
   server: 188.34.193.153
@@ -432,6 +420,18 @@ proxies:
     public-key: gZGVp5PUdafgsmi1gawa1yLuha_XhXRc_W9SvPiGmTY
     short-id: 7cad5040
   client-fingerprint: chrome
+- name: OpenRay  HK-188
+  type: vmess
+  server: 47.244.120.197
+  port: 44867
+  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki?ed=2048
+    headers:
+      Host: 47.244.120.197
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -867,6 +867,16 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay  IN-14
+  type: vless
+  server: pq-india1.09vpn.com
+  port: 80
+  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: pq-india1.09vpn.com
 - name: OpenRay Dynamic-11837
   type: vmess
   server: cf.090227.xyz
@@ -881,16 +891,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  IN-14
-  type: vless
-  server: pq-india1.09vpn.com
-  port: 80
-  uuid: 05b544a4-d479-4ba4-8208-950bd4411453
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: pq-india1.09vpn.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -938,8 +938,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay  FR-489
   - OpenRay  FR-507
-  - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
+  - OpenRay Dynamic-11612
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
@@ -950,8 +950,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  DE-2971
+  - OpenRay  HK-188
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -990,8 +990,8 @@ proxy-groups:
   - OpenRay  DE-3173
   - OpenRay  AL-8
   - OpenRay  FR-496
-  - OpenRay Dynamic-11837
   - OpenRay  IN-14
+  - OpenRay Dynamic-11837
   - OpenRay  KZ-58
   - OpenRay  HK-301
 - name: PROXY
@@ -1013,8 +1013,8 @@ proxy-groups:
   - OpenRay  US-11298
   - OpenRay  FR-489
   - OpenRay  FR-507
-  - OpenRay Dynamic-11612
   - OpenRay Dynamic-11818
+  - OpenRay Dynamic-11612
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
@@ -1025,8 +1025,8 @@ proxy-groups:
   - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
-  - OpenRay  HK-188
   - OpenRay  DE-2971
+  - OpenRay  HK-188
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1065,8 +1065,8 @@ proxy-groups:
   - OpenRay  DE-3173
   - OpenRay  AL-8
   - OpenRay  FR-496
-  - OpenRay Dynamic-11837
   - OpenRay  IN-14
+  - OpenRay Dynamic-11837
   - OpenRay  KZ-58
   - OpenRay  HK-301
 rules:
