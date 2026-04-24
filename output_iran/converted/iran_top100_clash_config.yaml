@@ -748,16 +748,6 @@ proxies:
     path: /?ed=2560
     headers:
       Host: amiroo-l43dac88-v2.amiroo-d8b.workers.dev
-- name: OpenRay  CA-12439
-  type: vless
-  server: 104.21.80.5
-  port: 80
-  uuid: 14e1775b-d92c-455b-8db3-e6c6d61909e0
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: vpnpro.eshghiabolfazl2009.workers.dev
 - name: OpenRay Dynamic-12432
   type: vless
   server: 026.electrocellco-cf-026.workers.dev
@@ -771,6 +761,16 @@ proxies:
       /eyJqdW5rIjoieUVOZzhGTTh2OWdLcVYzRCIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbXX0
     headers:
       Host: 026.electrocellco-cf-026.workers.dev
+- name: OpenRay  CA-12439
+  type: vless
+  server: 104.21.80.5
+  port: 80
+  uuid: 14e1775b-d92c-455b-8db3-e6c6d61909e0
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: vpnpro.eshghiabolfazl2009.workers.dev
 - name: OpenRay  CA-12438
   type: vless
   server: 172.67.172.86
@@ -967,8 +967,8 @@ proxy-groups:
   - OpenRay  CA-11586
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
-  - OpenRay  CA-12439
   - OpenRay Dynamic-12432
+  - OpenRay  CA-12439
   - OpenRay  CA-12438
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
@@ -1041,8 +1041,8 @@ proxy-groups:
   - OpenRay  CA-11586
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
-  - OpenRay  CA-12439
   - OpenRay Dynamic-12432
+  - OpenRay  CA-12439
   - OpenRay  CA-12438
   - OpenRay  CA-11717
   - OpenRay Dynamic-11791
