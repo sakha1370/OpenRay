@@ -141,18 +141,6 @@ proxies:
     path: /vmessws
     headers:
       Host: 209.126.84.189
-- name: OpenRay  US-11402
-  type: vmess
-  server: 209.126.84.189
-  port: 443
-  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmessws
-    headers:
-      Host: 209.126.84.189
 - name: OpenRay  JP-433
   type: vless
   server: 45.89.109.25
@@ -165,6 +153,18 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
+- name: OpenRay  US-11402
+  type: vmess
+  server: 209.126.84.189
+  port: 443
+  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmessws
+    headers:
+      Host: 209.126.84.189
 - name: OpenRay  US-11431
   type: vmess
   server: 209.126.84.189
@@ -634,6 +634,16 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
+- name: OpenRay  DK-1
+  type: vless
+  server: 45.148.31.0
+  port: 15855
+  uuid: e4fc4761-154f-490e-bbaa-b4fa193f1073
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: 45.148.31.0
 - name: OpenRay Dynamic-11535
   type: vmess
   server: cf.090227.xyz
@@ -648,16 +658,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  DK-1
-  type: vless
-  server: 45.148.31.0
-  port: 15855
-  uuid: e4fc4761-154f-490e-bbaa-b4fa193f1073
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: 45.148.31.0
 - name: OpenRay  KZ-76
   type: vmess
   server: 38.107.234.57
@@ -928,8 +928,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  US-11385
-  - OpenRay  US-11402
   - OpenRay  JP-433
+  - OpenRay  US-11402
   - OpenRay  US-11431
   - OpenRay  US-11387
   - OpenRay  US-11241
@@ -969,8 +969,8 @@ proxy-groups:
   - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
-  - OpenRay Dynamic-11535
   - OpenRay  DK-1
+  - OpenRay Dynamic-11535
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
@@ -1003,8 +1003,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  US-11385
-  - OpenRay  US-11402
   - OpenRay  JP-433
+  - OpenRay  US-11402
   - OpenRay  US-11431
   - OpenRay  US-11387
   - OpenRay  US-11241
@@ -1044,8 +1044,8 @@ proxy-groups:
   - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
-  - OpenRay Dynamic-11535
   - OpenRay  DK-1
+  - OpenRay Dynamic-11535
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
