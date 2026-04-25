@@ -310,18 +310,6 @@ proxies:
     public-key: nWQ7b9l9X6N3PrXLgIzOvMM8iSYrqjVHEb9ikWxqYSg
     short-id: 0e
   client-fingerprint: chrome
-- name: OpenRay  US-11494
-  type: vmess
-  server: 209.126.84.189
-  port: 443
-  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmessws
-    headers:
-      Host: 209.126.84.189
 - name: OpenRay  GR-1
   type: vless
   server: 94.131.8.19
@@ -334,6 +322,18 @@ proxies:
     public-key: MmEVCRy11fz67vYJQWyA2a_ZPMBzv2le2cus1XSSI0E
     short-id: 958639bf55e679
   client-fingerprint: chrome
+- name: OpenRay  US-11494
+  type: vmess
+  server: 209.126.84.189
+  port: 443
+  uuid: 2c981164-9b93-4bca-94ff-b78d3f8498d7
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmessws
+    headers:
+      Host: 209.126.84.189
 - name: OpenRay  AL-7
   type: vless
   server: pq-albania1.09vpn.com
@@ -930,8 +930,8 @@ proxy-groups:
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
-  - OpenRay  US-11494
   - OpenRay  GR-1
+  - OpenRay  US-11494
   - OpenRay  AL-7
   - OpenRay Dynamic-11820
   - OpenRay  KZ-57
@@ -1004,8 +1004,8 @@ proxy-groups:
   - OpenRay  US-11668
   - OpenRay  MY-6
   - OpenRay  AM-4
-  - OpenRay  US-11494
   - OpenRay  GR-1
+  - OpenRay  US-11494
   - OpenRay  AL-7
   - OpenRay Dynamic-11820
   - OpenRay  KZ-57
