@@ -634,18 +634,6 @@ proxies:
     path: ws
     headers:
       Host: tiny-leaf-f59f.my-lla-s-a-njo-s-e.workers.dev
-- name: OpenRay  CA-12448
-  type: vless
-  server: 188.114.96.7
-  port: 443
-  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
-  network: ws
-  tls: true
-  servername: o94yv7lIF0-AnXiSd9EFeHVVS7mxn6Bh.z-ULe-IKA-d-e-Ne-k-E.WORKERs.DEv
-  ws-opts:
-    path: /dbJqwUHWfrXV0Z3Q?ed=2560
-    headers:
-      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-12450
   type: vless
   server: 188.114.98.134
@@ -656,6 +644,18 @@ proxies:
   servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
   ws-opts:
     path: /yraL4HRbwB8cMc0F?ed=2560
+    headers:
+      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
+- name: OpenRay  CA-12448
+  type: vless
+  server: 188.114.96.7
+  port: 443
+  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
+  network: ws
+  tls: true
+  servername: o94yv7lIF0-AnXiSd9EFeHVVS7mxn6Bh.z-ULe-IKA-d-e-Ne-k-E.WORKERs.DEv
+  ws-opts:
+    path: /dbJqwUHWfrXV0Z3Q?ed=2560
     headers:
       Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-11586
@@ -867,28 +867,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.250.45.234
-- name: OpenRay Dynamic-11697
+- name: OpenRay Dynamic-11779
   type: vless
-  server: 019.electrocellco-cf-019.workers.dev
-  port: 80
-  uuid: 94671f42-fdd3-4503-a3e6-bda4a2527560
+  server: labeller.neonime83.workers.dev
+  port: 443
+  uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
   network: ws
+  tls: true
+  servername: labeller.neonime83.workers.dev
   ws-opts:
-    path: 
-      /eyJqdW5rIjoibUVFb0RQcHJZZSIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbIjM0LjI1My4yMzQuNjIiXX0=?ed=2560
+    path: /?ed=2560
     headers:
-      Host: 019.electrocellco-cf-019.workers.dev
-- name: OpenRay  CA-11825
-  type: vless
-  server: 104.21.22.213
-  port: 80
-  uuid: 94671f42-fdd3-4503-a3e6-bda4a2527560
-  network: ws
-  ws-opts:
-    path: 
-      /eyJqdW5rIjoibUVFb0RQcHJZZSIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbIjM0LjI1My4yMzQuNjIiXX0=?ed=2560
-    headers:
-      Host: 019.electrocellco-cf-019.workers.dev
+      Host: labeller.neonime83.workers.dev
 - name: OpenRay  CA-11855
   type: vless
   server: 188.114.97.3
@@ -901,6 +891,18 @@ proxies:
     path: /
     headers:
       Host: labeller.neonime83.workers.dev
+- name: OpenRay Dynamic-11710
+  type: vless
+  server: mybb.com
+  port: 443
+  uuid: aebe5a70-0ca3-46ce-8208-8b5bab1346ce
+  network: ws
+  tls: true
+  servername: rAyAn-007.nAsTaRaN.DpDnS.OrG
+  ws-opts:
+    path: /?ed=2560
+    headers:
+      Host: rayan-007.nastaran.dpdns.org
 
 proxy-groups:
 - name: AUTO
@@ -955,8 +957,8 @@ proxy-groups:
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12448
   - OpenRay  CA-12450
+  - OpenRay  CA-12448
   - OpenRay  CA-11586
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
@@ -976,9 +978,9 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11697
-  - OpenRay  CA-11825
+  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11710
 - name: PROXY
   type: select
   proxies:
@@ -1029,8 +1031,8 @@ proxy-groups:
   - OpenRay  KZ-76
   - OpenRay  MY-7
   - OpenRay Dynamic-11763
-  - OpenRay  CA-12448
   - OpenRay  CA-12450
+  - OpenRay  CA-12448
   - OpenRay  CA-11586
   - OpenRay  CA-11829
   - OpenRay Dynamic-11769
@@ -1050,9 +1052,9 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11697
-  - OpenRay  CA-11825
+  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11710
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
