@@ -889,16 +889,16 @@ proxies:
       /eyJqdW5rIjoibUVFb0RQcHJZZSIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbIjM0LjI1My4yMzQuNjIiXX0=?ed=2560
     headers:
       Host: 019.electrocellco-cf-019.workers.dev
-- name: OpenRay Dynamic-11779
+- name: OpenRay  CA-11855
   type: vless
-  server: labeller.neonime83.workers.dev
+  server: 188.114.97.3
   port: 443
   uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
   network: ws
   tls: true
   servername: labeller.neonime83.workers.dev
   ws-opts:
-    path: /?ed=2560
+    path: /
     headers:
       Host: labeller.neonime83.workers.dev
 
@@ -978,7 +978,7 @@ proxy-groups:
   - OpenRay  MY-23
   - OpenRay Dynamic-11697
   - OpenRay  CA-11825
-  - OpenRay Dynamic-11779
+  - OpenRay  CA-11855
 - name: PROXY
   type: select
   proxies:
@@ -1052,7 +1052,7 @@ proxy-groups:
   - OpenRay  MY-23
   - OpenRay Dynamic-11697
   - OpenRay  CA-11825
-  - OpenRay Dynamic-11779
+  - OpenRay  CA-11855
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
