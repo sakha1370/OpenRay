@@ -141,6 +141,18 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
+- name: OpenRay  US-11387
+  type: vless
+  server: 95.164.85.109
+  port: 59374
+  uuid: bfc78cd8-5951-4803-8d6c-4cedef8cd420
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: ZsswZuBV8bEGQWFrpShCilSytnDUj0kwHFhTSLXzOwc
+    short-id: d21e7c
+  client-fingerprint: chrome
 - name: OpenRay  US-11241
   type: vless
   server: 137.184.218.169
@@ -153,18 +165,6 @@ proxies:
   reality-opts:
     public-key: lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0
     short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  US-11387
-  type: vless
-  server: 95.164.85.109
-  port: 59374
-  uuid: bfc78cd8-5951-4803-8d6c-4cedef8cd420
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: ZsswZuBV8bEGQWFrpShCilSytnDUj0kwHFhTSLXzOwc
-    short-id: d21e7c
   client-fingerprint: chrome
 - name: OpenRay  US-11414
   type: vless
@@ -372,18 +372,6 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
-- name: OpenRay  FR-389
-  type: vless
-  server: 94.232.247.168
-  port: 41360
-  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
-    short-id: 1aab45
-  client-fingerprint: chrome
 - name: OpenRay  KZ-67
   type: vmess
   server: 38.107.234.57
@@ -397,6 +385,18 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
+- name: OpenRay  FR-389
+  type: vless
+  server: 94.232.247.168
+  port: 41360
+  uuid: e16a35ea-6715-4e75-9845-d20358bd0876
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: TY6w1zP-qUFKVCAQdQT2ZEJsZBrPO4hZjZYBSS6h6DU
+    short-id: 1aab45
+  client-fingerprint: chrome
 - name: OpenRay  MY-20
   type: vmess
   server: 47.250.45.234
@@ -528,6 +528,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 61.245.11.60
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -540,16 +550,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -916,8 +916,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  JP-433
-  - OpenRay  US-11241
   - OpenRay  US-11387
+  - OpenRay  US-11241
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay  FR-489
@@ -935,8 +935,8 @@ proxy-groups:
   - OpenRay  KZ-64
   - OpenRay  DE-2971
   - OpenRay  HK-188
-  - OpenRay  FR-389
   - OpenRay  KZ-67
+  - OpenRay  FR-389
   - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
@@ -948,8 +948,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  AL-10
   - OpenRay  FR-513
+  - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -990,8 +990,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  JP-433
-  - OpenRay  US-11241
   - OpenRay  US-11387
+  - OpenRay  US-11241
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay  FR-489
@@ -1009,8 +1009,8 @@ proxy-groups:
   - OpenRay  KZ-64
   - OpenRay  DE-2971
   - OpenRay  HK-188
-  - OpenRay  FR-389
   - OpenRay  KZ-67
+  - OpenRay  FR-389
   - OpenRay  MY-20
   - OpenRay  CA-12446
   - OpenRay Dynamic-12041
@@ -1022,8 +1022,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  AL-10
   - OpenRay  FR-513
+  - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay  DK-1
