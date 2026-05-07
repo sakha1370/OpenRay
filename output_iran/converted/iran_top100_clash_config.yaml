@@ -141,18 +141,6 @@ proxies:
     public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
     short-id: f0
   client-fingerprint: chrome
-- name: OpenRay  US-11387
-  type: vless
-  server: 95.164.85.109
-  port: 59374
-  uuid: bfc78cd8-5951-4803-8d6c-4cedef8cd420
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: ZsswZuBV8bEGQWFrpShCilSytnDUj0kwHFhTSLXzOwc
-    short-id: d21e7c
-  client-fingerprint: chrome
 - name: OpenRay  US-11241
   type: vless
   server: 137.184.218.169
@@ -165,6 +153,18 @@ proxies:
   reality-opts:
     public-key: lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0
     short-id: ''
+  client-fingerprint: chrome
+- name: OpenRay  US-11387
+  type: vless
+  server: 95.164.85.109
+  port: 59374
+  uuid: bfc78cd8-5951-4803-8d6c-4cedef8cd420
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: ZsswZuBV8bEGQWFrpShCilSytnDUj0kwHFhTSLXzOwc
+    short-id: d21e7c
   client-fingerprint: chrome
 - name: OpenRay  US-11414
   type: vless
@@ -528,6 +528,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 61.245.11.60
+- name: OpenRay  FR-513
+  type: vless
+  server: 152.228.162.19
+  port: 80
+  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 152.228.162.19
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -540,16 +550,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
-- name: OpenRay  FR-513
-  type: vless
-  server: 152.228.162.19
-  port: 80
-  uuid: 25f86cb1-2140-4085-abcb-c3a0ea7a4be0
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 152.228.162.19
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -916,8 +916,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  JP-433
-  - OpenRay  US-11387
   - OpenRay  US-11241
+  - OpenRay  US-11387
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay  FR-489
@@ -948,8 +948,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  AL-10
   - OpenRay  FR-513
+  - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay  DK-1
@@ -990,8 +990,8 @@ proxy-groups:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
   - OpenRay  JP-433
-  - OpenRay  US-11387
   - OpenRay  US-11241
+  - OpenRay  US-11387
   - OpenRay  US-11414
   - OpenRay  HK-53
   - OpenRay  FR-489
@@ -1022,8 +1022,8 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  AU-3
   - OpenRay  PH-6
-  - OpenRay  AL-10
   - OpenRay  FR-513
+  - OpenRay  AL-10
   - OpenRay  KZ-62
   - OpenRay  HU-7
   - OpenRay  DK-1
