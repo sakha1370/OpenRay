@@ -296,18 +296,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay Dynamic-11820
   type: vmess
   server: cf.090227.xyz
@@ -322,6 +310,18 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -890,9 +890,9 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay  CA-11856
+- name: OpenRay Dynamic-11790
   type: vless
-  server: 104.16.250.22
+  server: cloudflare-ip.mofashi.ltd
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -928,8 +928,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay Dynamic-11820
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -979,7 +979,7 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
+  - OpenRay Dynamic-11790
 - name: PROXY
   type: select
   proxies:
@@ -1002,8 +1002,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay Dynamic-11820
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -1053,7 +1053,7 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
+  - OpenRay Dynamic-11790
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
