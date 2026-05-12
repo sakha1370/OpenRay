@@ -296,6 +296,18 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay Dynamic-11820
   type: vmess
   server: cf.090227.xyz
@@ -310,18 +322,6 @@ proxies:
     path: /
     headers:
       Host: sgal.dagrate.eu.org
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -854,18 +854,6 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.250.45.234
-- name: OpenRay Dynamic-11779
-  type: vless
-  server: labeller.neonime83.workers.dev
-  port: 443
-  uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
-  network: ws
-  tls: true
-  servername: labeller.neonime83.workers.dev
-  ws-opts:
-    path: /?ed=2560
-    headers:
-      Host: labeller.neonime83.workers.dev
 - name: OpenRay  CA-11855
   type: vless
   server: 188.114.97.3
@@ -876,6 +864,18 @@ proxies:
   servername: labeller.neonime83.workers.dev
   ws-opts:
     path: /
+    headers:
+      Host: labeller.neonime83.workers.dev
+- name: OpenRay Dynamic-11779
+  type: vless
+  server: labeller.neonime83.workers.dev
+  port: 443
+  uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
+  network: ws
+  tls: true
+  servername: labeller.neonime83.workers.dev
+  ws-opts:
+    path: /?ed=2560
     headers:
       Host: labeller.neonime83.workers.dev
 - name: OpenRay Dynamic-11710
@@ -928,8 +928,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay Dynamic-11820
   - OpenRay  KZ-57
+  - OpenRay Dynamic-11820
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -976,8 +976,8 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11790
 - name: PROXY
@@ -1002,8 +1002,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay Dynamic-11820
   - OpenRay  KZ-57
+  - OpenRay Dynamic-11820
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  HK-188
@@ -1050,8 +1050,8 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11790
 rules:
