@@ -822,21 +822,19 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay  CA-11854
+- name: OpenRay  CA-11720
   type: vless
-  server: 104.18.185.26
-  port: 443
+  server: 104.18.125.5
+  port: 80
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay Dynamic-11790
+- name: OpenRay  CA-11856
   type: vless
-  server: cloudflare-ip.mofashi.ltd
+  server: 104.16.250.22
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -858,19 +856,21 @@ proxies:
     path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
+- name: OpenRay  CA-11854
   type: vless
-  server: 104.18.125.5
-  port: 80
+  server: 104.18.185.26
+  port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11856
+- name: OpenRay Dynamic-11790
   type: vless
-  server: 104.16.250.22
+  server: cloudflare-ip.mofashi.ltd
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -962,11 +962,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11854
-  - OpenRay Dynamic-11790
-  - OpenRay Dynamic-11796
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay Dynamic-11796
+  - OpenRay  CA-11854
+  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11785
 - name: PROXY
   type: select
@@ -1036,11 +1036,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11854
-  - OpenRay Dynamic-11790
-  - OpenRay Dynamic-11796
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay Dynamic-11796
+  - OpenRay  CA-11854
+  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11785
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
