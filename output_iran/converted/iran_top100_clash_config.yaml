@@ -270,19 +270,6 @@ proxies:
     path: /vmess/
     headers:
       Host: google.com
-- name: OpenRay  KZ-64
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 
-        wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -307,6 +294,19 @@ proxies:
     path: /vmess/
     headers:
       Host: 38.107.234.57
+- name: OpenRay  KZ-64
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 
+        wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -786,18 +786,6 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay  CA-11856
-  type: vless
-  server: 104.16.250.22
-  port: 443
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11796
   type: vless
   server: saas.sin.fan
@@ -810,12 +798,26 @@ proxies:
     path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
+- name: OpenRay Dynamic-11790
   type: vless
-  server: 104.18.125.5
-  port: 80
+  server: cloudflare-ip.mofashi.ltd
+  port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11856
+  type: vless
+  server: 104.16.250.22
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed=2048
     headers:
@@ -832,14 +834,12 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay Dynamic-11790
+- name: OpenRay  CA-11720
   type: vless
-  server: cloudflare-ip.mofashi.ltd
-  port: 443
+  server: 104.18.125.5
+  port: 80
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed=2048
     headers:
@@ -854,9 +854,9 @@ proxies:
     path: /Telegram🇨🇳@WangCai2/?ed=2560
     headers:
       Host: frejd.11258.workers.dev
-- name: OpenRay Dynamic-11789
+- name: OpenRay Dynamic-11787
   type: vless
-  server: wangcai15.cloudflare.182682.xyz
+  server: wangcai139.cloudflare.182682.xyz
   port: 8880
   uuid: 7890ce31-9a25-4fd4-90e7-80e5823ff510
   network: ws
@@ -864,9 +864,9 @@ proxies:
     path: /Telegram🇨🇳@WangCai2/?ed=2560
     headers:
       Host: frejd.11258.workers.dev
-- name: OpenRay Dynamic-11787
+- name: OpenRay Dynamic-11789
   type: vless
-  server: wangcai139.cloudflare.182682.xyz
+  server: wangcai15.cloudflare.182682.xyz
   port: 8880
   uuid: 7890ce31-9a25-4fd4-90e7-80e5823ff510
   network: ws
@@ -908,9 +908,9 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  AL-7
   - OpenRay  KZ-57
-  - OpenRay  KZ-64
   - OpenRay  HK-188
   - OpenRay  KZ-53
+  - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -953,14 +953,14 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
   - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
-  - OpenRay  CA-11854
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11856
+  - OpenRay  CA-11854
+  - OpenRay  CA-11720
   - OpenRay Dynamic-11785
-  - OpenRay Dynamic-11789
   - OpenRay Dynamic-11787
+  - OpenRay Dynamic-11789
   - OpenRay  CA-11943
 - name: PROXY
   type: select
@@ -982,9 +982,9 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  AL-7
   - OpenRay  KZ-57
-  - OpenRay  KZ-64
   - OpenRay  HK-188
   - OpenRay  KZ-53
+  - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1027,14 +1027,14 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
   - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
-  - OpenRay  CA-11854
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11856
+  - OpenRay  CA-11854
+  - OpenRay  CA-11720
   - OpenRay Dynamic-11785
-  - OpenRay Dynamic-11789
   - OpenRay Dynamic-11787
+  - OpenRay Dynamic-11789
   - OpenRay  CA-11943
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
