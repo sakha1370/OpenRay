@@ -282,6 +282,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  KZ-53
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 38.107.234.57
 - name: OpenRay  KZ-64
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -295,18 +307,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  KZ-53
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 38.107.234.57
 - name: OpenRay  FR-389
   type: vless
   server: 94.232.247.168
@@ -786,16 +786,16 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay  CA-11856
+- name: OpenRay Dynamic-11796
   type: vless
-  server: 104.16.250.22
+  server: saas.sin.fan
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed=2048
+    path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11790
@@ -810,16 +810,16 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay Dynamic-11796
+- name: OpenRay  CA-11856
   type: vless
-  server: saas.sin.fan
+  server: 104.16.250.22
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed
+    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11720
@@ -909,8 +909,8 @@ proxy-groups:
   - OpenRay  AL-7
   - OpenRay  KZ-57
   - OpenRay  HK-188
-  - OpenRay  KZ-64
   - OpenRay  KZ-53
+  - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -953,9 +953,9 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
-  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
+  - OpenRay  CA-11856
   - OpenRay  CA-11720
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
@@ -983,8 +983,8 @@ proxy-groups:
   - OpenRay  AL-7
   - OpenRay  KZ-57
   - OpenRay  HK-188
-  - OpenRay  KZ-64
   - OpenRay  KZ-53
+  - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
   - OpenRay  MY-20
@@ -1027,9 +1027,9 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay  CA-11856
-  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
+  - OpenRay  CA-11856
   - OpenRay  CA-11720
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
