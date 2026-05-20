@@ -750,18 +750,6 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.250.45.234
-- name: OpenRay Dynamic-11779
-  type: vless
-  server: labeller.neonime83.workers.dev
-  port: 443
-  uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
-  network: ws
-  tls: true
-  servername: labeller.neonime83.workers.dev
-  ws-opts:
-    path: /?ed=2560
-    headers:
-      Host: labeller.neonime83.workers.dev
 - name: OpenRay  CA-11855
   type: vless
   server: 188.114.97.3
@@ -772,6 +760,18 @@ proxies:
   servername: labeller.neonime83.workers.dev
   ws-opts:
     path: /
+    headers:
+      Host: labeller.neonime83.workers.dev
+- name: OpenRay Dynamic-11779
+  type: vless
+  server: labeller.neonime83.workers.dev
+  port: 443
+  uuid: a73b8135-ec7a-4f70-bac6-81fbccad4515
+  network: ws
+  tls: true
+  servername: labeller.neonime83.workers.dev
+  ws-opts:
+    path: /?ed=2560
     headers:
       Host: labeller.neonime83.workers.dev
 - name: OpenRay Dynamic-11710
@@ -786,21 +786,21 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay Dynamic-11796
+- name: OpenRay  CA-11856
   type: vless
-  server: saas.sin.fan
+  server: 104.16.250.22
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed
+    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11856
+- name: OpenRay Dynamic-11790
   type: vless
-  server: 104.16.250.22
+  server: cloudflare-ip.mofashi.ltd
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -820,16 +820,16 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay Dynamic-11790
+- name: OpenRay Dynamic-11796
   type: vless
-  server: cloudflare-ip.mofashi.ltd
+  server: saas.sin.fan
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed=2048
+    path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11854
@@ -854,9 +854,9 @@ proxies:
     path: /Telegram🇨🇳@WangCai2/?ed=2560
     headers:
       Host: frejd.11258.workers.dev
-- name: OpenRay Dynamic-11787
+- name: OpenRay Dynamic-11789
   type: vless
-  server: wangcai139.cloudflare.182682.xyz
+  server: wangcai15.cloudflare.182682.xyz
   port: 8880
   uuid: 7890ce31-9a25-4fd4-90e7-80e5823ff510
   network: ws
@@ -864,9 +864,9 @@ proxies:
     path: /Telegram🇨🇳@WangCai2/?ed=2560
     headers:
       Host: frejd.11258.workers.dev
-- name: OpenRay Dynamic-11789
+- name: OpenRay Dynamic-11787
   type: vless
-  server: wangcai15.cloudflare.182682.xyz
+  server: wangcai139.cloudflare.182682.xyz
   port: 8880
   uuid: 7890ce31-9a25-4fd4-90e7-80e5823ff510
   network: ws
@@ -950,17 +950,17 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
   - OpenRay  CA-11856
-  - OpenRay  CA-11720
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
-  - OpenRay Dynamic-11787
   - OpenRay Dynamic-11789
+  - OpenRay Dynamic-11787
   - OpenRay  CA-11943
 - name: PROXY
   type: select
@@ -1024,17 +1024,17 @@ proxy-groups:
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  MY-23
-  - OpenRay Dynamic-11779
   - OpenRay  CA-11855
+  - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
   - OpenRay  CA-11856
-  - OpenRay  CA-11720
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
-  - OpenRay Dynamic-11787
   - OpenRay Dynamic-11789
+  - OpenRay Dynamic-11787
   - OpenRay  CA-11943
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
