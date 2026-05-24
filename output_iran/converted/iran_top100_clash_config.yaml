@@ -246,18 +246,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -270,6 +258,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -786,16 +786,6 @@ proxies:
     path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
-  type: vless
-  server: 104.18.125.5
-  port: 80
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11856
   type: vless
   server: 104.16.250.22
@@ -808,9 +798,19 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay Dynamic-11790
+- name: OpenRay  CA-11720
   type: vless
-  server: cloudflare-ip.mofashi.ltd
+  server: 104.18.125.5
+  port: 80
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11854
+  type: vless
+  server: 104.18.185.26
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -820,9 +820,9 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11854
+- name: OpenRay Dynamic-11790
   type: vless
-  server: 104.18.185.26
+  server: cloudflare-ip.mofashi.ltd
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -927,8 +927,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -974,10 +974,10 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
   - OpenRay  CA-11856
-  - OpenRay Dynamic-11790
+  - OpenRay  CA-11720
   - OpenRay  CA-11854
+  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11785
   - OpenRay Dynamic-11787
   - OpenRay Dynamic-11789
@@ -1003,8 +1003,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -1050,10 +1050,10 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
   - OpenRay  CA-11856
-  - OpenRay Dynamic-11790
+  - OpenRay  CA-11720
   - OpenRay  CA-11854
+  - OpenRay Dynamic-11790
   - OpenRay Dynamic-11785
   - OpenRay Dynamic-11787
   - OpenRay Dynamic-11789
