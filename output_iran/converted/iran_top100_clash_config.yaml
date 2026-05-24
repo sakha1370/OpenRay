@@ -786,6 +786,16 @@ proxies:
     path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11720
+  type: vless
+  server: 104.18.125.5
+  port: 80
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11856
   type: vless
   server: 104.16.250.22
@@ -806,16 +816,6 @@ proxies:
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
-  type: vless
-  server: 104.18.125.5
-  port: 80
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
   ws-opts:
     path: /?ed=2048
     headers:
@@ -974,9 +974,9 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11796
+  - OpenRay  CA-11720
   - OpenRay  CA-11856
   - OpenRay Dynamic-11790
-  - OpenRay  CA-11720
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
   - OpenRay Dynamic-11787
@@ -1050,9 +1050,9 @@ proxy-groups:
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
   - OpenRay Dynamic-11796
+  - OpenRay  CA-11720
   - OpenRay  CA-11856
   - OpenRay Dynamic-11790
-  - OpenRay  CA-11720
   - OpenRay  CA-11854
   - OpenRay Dynamic-11785
   - OpenRay Dynamic-11787
