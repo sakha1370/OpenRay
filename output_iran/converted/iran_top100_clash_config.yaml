@@ -449,6 +449,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  DK-1
+  type: vless
+  server: 45.148.31.0
+  port: 15855
+  uuid: e4fc4761-154f-490e-bbaa-b4fa193f1073
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: 45.148.31.0
 - name: OpenRay  HU-7
   type: vless
   server: 5.182.38.91
@@ -461,16 +471,6 @@ proxies:
     public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
     short-id: 4ae260
   client-fingerprint: chrome
-- name: OpenRay  DK-1
-  type: vless
-  server: 45.148.31.0
-  port: 15855
-  uuid: e4fc4761-154f-490e-bbaa-b4fa193f1073
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      Host: 45.148.31.0
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -764,16 +764,14 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay Dynamic-11796
+- name: OpenRay  CA-11720
   type: vless
-  server: saas.sin.fan
-  port: 443
+  server: 104.18.125.5
+  port: 80
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed
+    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11790
@@ -788,19 +786,9 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
+- name: OpenRay  CA-11854
   type: vless
-  server: 104.18.125.5
-  port: 80
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11856
-  type: vless
-  server: 104.16.250.22
+  server: 104.18.185.26
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -810,9 +798,21 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11854
+- name: OpenRay Dynamic-11796
   type: vless
-  server: 104.18.185.26
+  server: saas.sin.fan
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11856
+  type: vless
+  server: 104.16.250.22
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -896,8 +896,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  FR-513
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  DK-1
+  - OpenRay  HU-7
   - OpenRay  KZ-62
   - OpenRay  KZ-76
   - OpenRay  MY-7
@@ -924,11 +924,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay Dynamic-11790
   - OpenRay  CA-11720
-  - OpenRay  CA-11856
+  - OpenRay Dynamic-11790
   - OpenRay  CA-11854
+  - OpenRay Dynamic-11796
+  - OpenRay  CA-11856
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
@@ -967,8 +967,8 @@ proxy-groups:
   - OpenRay  AU-3
   - OpenRay  FR-513
   - OpenRay  AL-10
-  - OpenRay  HU-7
   - OpenRay  DK-1
+  - OpenRay  HU-7
   - OpenRay  KZ-62
   - OpenRay  KZ-76
   - OpenRay  MY-7
@@ -995,11 +995,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay Dynamic-11790
   - OpenRay  CA-11720
-  - OpenRay  CA-11856
+  - OpenRay Dynamic-11790
   - OpenRay  CA-11854
+  - OpenRay Dynamic-11796
+  - OpenRay  CA-11856
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
