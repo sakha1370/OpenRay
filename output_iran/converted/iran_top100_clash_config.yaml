@@ -776,6 +776,18 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11856
+  type: vless
+  server: 104.16.250.22
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11790
   type: vless
   server: cloudflare-ip.mofashi.ltd
@@ -788,14 +800,12 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11856
+- name: OpenRay  CA-11720
   type: vless
-  server: 104.16.250.22
-  port: 443
+  server: 104.18.125.5
+  port: 80
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed=2048
     headers:
@@ -810,16 +820,6 @@ proxies:
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11720
-  type: vless
-  server: 104.18.125.5
-  port: 80
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  ws-opts:
-    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  US-11398
@@ -925,10 +925,10 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
   - OpenRay  CA-11854
-  - OpenRay Dynamic-11790
   - OpenRay  CA-11856
-  - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
   - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
@@ -996,10 +996,10 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11710
   - OpenRay  CA-11854
-  - OpenRay Dynamic-11790
   - OpenRay  CA-11856
-  - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
   - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
