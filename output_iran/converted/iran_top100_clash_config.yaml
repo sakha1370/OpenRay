@@ -425,18 +425,6 @@ proxies:
     path: /vless/
     headers:
       Host: 152.228.162.19
-- name: OpenRay  AU-3
-  type: vmess
-  server: 45.15.185.17
-  port: 80
-  uuid: c503a96a-a2f5-4847-a31f-20c17ecf3be4
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 45.15.185.17
 - name: OpenRay  AL-10
   type: vmess
   server: 45.15.170.237
@@ -660,16 +648,6 @@ proxies:
     path: /http#Telegram@V2ray_Alpha/?ed=2560
     headers:
       Host: google.com
-- name: OpenRay  AL-8
-  type: vless
-  server: 45.15.170.237
-  port: 80
-  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  FR-496
   type: vless
   server: ov-france1.09vpn.com
@@ -680,6 +658,16 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay  AL-8
+  type: vless
+  server: 45.15.170.237
+  port: 80
+  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 45.15.170.237
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -764,30 +752,6 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay Dynamic-11796
-  type: vless
-  server: saas.sin.fan
-  port: 443
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11854
-  type: vless
-  server: 104.18.185.26
-  port: 443
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11720
   type: vless
   server: 104.18.125.5
@@ -810,9 +774,33 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay Dynamic-11796
+  type: vless
+  server: saas.sin.fan
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11790
   type: vless
   server: cloudflare-ip.mofashi.ltd
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11854
+  type: vless
+  server: 104.18.185.26
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
@@ -894,7 +882,6 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AU-3
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  HU-7
@@ -915,8 +902,8 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  AL-8
   - OpenRay  FR-496
+  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay  MY-21
@@ -924,11 +911,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay  CA-11854
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay Dynamic-11796
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11854
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
@@ -965,7 +952,6 @@ proxy-groups:
   - OpenRay  NL-530
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AU-3
   - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  HU-7
@@ -986,8 +972,8 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  AL-8
   - OpenRay  FR-496
+  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay  MY-21
@@ -995,11 +981,11 @@ proxy-groups:
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay  CA-11854
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay Dynamic-11796
   - OpenRay Dynamic-11790
+  - OpenRay  CA-11854
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-1848
