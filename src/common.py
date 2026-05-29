@@ -521,59 +521,150 @@ def get_v2rayn_connection_key(uri: str) -> str:
         return uri
 
 
+# Connection-defining ProfileItem fields compared by v2rayNG's
+# ProfileItem.equals() (remarks, alterId, encryption-as-method-for-vmess,
+# insecure, spiderX, etc. are intentionally excluded — see v2rayNG dto/ProfileItem.kt).
+_V2RAY_DEDUP_FIELDS = (
+    'server', 'serverPort', 'password', 'method', 'flow',
+    'network', 'headerType', 'host', 'path', 'seed', 'quicSecurity', 'quicKey',
+    'mode', 'serviceName', 'authority', 'xhttpMode',
+    'security', 'sni', 'alpn', 'fingerPrint', 'publicKey', 'shortId',
+    'obfsPassword', 'portHopping', 'portHoppingInterval', 'pinnedCA256',
+)
+
+
+def _v2ray_query_params(query: str) -> dict:
+    """Decode a raw URI query string the way v2rayNG's getQueryParam does."""
+    params: dict = {}
+    for part in query.split('&'):
+        if not part:
+            continue
+        if '=' in part:
+            k, v = part.split('=', 1)
+        else:
+            k, v = part, ''
+        from urllib.parse import unquote
+        params[k] = unquote(v)
+    return params
+
+
+def _v2ray_fields_from_query(fields: dict, q: dict) -> None:
+    """Populate transport/TLS fields from query params (mirrors FmtBase.getItemFormQuery)."""
+    fields['network'] = q.get('type') or 'tcp'
+    fields['headerType'] = q.get('headerType')
+    fields['host'] = q.get('host')
+    fields['path'] = q.get('path')
+    fields['seed'] = q.get('seed')
+    fields['quicSecurity'] = q.get('quicSecurity')
+    fields['quicKey'] = q.get('key')
+    fields['mode'] = q.get('mode')
+    fields['serviceName'] = q.get('serviceName')
+    fields['authority'] = q.get('authority')
+    fields['xhttpMode'] = q.get('mode')
+    sec = q.get('security')
+    fields['security'] = sec if sec in ('tls', 'reality') else None
+    fields['sni'] = q.get('sni')
+    fields['fingerPrint'] = q.get('fp')
+    fields['alpn'] = q.get('alpn')
+    fields['pinnedCA256'] = q.get('pcs')
+    fields['publicKey'] = q.get('pbk')
+    fields['shortId'] = q.get('sid')
+    fields['flow'] = q.get('flow')
+
+
 def get_openray_dedup_key(uri: str) -> str:
     """
-    Custom deduplication key per requested rules:
-    - For all protocols by default: use exact string (sans remarks) for equality-based dedup.
-    - For vmess: use normalized connection hash (removes ps/remarks, normalizes parameters).
-    - For vless: consider only characters before '?', and ignore '/' characters.
+    Deduplication key that mirrors v2rayNG's notion of a duplicate server.
+
+    v2rayNG parses each share link into a ProfileItem and treats two servers as
+    duplicates when their connection-defining fields are equal (ignoring the
+    remark/name, vmess alterId, vless encryption, allowInsecure, fingerprint
+    spider-x, etc.). We replicate that parsing + field set here so that proxies
+    surviving our dedup also survive v2rayNG's "remove duplicate" with no leftovers.
+
+    Falls back to a stable normalized key for protocols without a dedicated
+    parser (hysteria2, tuic, socks, ...).
     """
     if not uri:
         return ''
 
     try:
-        # Strip remarks/comments (everything after #)
+        from urllib.parse import unquote
+
         base_uri = uri.split('#', 1)[0].strip()
         if '://' not in base_uri:
             return f"raw|{base_uri}"
 
-        parsed = urlparse(base_uri)
-        scheme = (parsed.scheme or '').lower()
+        scheme = base_uri.split('://', 1)[0].lower()
+        fields = {f: None for f in _V2RAY_DEDUP_FIELDS}
 
         if scheme == 'vmess':
-            # Use normalized connection hash for vmess to properly detect duplicates
-            # This removes ps field and normalizes all connection parameters
-            normalized = normalize_proxy_uri(uri)
-            return f"vmess|{normalized}"
-
-        if scheme == 'vless':
-            # Take substring after scheme up to '?'
-            after_scheme = base_uri.split('://', 1)[1]
-            before_query = after_scheme.split('?', 1)[0]
-
-            # Normalize host:port to lowercase (DNS is case-insensitive)
-            user_host = before_query.split('@', 1)
-            if len(user_host) == 2:
-                user, hostport = user_host
-                normalized_core = f"{user}@{hostport.lower()}"
+            # vmess-std (vless-like with query) vs legacy base64 JSON.
+            if '?' in uri and '&' in uri:
+                parsed = urlparse(base_uri)
+                fields['server'] = (parsed.hostname or '').lower()
+                fields['serverPort'] = str(parsed.port) if parsed.port else '-1'
+                fields['password'] = unquote(parsed.username) if parsed.username else None
+                fields['method'] = 'auto'
+                _v2ray_fields_from_query(fields, _v2ray_query_params(parsed.query))
             else:
-                # Fallback: lowercase everything if we can't split
-                normalized_core = before_query.lower()
+                b = safe_b64decode_to_bytes(base_uri.split('://', 1)[1])
+                if not b:
+                    return f"raw|{base_uri}"
+                obj = json.loads(b.decode('utf-8', errors='ignore') or '{}')
+                net = (str(obj.get('net')) if obj.get('net') else '') or 'tcp'
+                fields['server'] = str(obj.get('add') or '').lower()
+                fields['serverPort'] = str(obj.get('port') or '')
+                fields['password'] = obj.get('id') or None
+                fields['method'] = (obj.get('scy') or 'auto')
+                fields['network'] = net
+                fields['headerType'] = obj.get('type') or None
+                fields['host'] = obj.get('host') or None
+                fields['path'] = obj.get('path') or None
+                if net == 'grpc':
+                    fields['mode'] = obj.get('type') or None
+                    fields['serviceName'] = obj.get('path') or None
+                    fields['authority'] = obj.get('host') or None
+                elif net == 'kcp':
+                    fields['seed'] = obj.get('path') or None
+                fields['security'] = obj.get('tls') or None
+                fields['sni'] = obj.get('sni') or None
+                fields['fingerPrint'] = obj.get('fp') or None
+                fields['alpn'] = obj.get('alpn') or None
 
-            # Remove all '/' characters (as per original rule)
-            normalized = normalized_core.replace('/', '')
-            return f"vless|{normalized}"
+        elif scheme == 'vless':
+            parsed = urlparse(base_uri)
+            fields['server'] = (parsed.hostname or '').lower()
+            fields['serverPort'] = str(parsed.port) if parsed.port else '-1'
+            fields['password'] = unquote(parsed.username) if parsed.username else None
+            q = _v2ray_query_params(parsed.query)
+            fields['method'] = q.get('encryption') or 'none'
+            _v2ray_fields_from_query(fields, q)
 
-        if scheme == 'trojan':
-            normalized = normalize_proxy_uri(uri)
-            return f"trojan|{normalized}"
+        elif scheme == 'trojan':
+            parsed = urlparse(base_uri)
+            fields['server'] = (parsed.hostname or '').lower()
+            fields['serverPort'] = str(parsed.port) if parsed.port else '-1'
+            fields['password'] = unquote(parsed.username) if parsed.username else None
+            if not parsed.query:
+                fields['network'] = 'tcp'
+                fields['security'] = 'tls'
+            else:
+                q = _v2ray_query_params(parsed.query)
+                _v2ray_fields_from_query(fields, q)
+                # Trojan overrides security with the raw value (default tls).
+                fields['security'] = q.get('security') or 'tls'
 
-        if scheme == 'ss':
+        elif scheme == 'ss':
             return _get_ss_dedup_key(base_uri)
 
-        # Default: normalize query ordering / trailing separators so cosmetic
-        # differences (param order, empty params, trailing '?') collapse to one key.
-        return _get_generic_dedup_key(scheme, base_uri)
+        else:
+            # No dedicated v2rayNG-style parser: collapse cosmetic differences only.
+            return _get_generic_dedup_key(scheme, base_uri)
+
+        return scheme + '|' + '|'.join(
+            (fields[f] if fields[f] is not None else '') for f in _V2RAY_DEDUP_FIELDS
+        )
 
     except Exception:
         # Fallback to raw string if anything goes wrong
