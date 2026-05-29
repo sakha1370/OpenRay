@@ -568,12 +568,117 @@ def get_openray_dedup_key(uri: str) -> str:
             normalized = normalize_proxy_uri(uri)
             return f"trojan|{normalized}"
 
-        # Default: equality-based on the base URI (without remarks)
-        return f"raw|{base_uri}"
+        if scheme == 'ss':
+            return _get_ss_dedup_key(base_uri)
+
+        # Default: normalize query ordering / trailing separators so cosmetic
+        # differences (param order, empty params, trailing '?') collapse to one key.
+        return _get_generic_dedup_key(scheme, base_uri)
 
     except Exception:
         # Fallback to raw string if anything goes wrong
         return f"raw|{uri.strip()}"
+
+
+def _get_ss_dedup_key(base_uri: str) -> str:
+    """
+    Canonical dedup key for Shadowsocks.
+
+    Clients (v2rayNG / Xray) resolve an SS link to the same outbound regardless
+    of how it is encoded. The same server commonly appears as:
+      - SIP002:  ss://base64(method:password)@host:port
+      - SIP002:  ss://method:password@host:port  (plain userinfo)
+      - legacy:  ss://base64(method:password@host:port)
+      - with base64 '=' padding percent-encoded (%3D), or a trailing '?'.
+    All of these must produce one key so duplicates are removed.
+    """
+    try:
+        from urllib.parse import unquote, parse_qsl
+
+        after = base_uri.split('://', 1)[1]
+
+        # Split off the plugin/query portion (a bare trailing '?' carries no info).
+        query = ''
+        if '?' in after:
+            after, query = after.split('?', 1)
+
+        method = password = host = port = ''
+
+        if '@' in after:
+            # SIP002: userinfo@host:port
+            userinfo, hostport = after.rsplit('@', 1)
+            userinfo = unquote(userinfo)
+            if ':' in userinfo:
+                # Plain method:password (base64 alphabet never contains ':').
+                method, password = userinfo.split(':', 1)
+            else:
+                dec = safe_b64decode_to_bytes(userinfo)
+                cred = dec.decode('utf-8', 'ignore') if dec else userinfo
+                if ':' in cred:
+                    method, password = cred.split(':', 1)
+                else:
+                    method, password = cred, ''
+            if ':' in hostport:
+                host, port = hostport.rsplit(':', 1)
+            else:
+                host = hostport
+        else:
+            # Legacy fully base64-encoded payload: method:password@host:port
+            dec = safe_b64decode_to_bytes(after)
+            cred = dec.decode('utf-8', 'ignore') if dec else after
+            if '@' not in cred:
+                return f"raw|ss://{base_uri.split('://', 1)[1]}"
+            userinfo, hostport = cred.rsplit('@', 1)
+            if ':' in userinfo:
+                method, password = userinfo.split(':', 1)
+            else:
+                method, password = userinfo, ''
+            if ':' in hostport:
+                host, port = hostport.rsplit(':', 1)
+            else:
+                host = hostport
+
+        # Plugin is connection-defining, so keep it (normalized).
+        plugin = ''
+        if query:
+            for k, v in parse_qsl(query, keep_blank_values=False):
+                if k == 'plugin' and v:
+                    plugin = unquote(v).strip()
+                    break
+
+        host = host.strip().lower()
+        return f"ss|{method.strip().lower()}|{password.strip()}|{host}|{port.strip()}|{plugin}"
+
+    except Exception:
+        return f"raw|{base_uri.strip()}"
+
+
+def _get_generic_dedup_key(scheme: str, base_uri: str) -> str:
+    """
+    Dedup key for protocols without a dedicated normalizer (hysteria/2, tuic,
+    socks, http, wireguard, ...). Collapses cosmetic differences by sorting
+    query parameters, dropping empty ones, and removing a bare trailing '?'.
+    """
+    try:
+        from urllib.parse import parse_qsl, urlencode
+
+        after = base_uri.split('://', 1)[1]
+        authority = after
+        query = ''
+        if '?' in after:
+            authority, query = after.split('?', 1)
+
+        params = [(k, v) for k, v in parse_qsl(query, keep_blank_values=False) if v != '']
+        params.sort()
+        norm_query = urlencode(params)
+
+        key = f"{scheme}|{authority}"
+        if norm_query:
+            key += f"|{norm_query}"
+        return key
+
+    except Exception:
+        return f"raw|{base_uri.strip()}"
 
 def _get_vmess_v2rayn_key(parsed) -> str:
     """Get V2RayN-style connection key for VMess."""
