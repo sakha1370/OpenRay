@@ -15,9 +15,10 @@ STAGE3_TEST_URLS: List[str] = [
 
 class SiteTarget(TypedDict):
     id: str
-    url: str
+    urls: Tuple[str, ...]
     blocked_codes: NotRequired[Tuple[int, ...]]
     allowed_codes: NotRequired[Tuple[int, ...]]
+    output_file: NotRequired[str]
 
 
 def _build_proxy_opener(http_port: int, user_agent: str = USER_AGENT):
@@ -63,22 +64,29 @@ def probe_all_targets(
     targets: Sequence[SiteTarget],
     user_agent: str = USER_AGENT,
 ) -> Dict[str, bool]:
-    """Test each target URL within the deadline; return {target_id: passed}."""
+    """Test each target (any URL may pass) within the deadline; return {target_id: passed}."""
     results: Dict[str, bool] = {}
     for target in targets:
+        site_id = target['id']
         if time.time() >= deadline:
-            results[target['id']] = False
+            results[site_id] = False
             continue
-        per_target_deadline = deadline
-        passed = probe_url_not_blocked(
-            http_port,
-            target['url'],
-            per_target_deadline,
-            blocked_codes=target.get('blocked_codes', (403,)),
-            allowed_codes=target.get('allowed_codes'),
-            user_agent=user_agent,
-        )
-        results[target['id']] = passed
+        blocked_codes = target.get('blocked_codes', (403,))
+        allowed_codes = target.get('allowed_codes')
+        passed = False
+        for url in target['urls']:
+            if passed or time.time() >= deadline:
+                break
+            if probe_url_not_blocked(
+                http_port,
+                url,
+                deadline,
+                blocked_codes=blocked_codes,
+                allowed_codes=allowed_codes,
+                user_agent=user_agent,
+            ):
+                passed = True
+        results[site_id] = passed
     return results
 
 

@@ -394,7 +394,10 @@ SITE_ACCESS_TARGETS = [
     },
     {
         'id': 'cursor',
-        'url': 'https://agentn.global.api5.cursor.sh',
+        'urls': (
+            'https://agentn.global.api5.cursor.sh',
+            'https://api3.cursor.sh',
+        ),
         'allowed_codes': (200,),
         'output_file': 'cursor.txt',
     },

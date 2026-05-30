@@ -35,17 +35,25 @@ def _deduplicate_proxies(proxies: List[str]) -> List[str]:
     return deduped
 
 
+def _entry_urls(entry: dict) -> tuple[str, ...]:
+    if 'urls' in entry:
+        return tuple(str(u) for u in entry['urls'] if u)
+    return (str(entry['url']),)
+
+
 def _normalize_targets() -> List[SiteTarget]:
     targets: List[SiteTarget] = []
     for entry in SITE_ACCESS_TARGETS:
         target: SiteTarget = {
             'id': str(entry['id']),
-            'url': str(entry['url']),
+            'urls': _entry_urls(entry),
         }
         if 'allowed_codes' in entry:
             target['allowed_codes'] = tuple(entry['allowed_codes'])
         else:
             target['blocked_codes'] = tuple(entry.get('blocked_codes', (403,)))
+        if entry.get('output_file'):
+            target['output_file'] = str(entry['output_file'])
         targets.append(target)
     return targets
 
