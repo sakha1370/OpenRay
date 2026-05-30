@@ -35,6 +35,17 @@ def _deduplicate_proxies(proxies: List[str]) -> List[str]:
     return deduped
 
 
+def _target_versions() -> Dict[str, int]:
+    versions: Dict[str, int] = {}
+    for entry in SITE_ACCESS_TARGETS:
+        site_id = str(entry['id'])
+        try:
+            versions[site_id] = int(entry.get('version', 1))
+        except (TypeError, ValueError):
+            versions[site_id] = 1
+    return versions
+
+
 def _entry_urls(entry: dict) -> tuple[str, ...]:
     if 'urls' in entry:
         return tuple(str(u) for u in entry['urls'] if u)
@@ -134,7 +145,8 @@ def main() -> int:
         return 0
 
     proxies = _deduplicate_proxies(lines)
-    blocked_state = sync_blocked_state(proxies)
+    target_versions = _target_versions()
+    blocked_state = sync_blocked_state(proxies, target_versions)
 
     targets_by_uri: Dict[str, List[SiteTarget]] = {
         uri: _targets_for_proxy(uri, targets, blocked_state) for uri in proxies
@@ -172,7 +184,7 @@ def main() -> int:
     new_blocks = _apply_failures_to_state(results, blocked_state)
     if new_blocks:
         log(f"Site access: marked {new_blocks} new permanent site block(s)")
-    save_blocked_state(blocked_state)
+    save_blocked_state(blocked_state, target_versions)
 
     per_site, combined = _aggregate_results(proxies, results, targets, blocked_state)
 

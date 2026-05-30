@@ -388,15 +388,16 @@ SITE_ACCESS_DIR = os.path.join(OUTPUT_DIR, 'site_access')
 SITE_ACCESS_TARGETS = [
     {
         'id': 'aistudio',
+        'version': 1,
         'url': 'https://aistudio.google.com/welcome',
         'blocked_codes': (403,),
         'output_file': 'aistudio.txt',
     },
     {
         'id': 'cursor',
+        'version': 2,
         'urls': (
             'https://agentn.global.api5.cursor.sh',
-            # 'https://api3.cursor.sh',
         ),
         'allowed_codes': (200,),
         'output_file': 'cursor.txt',
