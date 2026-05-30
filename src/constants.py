@@ -392,6 +392,12 @@ SITE_ACCESS_TARGETS = [
         'blocked_codes': (403,),
         'output_file': 'aistudio.txt',
     },
+    {
+        'id': 'cursor',
+        'url': 'https://agentn.global.api5.cursor.sh',
+        'allowed_codes': (200,),
+        'output_file': 'cursor.txt',
+    },
 ]
 SITE_ACCESS_COMBINED_FILE = 'all_sites.txt'
 SITE_ACCESS_STATE_FILE = os.path.join(STATE_DIR, 'site_access_blocked.json')

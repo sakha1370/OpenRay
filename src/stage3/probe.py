@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Dict, List, Sequence, Tuple, TypedDict
+from typing import Dict, List, NotRequired, Sequence, Tuple, TypedDict
 from urllib.request import Request, build_opener, urlopen
 from urllib.request import ProxyHandler
 
@@ -16,7 +16,8 @@ STAGE3_TEST_URLS: List[str] = [
 class SiteTarget(TypedDict):
     id: str
     url: str
-    blocked_codes: Tuple[int, ...]
+    blocked_codes: NotRequired[Tuple[int, ...]]
+    allowed_codes: NotRequired[Tuple[int, ...]]
 
 
 def _build_proxy_opener(http_port: int, user_agent: str = USER_AGENT):
@@ -31,9 +32,10 @@ def probe_url_not_blocked(
     url: str,
     deadline: float,
     blocked_codes: Sequence[int] = (403,),
+    allowed_codes: Sequence[int] | None = None,
     user_agent: str = USER_AGENT,
 ) -> bool:
-    """HTTP(S) fetch via local HTTP inbound; True if response status is not blocked."""
+    """HTTP(S) fetch via local HTTP inbound; True if response status passes the check."""
     if time.time() >= deadline:
         return False
     try:
@@ -45,8 +47,11 @@ def probe_url_not_blocked(
         rem = max(2.0, deadline - time.time())
         with opener.open(req, timeout=rem) as resp:
             code = getattr(resp, 'status', None) or getattr(resp, 'code', None)
-            if isinstance(code, int) and code not in blocked_codes:
-                return True
+            if not isinstance(code, int):
+                return False
+            if allowed_codes is not None:
+                return code in allowed_codes
+            return code not in blocked_codes
     except Exception:
         pass
     return False
@@ -70,6 +75,7 @@ def probe_all_targets(
             target['url'],
             per_target_deadline,
             blocked_codes=target.get('blocked_codes', (403,)),
+            allowed_codes=target.get('allowed_codes'),
             user_agent=user_agent,
         )
         results[target['id']] = passed
