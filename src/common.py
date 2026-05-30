@@ -122,6 +122,42 @@ def normalize_proxy_uri(uri: str) -> str:
         return uri
 
 
+def _canonicalize_vmess_header_type(header_type: str | None) -> str | None:
+    """Treat empty / none / --- as the same VMess header type (v2rayNG default)."""
+    if header_type is None:
+        return None
+    low = str(header_type).strip().lower()
+    if low in ('', '---', 'none'):
+        return None
+    return low
+
+
+def _canonicalize_vmess_transport(net: str | None, header_type: str | None) -> tuple[str, str | None]:
+    """
+    Unify VMess share-link variants of the same transport.
+
+    The same server is often published as net=tcp with an empty type, or net=raw
+    with type=none — clients treat these as equivalent plain TCP VMess.
+    """
+    net_norm = (str(net).strip().lower() if net else '') or 'tcp'
+    ht = _canonicalize_vmess_header_type(header_type)
+    if net_norm == 'raw' and ht is None:
+        net_norm = 'tcp'
+    return net_norm, ht
+
+
+def _canonicalize_vmess_security(tls: str | None) -> str | None:
+    """Match v2rayNG: only tls/reality are connection-defining security values."""
+    if not tls:
+        return None
+    low = str(tls).strip().lower()
+    if low in ('none', 'disable', 'disabled', 'off', 'false', '0'):
+        return None
+    if low in ('tls', 'reality'):
+        return low
+    return low
+
+
 def _normalize_vmess(uri: str, parsed) -> str:
     """Normalize VMess proxy URI."""
     try:
@@ -176,24 +212,14 @@ def _normalize_vmess(uri: str, parsed) -> str:
         # Optional fields with defaults - normalize empty strings
         aid = normalize_value(obj.get('aid')) or '0'
         scy = normalize_value(obj.get('scy')) or 'auto'
-        net = normalize_value(obj.get('net')) or 'tcp'
-        # Normalize type: empty, "---", or None should all become "none"
-        type_val_raw = normalize_value(obj.get('type'))
-        if not type_val_raw or type_val_raw == '---':
-            type_val = 'none'
-        else:
-            type_val = type_val_raw
+        net, header_type = _canonicalize_vmess_transport(
+            normalize_value(obj.get('net')),
+            normalize_value(obj.get('type')),
+        )
+        type_val = header_type if header_type else 'none'
         host = normalize_value(obj.get('host'))
         path = normalize_value(obj.get('path'))
-        def canonicalize_tls(value: str | None) -> str | None:
-            if not value:
-                return None
-            low = value.lower()
-            if low in ('none', 'disable', 'disabled', 'off', 'false', '0'):
-                return None
-            return low
-
-        tls = canonicalize_tls(normalize_value(obj.get('tls')))
+        tls = _canonicalize_vmess_security(normalize_value(obj.get('tls')))
         sni = normalize_value(obj.get('sni'))
         alpn = normalize_value(obj.get('alpn'))
         # Note: 'fp' (fingerprint) and 'insecure' are excluded as they're not connection parameters
@@ -402,11 +428,15 @@ def _normalize_ss(uri: str, parsed, protocol: str) -> str:
             # SSR has a different format, return as-is for now
             return uri
 
-        # SS handling
-        payload = parsed.path.lstrip('/')
-        text = None
+        # SS handling — use the raw segment after ss://; urlparse breaks legacy
+        # ss://base64(...) links (especially with a trailing '/' path separator).
+        after = _strip_ss_uri_artifacts(uri.split('://', 1)[1])
+        query = ''
+        payload = after
+        if '?' in after:
+            payload, query = after.split('?', 1)
 
-        # Try to decode if it's base64
+        text = None
         b = safe_b64decode_to_bytes(payload)
         if b:
             text = b.decode('utf-8', errors='ignore')
@@ -420,26 +450,21 @@ def _normalize_ss(uri: str, parsed, protocol: str) -> str:
                 method, password = method_pass.split(':', 1)
                 if ':' in host_port:
                     host, port = host_port.rsplit(':', 1)
+                    port = _normalize_ss_port(port)
 
-                    # Parse query parameters for additional settings
-                    from urllib.parse import parse_qs
-                    query_params = parse_qs(parsed.query)
-
-                    # Reconstruct normalized URI
+                    from urllib.parse import parse_qsl, unquote
                     import base64
+
                     credentials = f"{method}:{password}@{host}:{port}"
                     b64_credentials = base64.b64encode(credentials.encode('utf-8')).decode('ascii')
-
                     result = f'ss://{b64_credentials}'
 
-                    # Add connection-defining query parameters
                     connection_params = ['plugin', 'mode']
                     query_parts = []
-                    for param in connection_params:
-                        if param in query_params and query_params[param]:
-                            value = query_params[param][0]
-                            if value:
-                                query_parts.append(f'{param}={value}')
+                    if query:
+                        for k, v in parse_qsl(query, keep_blank_values=False):
+                            if k in connection_params and v:
+                                query_parts.append(f'{k}={unquote(v)}')
 
                     if query_parts:
                         result += '?' + '&'.join(sorted(query_parts))
@@ -612,13 +637,17 @@ def get_openray_dedup_key(uri: str) -> str:
                 if not b:
                     return f"raw|{base_uri}"
                 obj = json.loads(b.decode('utf-8', errors='ignore') or '{}')
-                net = (str(obj.get('net')) if obj.get('net') else '') or 'tcp'
+                net, header_type = _canonicalize_vmess_transport(
+                    obj.get('net'),
+                    obj.get('type'),
+                )
                 fields['server'] = str(obj.get('add') or '').lower()
                 fields['serverPort'] = str(obj.get('port') or '')
                 fields['password'] = obj.get('id') or None
-                fields['method'] = (obj.get('scy') or 'auto')
+                scy = obj.get('scy')
+                fields['method'] = scy if scy not in (None, '') else 'auto'
                 fields['network'] = net
-                fields['headerType'] = obj.get('type') or None
+                fields['headerType'] = header_type
                 fields['host'] = obj.get('host') or None
                 fields['path'] = obj.get('path') or None
                 if net == 'grpc':
@@ -627,7 +656,7 @@ def get_openray_dedup_key(uri: str) -> str:
                     fields['authority'] = obj.get('host') or None
                 elif net == 'kcp':
                     fields['seed'] = obj.get('path') or None
-                fields['security'] = obj.get('tls') or None
+                fields['security'] = _canonicalize_vmess_security(obj.get('tls'))
                 fields['sni'] = obj.get('sni') or None
                 fields['fingerPrint'] = obj.get('fp') or None
                 fields['alpn'] = obj.get('alpn') or None
@@ -671,6 +700,28 @@ def get_openray_dedup_key(uri: str) -> str:
         return f"raw|{uri.strip()}"
 
 
+def _strip_ss_uri_artifacts(payload: str) -> str:
+    """
+    Strip cosmetic trailing URL characters from an SS authority/payload segment.
+
+    Legacy ss://base64(...) links are often published with a trailing '/' (treated
+    as a URL path) or '?' (empty query). '/' is in the base64 alphabet, so leaving
+    it in place corrupts the decoded method:password@host:port string.
+    """
+    s = payload.strip()
+    while s.endswith('?'):
+        s = s[:-1].rstrip()
+    # Legacy fully-encoded payloads never contain '@' before decoding.
+    if '@' not in s:
+        s = s.rstrip('/')
+    return s
+
+
+def _normalize_ss_port(port: str) -> str:
+    """Drop decode artifacts from a parsed SS port (e.g. '50099?')."""
+    return port.strip().rstrip('?/')
+
+
 def _get_ss_dedup_key(base_uri: str) -> str:
     """
     Canonical dedup key for Shadowsocks.
@@ -681,12 +732,13 @@ def _get_ss_dedup_key(base_uri: str) -> str:
       - SIP002:  ss://method:password@host:port  (plain userinfo)
       - legacy:  ss://base64(method:password@host:port)
       - with base64 '=' padding percent-encoded (%3D), or a trailing '?'.
+      - with a mistaken trailing '/' after the base64 blob.
     All of these must produce one key so duplicates are removed.
     """
     try:
         from urllib.parse import unquote, parse_qsl
 
-        after = base_uri.split('://', 1)[1]
+        after = _strip_ss_uri_artifacts(base_uri.split('://', 1)[1])
 
         # Split off the plugin/query portion (a bare trailing '?' carries no info).
         query = ''
@@ -711,6 +763,7 @@ def _get_ss_dedup_key(base_uri: str) -> str:
                     method, password = cred, ''
             if ':' in hostport:
                 host, port = hostport.rsplit(':', 1)
+                port = _normalize_ss_port(port)
             else:
                 host = hostport
         else:
@@ -726,6 +779,7 @@ def _get_ss_dedup_key(base_uri: str) -> str:
                 method, password = userinfo, ''
             if ':' in hostport:
                 host, port = hostport.rsplit(':', 1)
+                port = _normalize_ss_port(port)
             else:
                 host = hostport
 
@@ -738,7 +792,7 @@ def _get_ss_dedup_key(base_uri: str) -> str:
                     break
 
         host = host.strip().lower()
-        return f"ss|{method.strip().lower()}|{password.strip()}|{host}|{port.strip()}|{plugin}"
+        return f"ss|{method.strip().lower()}|{password.strip()}|{host}|{_normalize_ss_port(port)}|{plugin}"
 
     except Exception:
         return f"raw|{base_uri.strip()}"
