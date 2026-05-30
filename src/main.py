@@ -37,6 +37,7 @@ from .io_ops import (
     write_text_file_atomic,
 )
 from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
+from .stage3.engine import get_engine
 from .parsing import (
     _set_remark,
     extract_host,
@@ -466,51 +467,31 @@ def main() -> int:
                 if not core_path:
                     log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation for existing proxies.")
                 else:
-                    subset = alive # [:int(STAGE3_MAX)]
+                    subset = alive[: int(STAGE3_MAX)]
                     kept_subset: List[str] = []
                     
                     # Load check counts for tracking consecutive failures
                     counts = _load_check_counts()
 
-                    def _core_check_with_retry(u: str) -> Tuple[str, bool]:
-                        # For existing proxies, we are more lenient and try up to 5 times
-                        # to avoid dropping them due to transient issues.
-                        max_attempts = 1
-                        for attempt in range(max_attempts):
-                            try:
-                                # Slightly longer timeout for existing proxies to be sure
-                                res = validate_with_v2ray_core(u, timeout_s=20)
-                                if res is True:
-                                    return u, True
-                            except Exception:
-                                pass
+                    print("Start Stage 3 (with retries) for existing proxies")
+                    stage3_results = get_engine().validate_many(subset, timeout_s=20)
+                    for u in progress(subset, total=len(subset)):
+                        success = stage3_results.get(u) is True
+                        if success:
+                            kept_subset.append(u)
+                            successful_this_run.append(u)
+                            if u in counts:
+                                counts[u]["consecutive_failures"] = 0
+                        else:
+                            if u not in counts:
+                                counts[u] = {"main": 0, "iran": 0, "consecutive_failures": 0}
                             
-                            if attempt < max_attempts - 1:
-                                # Progressive delay between retries
-                                time.sleep(2.0 * (attempt + 1))
-                        return u, False
-
-                    workers = int(STAGE3_WORKERS)
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
-                        print("Start Stage 3 (with retries) for existing proxies")
-                        for u, success in progress(pool2.map(_core_check_with_retry, subset), total=len(subset)):
-                            if success:
+                            counts[u]["consecutive_failures"] += 1
+                            
+                            if counts[u]["consecutive_failures"] < int(EXISTING_PROXY_FAILURE_LIMIT):
                                 kept_subset.append(u)
-                                successful_this_run.append(u)
-                                if u in counts:
-                                    counts[u]["consecutive_failures"] = 0
                             else:
-                                if u not in counts:
-                                    counts[u] = {"main": 0, "iran": 0, "consecutive_failures": 0}
-                                
-                                counts[u]["consecutive_failures"] += 1
-                                
-                                if counts[u]["consecutive_failures"] < int(EXISTING_PROXY_FAILURE_LIMIT):
-                                    kept_subset.append(u)
-                                else:
-                                    log(f"Proxy {u[:50]}... reached failure limit ({EXISTING_PROXY_FAILURE_LIMIT}). Removing it.")
-                                    # Entry will be removed from counts later during sync or we can keep it with high failure count
-                                    # but for now, we just don't add it to kept_subset
+                                log(f"Proxy {u[:50]}... reached failure limit ({EXISTING_PROXY_FAILURE_LIMIT}). Removing it.")
 
                     # Save updated check counts after revalidation
                     _save_check_counts(counts)
@@ -686,24 +667,15 @@ def main() -> int:
         if not core_path:
             log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation.")
         else:
-            subset = available_to_add # [:int(STAGE3_MAX)]
+            subset = available_to_add[: int(STAGE3_MAX)]
             kept_subset: List[str] = []
 
-            def _core_check_new(u: str) -> Optional[str]:
-                try:
-                    # New proxies get a single attempt with 15s timeout
-                    res = validate_with_v2ray_core(u, timeout_s=15)
-                except Exception:
-                    return None
-                return u if res is True else None
-
-            workers = int(STAGE3_WORKERS)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
-                print("Start Stage 3 for new proxies")
-                for r in progress(pool2.map(_core_check_new, subset), total=len(subset)):
-                    if r is not None:
-                        kept_subset.append(r)
-                        successful_this_run.append(r)
+            print("Start Stage 3 for new proxies")
+            stage3_results = get_engine().validate_many(subset, timeout_s=15)
+            for u in progress(subset, total=len(subset)):
+                if stage3_results.get(u) is True:
+                    kept_subset.append(u)
+                    successful_this_run.append(u)
             # Merge: replace subset portion with validated ones
             available_to_add = kept_subset + available_to_add[len(subset):]
 

@@ -51,6 +51,7 @@ jobs:
         pip install pyyaml
         pip install ruamel.yaml
         pip install requests
+        pip install -r requirment.txt
 
     # Install Xray core
     - name: Install Xray core
@@ -67,6 +68,9 @@ jobs:
 
     # Run proxy checker script for previous proxies only
     - name: Run previous proxies checker
+      env:
+        OPENRAY_STAGE3_BACKEND: pool
+        OPENRAY_STAGE3_JITTER_MS: "0"
       run: python -m src.main_existing_only
 
     # Run the converter scripts

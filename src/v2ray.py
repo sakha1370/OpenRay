@@ -610,6 +610,24 @@ def build_wireguard_config(uri: str) -> Optional[Tuple[str, Dict]]:
         return None
 
 
+def build_outbound_for_uri(uri: str) -> Optional[Dict]:
+    """Extract the primary outbound dict from a share link (for Stage 3 API backend)."""
+    built = build_config_for_uri(uri)
+    if not built:
+        return None
+    tag, cfg = built
+    outbounds = cfg.get('outbounds') or []
+    if not outbounds:
+        return None
+    outbound = outbounds[0]
+    if not isinstance(outbound, dict):
+        return None
+    ob = dict(outbound)
+    if tag and not ob.get('tag'):
+        ob['tag'] = tag
+    return ob
+
+
 def build_config_for_uri(uri: str) -> Optional[Tuple[str, Dict]]:
     scheme = (uri.split('://', 1)[0] if '://' in uri else '').lower()
     if scheme == 'vless':

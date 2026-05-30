@@ -9,6 +9,7 @@ from .constants import AVAILABLE_FILE, OUTPUT_DIR, PING_WORKERS, ENABLE_STAGE2, 
 from .io_ops import ensure_dirs, read_lines, write_text_file_atomic  # type: ignore
 from .parsing import extract_host, extract_port  # type: ignore
 from .net import ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core  # type: ignore
+from .stage3.engine import get_engine  # type: ignore
 from .common import log, progress  # type: ignore
 
 
@@ -90,22 +91,14 @@ def main() -> int:
         if not core_path:
             log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation.")
         else:
-            subset = alive # [:int(STAGE3_MAX)]
+            subset = alive[: int(STAGE3_MAX)]
             kept_subset: List[str] = []
 
-            def _core_check(u: str) -> Optional[str]:
-                try:
-                    res = validate_with_v2ray_core(u, timeout_s=12)
-                except Exception:
-                    return None
-                return u if res is True else None
-
-            workers = min(int(PING_WORKERS), 16)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-                print("Start Stage 3 for existing proxies")
-                for r in progress(pool.map(_core_check, subset), total=len(subset)):
-                    if r is not None:
-                        kept_subset.append(r)
+            print("Start Stage 3 for existing proxies")
+            stage3_results = get_engine().validate_many(subset, timeout_s=12)
+            for u in progress(subset, total=len(subset)):
+                if stage3_results.get(u) is True:
+                    kept_subset.append(u)
             # Merge: replace subset portion with validated ones
             alive = kept_subset + alive[len(subset):]
 

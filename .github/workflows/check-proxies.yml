@@ -51,6 +51,7 @@ jobs:
         pip install pyyaml
         pip install ruamel.yaml
         pip install requests
+        pip install -r requirment.txt
 
     # Install Xray core
     - name: Install Xray core
@@ -69,6 +70,8 @@ jobs:
     - name: Run proxies checker
       env:
         OPENRAY_RECHECK_EXISTING: "1"
+        OPENRAY_STAGE3_BACKEND: pool
+        OPENRAY_STAGE3_JITTER_MS: "0"
       run: python -m src.main
 
     # Reset tested state if proxy count is below threshold

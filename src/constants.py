@@ -360,6 +360,16 @@ def _adaptive_stage3_workers() -> int:
 STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS',
                          max(_adaptive_stage3_workers(), 48), 4, 512)
 
+# Stage 3 engine (subprocess | pool | api)
+STAGE3_BACKEND = os.environ.get('OPENRAY_STAGE3_BACKEND', 'pool').strip().lower()
+STAGE3_POOL_SIZE = _env_int('OPENRAY_STAGE3_POOL_SIZE', STAGE3_WORKERS, 1, 512)
+STAGE3_BASE_PORT = _env_int('OPENRAY_STAGE3_BASE_PORT', 31000, 1024, 60000)
+STAGE3_RECYCLE_EVERY = _env_int('OPENRAY_STAGE3_RECYCLE_EVERY', 100, 1, 10000)
+STAGE3_JITTER_MS = _env_int('OPENRAY_STAGE3_JITTER_MS', 500, 0, 5000)
+STAGE3_FAST_FAIL_MS = _env_int('OPENRAY_STAGE3_FAST_FAIL_MS', 200, 50, 5000)
+STAGE3_MIN_ATTEMPT_S = _env_int('OPENRAY_STAGE3_MIN_ATTEMPT_S', 15, 2, 120)
+STAGE3_API_ADDR = os.environ.get('OPENRAY_STAGE3_API_ADDR', '127.0.0.1:10085').strip()
+
 # Limit for number of new URIs processed per run (overridable)
 NEW_URIS_LIMIT_ENABLED = _env_int('OPENRAY_NEW_URIS_LIMIT_ENABLED', 1, 0, 1)
 NEW_URIS_LIMIT = _env_int('OPENRAY_NEW_URIS_LIMIT', 25000, 1, 1000000)
@@ -422,6 +432,9 @@ if os.environ.get('OPENRAY_DEBUG', '').strip() in ('1', 'true', 'yes'):
     print(f"   FETCH_WORKERS: {FETCH_WORKERS} (was: {_opt_fetch})")
     print(f"   PING_WORKERS: {PING_WORKERS} (was: {_opt_ping})")
     print(f"   STAGE3_WORKERS: {STAGE3_WORKERS}")
+    print(f"   STAGE3_BACKEND: {STAGE3_BACKEND}")
+    print(f"   STAGE3_POOL_SIZE: {STAGE3_POOL_SIZE}")
+    print(f"   STAGE3_BASE_PORT: {STAGE3_BASE_PORT}")
     print("⏱️  TIMEOUTS:")
     print(f"   PING_TIMEOUT_MS: {PING_TIMEOUT_MS}ms (auto: {_opt_ping_timeout}ms)")
     print(f"   CONNECT_TIMEOUT_MS: {CONNECT_TIMEOUT_MS}ms (auto: {_opt_connect_timeout}ms)")

@@ -552,31 +552,23 @@ def _validate_proxies_directly(proxies: List[str]) -> List[str]:
     # Load check counts for tracking consecutive failures
     counts = _load_check_counts()
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_proxy = {executor.submit(net_module.validate_with_v2ray_core, proxy, 12): proxy for proxy in proxies if proxy}
-        for future in as_completed(future_to_proxy):
-            proxy = future_to_proxy[future]
-            ok = False
-            try:
-                ok = bool(future.result())
-            except Exception:
-                ok = False
-            
-            if ok:
-                successful_proxies.append(proxy)
-                if proxy in counts:
-                    counts[proxy]["consecutive_failures"] = 0
-            else:
-                if proxy not in counts:
-                    counts[proxy] = {"main": 0, "iran": 0, "consecutive_failures": 0}
-                # counts[proxy]["consecutive_failures"] += 1
-                
-                # We don't remove proxies here because main_for_iran.py is read-only for available proxies
-                # and only updates check_counts.json. But we could log it.
-                if counts[proxy]["consecutive_failures"] >= int(getattr(C, 'EXISTING_PROXY_FAILURE_LIMIT', 24)):
-                    log(f"Proxy {proxy[:50]}... reached failure limit ({counts[proxy]['consecutive_failures']}) in Iran.")
-
-            _update_progress(1)
+    from .stage3.engine import get_engine
+    stage3_results = get_engine().validate_many([p for p in proxies if p], timeout_s=12)
+    for proxy in proxies:
+        if not proxy:
+            _update_progress()
+            continue
+        ok = stage3_results.get(proxy) is True
+        if ok:
+            successful_proxies.append(proxy)
+            if proxy in counts:
+                counts[proxy]["consecutive_failures"] = 0
+        else:
+            if proxy not in counts:
+                counts[proxy] = {"main": 0, "iran": 0, "consecutive_failures": 0}
+            if counts[proxy]["consecutive_failures"] >= int(getattr(C, 'EXISTING_PROXY_FAILURE_LIMIT', 24)):
+                log(f"Proxy {proxy[:50]}... reached failure limit ({counts[proxy]['consecutive_failures']}) in Iran.")
+        _update_progress()
 
     # Save updated check counts
     _save_check_counts(counts)

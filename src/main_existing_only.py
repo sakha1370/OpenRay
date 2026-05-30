@@ -23,6 +23,7 @@ from .io_ops import (
     save_streaks,
 )
 from .net import ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core
+from .stage3.engine import get_engine
 from .parsing import (
     extract_host,
     extract_port,
@@ -147,41 +148,32 @@ def main() -> int:
                 if not core_path:
                     log("Stage 3 enabled, but V2Ray/Xray core not found or OPENRAY_V2RAY_CORE is not set; skipping core validation for existing proxies.")
                 else:
-                    subset = alive # [:int(STAGE3_MAX)]
+                    subset = alive[: int(STAGE3_MAX)]
                     kept_subset: List[str] = []
 
-                    def _core_check(u: str) -> Tuple[str, bool]:
-                        try:
-                            res = validate_with_v2ray_core(u, timeout_s=12)
-                        except Exception:
-                            return u, False
-                        return u, (res is True)
-
-                    workers = int(STAGE3_WORKERS)
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool2:
-                        print("Start Stage 3 for existing proxies")
-                        for u, success in progress(pool2.map(_core_check, subset), total=len(subset)):
-                            h = host_map_existing.get(u)
-                            if success:
-                                kept_subset.append(u)
-                                if h:
-                                    if h not in streaks:
-                                        streaks[h] = {'streak': 0, 'last_test': 0, 'last_success': 0, 'failure_count': 0}
-                                    streaks[h]['failure_count'] = 0
-                            else:
-                                if h:
-                                    if h not in streaks:
-                                        streaks[h] = {'streak': 0, 'last_test': 0, 'last_success': 0, 'failure_count': 0}
-                                    
-                                    curr_fails = streaks[h].get('failure_count', 0)
-                                    streaks[h]['failure_count'] = curr_fails + 1
-                                    
-                                    if streaks[h]['failure_count'] < int(EXISTING_PROXY_FAILURE_LIMIT):
-                                        kept_subset.append(u)
-                                    else:
-                                        log(f"Proxy {h} reached failure limit ({EXISTING_PROXY_FAILURE_LIMIT}). Removing it.")
+                    print("Start Stage 3 for existing proxies")
+                    stage3_results = get_engine().validate_many(subset, timeout_s=12)
+                    for u in progress(subset, total=len(subset)):
+                        success = stage3_results.get(u) is True
+                        h = host_map_existing.get(u)
+                        if success:
+                            kept_subset.append(u)
+                            if h:
+                                if h not in streaks:
+                                    streaks[h] = {'streak': 0, 'last_test': 0, 'last_success': 0, 'failure_count': 0}
+                                streaks[h]['failure_count'] = 0
+                        else:
+                            if h:
+                                if h not in streaks:
+                                    streaks[h] = {'streak': 0, 'last_test': 0, 'last_success': 0, 'failure_count': 0}
+                                
+                                curr_fails = streaks[h].get('failure_count', 0)
+                                streaks[h]['failure_count'] = curr_fails + 1
+                                
+                                if streaks[h]['failure_count'] < int(EXISTING_PROXY_FAILURE_LIMIT):
+                                    kept_subset.append(u)
                                 else:
-                                    pass
+                                    log(f"Proxy {h} reached failure limit ({EXISTING_PROXY_FAILURE_LIMIT}). Removing it.")
 
                     # Save updated streaks after revalidation
                     save_streaks(streaks)
