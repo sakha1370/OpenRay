@@ -27,12 +27,21 @@ def record_check(result: Optional[bool], timing: TimingStats) -> None:
             _global_summary.record(result, timing)
 
 
+def _should_log_summary() -> bool:
+    if os.environ.get('OPENRAY_DEBUG', '').strip().lower() in ('1', 'true', 'yes'):
+        return True
+    try:
+        from ..constants import _is_ci_env
+        return _is_ci_env()
+    except Exception:
+        return os.environ.get('CI', '').strip().lower() in ('1', 'true', 'yes')
+
+
 def log_summary_if_debug() -> None:
     with _lock:
         summary = _global_summary
     if summary is None:
         return
-    debug = os.environ.get('OPENRAY_DEBUG', '').strip().lower() in ('1', 'true', 'yes')
-    if debug:
+    if _should_log_summary():
         from ..common import log
         log(summary.format_line())

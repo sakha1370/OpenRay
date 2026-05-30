@@ -356,9 +356,17 @@ def _adaptive_stage3_workers() -> int:
 
     return max(8, min(workers, 128))  # Range: 8-128 workers (increased for performance)
 
+
+def _default_stage3_workers() -> int:
+    """CI uses adaptive cap (16); local defaults higher for throughput."""
+    adaptive = _adaptive_stage3_workers()
+    if _is_ci_env():
+        return adaptive
+    return max(adaptive, 48)
+
+
 # Stage 3 adaptive workers (maximum performance)
-STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS',
-                         max(_adaptive_stage3_workers(), 48), 4, 512)
+STAGE3_WORKERS = _env_int('OPENRAY_STAGE3_WORKERS', _default_stage3_workers(), 4, 512)
 
 # Stage 3 engine (subprocess | pool | api)
 STAGE3_BACKEND = os.environ.get('OPENRAY_STAGE3_BACKEND', 'pool').strip().lower()
@@ -367,7 +375,10 @@ STAGE3_BASE_PORT = _env_int('OPENRAY_STAGE3_BASE_PORT', 31000, 1024, 60000)
 STAGE3_RECYCLE_EVERY = _env_int('OPENRAY_STAGE3_RECYCLE_EVERY', 100, 1, 10000)
 STAGE3_JITTER_MS = _env_int('OPENRAY_STAGE3_JITTER_MS', 500, 0, 5000)
 STAGE3_FAST_FAIL_MS = _env_int('OPENRAY_STAGE3_FAST_FAIL_MS', 200, 50, 5000)
-STAGE3_MIN_ATTEMPT_S = _env_int('OPENRAY_STAGE3_MIN_ATTEMPT_S', 15, 2, 120)
+# Shorter floor on CI so dead proxies fail faster (spawn savings are small vs this wait)
+STAGE3_MIN_ATTEMPT_S = _env_int('OPENRAY_STAGE3_MIN_ATTEMPT_S', 8 if _CI else 15, 2, 120)
+STAGE3_EXISTING_TIMEOUT_S = _env_int('OPENRAY_STAGE3_EXISTING_TIMEOUT_S', 12 if _CI else 20, 5, 120)
+STAGE3_NEW_TIMEOUT_S = _env_int('OPENRAY_STAGE3_NEW_TIMEOUT_S', 10 if _CI else 15, 5, 120)
 STAGE3_API_ADDR = os.environ.get('OPENRAY_STAGE3_API_ADDR', '127.0.0.1:10085').strip()
 
 # Limit for number of new URIs processed per run (overridable)

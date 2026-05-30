@@ -20,6 +20,8 @@ from .constants import (
     OUTPUT_DIR,
     STATE_DIR,
     STAGE3_WORKERS,
+    STAGE3_EXISTING_TIMEOUT_S,
+    STAGE3_NEW_TIMEOUT_S,
     NEW_URIS_LIMIT_ENABLED,
     NEW_URIS_LIMIT,
     EXISTING_PROXY_FAILURE_LIMIT,
@@ -474,7 +476,7 @@ def main() -> int:
                     counts = _load_check_counts()
 
                     print("Start Stage 3 (with retries) for existing proxies")
-                    stage3_results = get_engine().validate_many(subset, timeout_s=20)
+                    stage3_results = get_engine().validate_many(subset, timeout_s=int(STAGE3_EXISTING_TIMEOUT_S))
                     for u in progress(subset, total=len(subset)):
                         success = stage3_results.get(u) is True
                         if success:
@@ -671,7 +673,7 @@ def main() -> int:
             kept_subset: List[str] = []
 
             print("Start Stage 3 for new proxies")
-            stage3_results = get_engine().validate_many(subset, timeout_s=15)
+            stage3_results = get_engine().validate_many(subset, timeout_s=int(STAGE3_NEW_TIMEOUT_S))
             for u in progress(subset, total=len(subset)):
                 if stage3_results.get(u) is True:
                     kept_subset.append(u)

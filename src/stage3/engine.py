@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 from typing import Dict, List, Optional
 
-from ..constants import STAGE3_WORKERS
+from ..common import log
+from ..constants import STAGE3_POOL_SIZE, STAGE3_WORKERS
 from .backends.xray_api import XrayApiBackend
 from .backends.base import Stage3Backend
 from .backends.pool import PoolBackend
@@ -47,9 +48,11 @@ class Stage3Engine:
     def validate_many(self, uris: List[str], timeout_s: int) -> Dict[str, Optional[bool]]:
         if not uris:
             return {}
-        workers = int(os.environ.get('OPENRAY_STAGE3_POOL_SIZE', '0') or STAGE3_WORKERS)
-        if workers <= 0:
-            workers = STAGE3_WORKERS
+        pool_size = int(os.environ.get('OPENRAY_STAGE3_POOL_SIZE', '0') or 0) or int(STAGE3_POOL_SIZE)
+        log(
+            f"Stage3 validate_many: backend={self._kind.value} n={len(uris)} "
+            f"timeout_s={timeout_s} pool_size={pool_size}"
+        )
         results = self._backend.validate_many(uris, timeout_s)
         log_summary_if_debug()
         return results
