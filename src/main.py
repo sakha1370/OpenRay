@@ -22,6 +22,7 @@ from .constants import (
     STAGE3_WORKERS,
     STAGE3_EXISTING_TIMEOUT_S,
     STAGE3_NEW_TIMEOUT_S,
+    STAGE3_TCP_PREFILTER,
     NEW_URIS_LIMIT_ENABLED,
     NEW_URIS_LIMIT,
     EXISTING_PROXY_FAILURE_LIMIT,
@@ -40,6 +41,7 @@ from .io_ops import (
 )
 from .net import _get_country_code_for_host, ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core, fetch_urls_async_batch, get_country_codes_batch, check_one_sync, is_dynamic_host, check_pair
 from .stage3.engine import get_engine
+from .stage3.prefilter import tcp_prefilter_existing
 from .parsing import (
     _set_remark,
     extract_host,
@@ -475,10 +477,24 @@ def main() -> int:
                     # Load check counts for tracking consecutive failures
                     counts = _load_check_counts()
 
+                    tcp_pass = subset
+                    tcp_fail_set: Set[str] = set()
+                    if int(STAGE3_TCP_PREFILTER) == 1:
+                        tcp_pass, tcp_fail = tcp_prefilter_existing(
+                            subset, host_map_existing, max_workers=PING_WORKERS
+                        )
+                        tcp_fail_set = set(tcp_fail)
+                        log(f"Stage 3 TCP prefilter: pass={len(tcp_pass)} fail={len(tcp_fail)}")
+
                     print("Start Stage 3 (with retries) for existing proxies")
-                    stage3_results = get_engine().validate_many(subset, timeout_s=int(STAGE3_EXISTING_TIMEOUT_S))
+                    stage3_results = get_engine().validate_many(
+                        tcp_pass, timeout_s=int(STAGE3_EXISTING_TIMEOUT_S)
+                    )
                     for u in progress(subset, total=len(subset)):
-                        success = stage3_results.get(u) is True
+                        if u in tcp_fail_set:
+                            success = False
+                        else:
+                            success = stage3_results.get(u) is True
                         if success:
                             kept_subset.append(u)
                             successful_this_run.append(u)

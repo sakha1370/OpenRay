@@ -3,16 +3,15 @@ from __future__ import annotations
 import concurrent.futures
 import os
 import time
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 from .common import log, progress, sha1_hex, get_proxy_connection_hash, get_v2rayn_connection_key
 from .constants import (
     AVAILABLE_FILE,
     PING_WORKERS,
-    ENABLE_STAGE2,
     ENABLE_STAGE3,
     STAGE3_MAX,
-    STAGE3_WORKERS,
+    STAGE3_TCP_PREFILTER,
     EXISTING_PROXY_FAILURE_LIMIT,
 )
 from .grouping import write_grouped_outputs
@@ -22,12 +21,10 @@ from .io_ops import (
     read_lines,
     save_streaks,
 )
-from .net import ping_host, connect_host_port, quick_protocol_probe, validate_with_v2ray_core
+from .net import ping_host, connect_host_port
 from .stage3.engine import get_engine
-from .parsing import (
-    extract_host,
-    extract_port,
-)
+from .stage3.prefilter import tcp_prefilter_existing
+from .parsing import extract_host
 
 def _sync_check_counts_with_available_file() -> None:
     """Lazy import and call sync function from main.py to avoid circular imports."""
@@ -95,41 +92,7 @@ def main() -> int:
             existing_lines = deduplicated_existing
 
             host_map_existing = {u: _extract_host_for_existing(u) for u in existing_lines}
-            items = [(u, h) for u, h in host_map_existing.items() if h]
-            # initialize to False for tested hosts
-            for _, h in items:
-                if h not in host_success_run:
-                    host_success_run[h] = False
 
-            def check_existing(item: Tuple[str, str]) -> Optional[str]:
-                u, h = item
-                try:
-                    if not ping_host(h):
-                        return None
-                    scheme = u.split('://', 1)[0].lower()
-                    if scheme in ('vmess', 'vless', 'trojan', 'ss', 'ssr', 'hysteria', 'hysteria2', 'hy2', 'tuic', 'juicity', 'wireguard'):
-                        p = extract_port(u)
-                        if p is not None:
-                            ok = connect_host_port(h, int(p))
-                            if not ok:
-                                return None
-                            if int(ENABLE_STAGE2) == 1:
-                                return u if quick_protocol_probe(u, h, int(p)) else None
-                            return u
-                    return u
-                except Exception:
-                    return None
-
-            # Skip Stage 2 for existing proxies - keep all existing proxies without revalidation
-            # with concurrent.futures.ThreadPoolExecutor(max_workers=PING_WORKERS) as pool:
-            #     print("Start Stage 2 for existing proxies")
-            #     for res in progress(pool.map(check_existing, items), total=len(items)):
-            #         if res is not None:
-            #             alive.append(res)
-            #             h = host_map_existing.get(res)
-            #             if h:
-            #                 host_success_run[h] = True
-            
             # Keep all existing proxies without Stage 2 revalidation
             for u in existing_lines:
                 alive.append(u)
@@ -151,10 +114,22 @@ def main() -> int:
                     subset = alive[: int(STAGE3_MAX)]
                     kept_subset: List[str] = []
 
+                    tcp_pass = subset
+                    tcp_fail_set: Set[str] = set()
+                    if int(STAGE3_TCP_PREFILTER) == 1:
+                        tcp_pass, tcp_fail = tcp_prefilter_existing(
+                            subset, host_map_existing, max_workers=PING_WORKERS
+                        )
+                        tcp_fail_set = set(tcp_fail)
+                        log(f"Stage 3 TCP prefilter: pass={len(tcp_pass)} fail={len(tcp_fail)}")
+
                     print("Start Stage 3 for existing proxies")
-                    stage3_results = get_engine().validate_many(subset, timeout_s=12)
+                    stage3_results = get_engine().validate_many(tcp_pass, timeout_s=12)
                     for u in progress(subset, total=len(subset)):
-                        success = stage3_results.get(u) is True
+                        if u in tcp_fail_set:
+                            success = False
+                        else:
+                            success = stage3_results.get(u) is True
                         h = host_map_existing.get(u)
                         if success:
                             kept_subset.append(u)

@@ -8,8 +8,8 @@ from urllib.request import ProxyHandler
 from ..constants import USER_AGENT
 
 STAGE3_TEST_URLS: List[str] = [
-    'https://www.google.com/generate_204',
     'https://cp.cloudflare.com/generate_204',
+    # 'https://www.google.com/generate_204',
 ]
 
 

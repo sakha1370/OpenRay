@@ -48,6 +48,7 @@ class Stage3Engine:
     def validate_many(self, uris: List[str], timeout_s: int) -> Dict[str, Optional[bool]]:
         if not uris:
             return {}
+        reset_summary(self._kind.value)
         pool_size = int(os.environ.get('OPENRAY_STAGE3_POOL_SIZE', '0') or 0) or int(STAGE3_POOL_SIZE)
         log(
             f"Stage3 validate_many: backend={self._kind.value} n={len(uris)} "

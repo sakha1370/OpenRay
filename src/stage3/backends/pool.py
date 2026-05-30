@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import concurrent.futures
 import os
 import queue
 import socket
@@ -16,7 +17,7 @@ from ..config_helpers import (
     worker_outbound_config_path,
     write_config,
 )
-from ..grpc_client import swap_candidate_outbound
+from ..grpc_client import XrayApiSession, swap_candidate_outbound
 from ..metrics import record_check
 from ..probe import probe_http_proxy
 from ..types import TimingStats
@@ -43,6 +44,7 @@ class _PoolWorker:
         self._jobs = 0
         self._lock = threading.Lock()
         self._reuse = _pool_reuse_enabled()
+        self._api_session = XrayApiSession(self.api_addr)
 
     def _creationflags(self) -> int:
         return (
@@ -56,6 +58,7 @@ class _PoolWorker:
             _terminate_proc(self._proc)
             self._proc = None
             self._jobs = 0
+        self._api_session.close()
 
     def _port_open(self, port: int) -> bool:
         try:
@@ -119,6 +122,7 @@ class _PoolWorker:
             self.api_addr,
             outbound,
             self.outbound_path,
+            session=self._api_session,
         )
         timing.config_ms += (time.perf_counter() - t_swap) * 1000
         return ok
@@ -271,18 +275,12 @@ class PoolBackend(Stage3Backend):
             with lock:
                 results[u] = r
 
-        threads: List[threading.Thread] = []
-        pool_size = max(1, len(self._workers))
         pending = [u for u in uris if u]
-        idx = 0
-        while idx < len(pending):
-            batch = pending[idx:idx + pool_size]
-            idx += pool_size
-            threads = [threading.Thread(target=_job, args=(u,), daemon=True) for u in batch]
-            for t in threads:
-                t.start()
-            for t in threads:
-                t.join()
+        max_workers = max(1, len(self._workers))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(_job, u) for u in pending]
+            for fut in concurrent.futures.as_completed(futures):
+                fut.result()
         return results
 
     def shutdown(self) -> None:

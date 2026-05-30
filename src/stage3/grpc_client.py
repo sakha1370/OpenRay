@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
+import threading
 from typing import Any, Dict, Optional
 
 from .config_helpers import CANDIDATE_OUTBOUND_TAG, write_config
@@ -26,12 +26,76 @@ def _api_timeout_s() -> int:
         return 5
 
 
+def _grpc_swap_enabled() -> bool:
+    val = os.environ.get('OPENRAY_STAGE3_GRPC_SWAP', '1').strip().lower()
+    return val not in ('0', 'false', 'no', 'off')
+
+
 def _creationflags() -> int:
     return (
         subprocess.CREATE_NO_WINDOW
         if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW')
         else 0
     )
+
+
+class XrayApiSession:
+    """Persistent gRPC channel for HandlerService/RemoveOutbound on one Xray daemon."""
+
+    _REMOVE_METHOD = '/xray.app.proxyman.command.HandlerService/RemoveOutbound'
+
+    def __init__(self, api_addr: str):
+        self.api_addr = api_addr
+        self._lock = threading.Lock()
+        self._channel = None
+        self._stub = None
+
+    def _ensure_stub(self):
+        if self._stub is not None:
+            return True
+        try:
+            import grpc
+        except ImportError:
+            return False
+
+        host, _, port_s = self.api_addr.rpartition(':')
+        if not host:
+            host, port_s = '127.0.0.1', self.api_addr
+        target = f'{host}:{port_s}'
+        try:
+            self._channel = grpc.insecure_channel(target)
+            self._stub = self._channel.unary_unary(
+                self._REMOVE_METHOD,
+                request_serializer=lambda x: x,
+                response_deserializer=lambda x: x,
+            )
+            return True
+        except Exception:
+            self.close()
+            return False
+
+    def remove_outbound(self, tag: str) -> bool:
+        if not tag or not _grpc_swap_enabled():
+            return False
+        with self._lock:
+            if not self._ensure_stub():
+                return False
+            try:
+                self._stub(_encode_remove_outbound_request(tag), timeout=float(_api_timeout_s()))
+                return True
+            except Exception:
+                self.close()
+                return False
+
+    def close(self) -> None:
+        with self._lock:
+            if self._channel is not None:
+                try:
+                    self._channel.close()
+                except Exception:
+                    pass
+            self._channel = None
+            self._stub = None
 
 
 def remove_outbound_via_cli(core_path: str, api_addr: str, tag: str) -> bool:
@@ -76,42 +140,27 @@ def swap_candidate_outbound(
     outbound: Dict[str, Any],
     outbound_path: str,
     tag: str = CANDIDATE_OUTBOUND_TAG,
+    session: Optional[XrayApiSession] = None,
 ) -> bool:
     """Replace the candidate outbound on a running daemon without restarting Xray."""
     ob = dict(outbound)
     ob['tag'] = tag
     write_config(outbound_path, {'outbounds': [ob]})
-    remove_outbound_via_cli(core_path, api_addr, tag)
+    removed = False
+    if session is not None:
+        removed = session.remove_outbound(tag)
+    if not removed:
+        remove_outbound_via_cli(core_path, api_addr, tag)
     return add_outbound_via_cli(core_path, api_addr, outbound_path)
 
 
 def remove_outbound(tag: str, api_addr: str) -> bool:
     """Best-effort RemoveOutbound via gRPC; returns True if call succeeded."""
+    session = XrayApiSession(api_addr)
     try:
-        import grpc
-    except ImportError:
-        return False
-
-    host, _, port_s = api_addr.rpartition(':')
-    if not host:
-        host, port_s = '127.0.0.1', api_addr
-    target = f'{host}:{port_s}'
-    try:
-        channel = grpc.insecure_channel(target)
-        stub = channel.unary_unary(
-            '/xray.app.proxyman.command.HandlerService/RemoveOutbound',
-            request_serializer=lambda x: x,
-            response_deserializer=lambda x: x,
-        )
-        stub(_encode_remove_outbound_request(tag), timeout=float(_api_timeout_s()))
-        channel.close()
-        return True
-    except Exception:
-        try:
-            channel.close()
-        except Exception:
-            pass
-        return False
+        return session.remove_outbound(tag)
+    finally:
+        session.close()
 
 
 def add_outbound_from_config(
