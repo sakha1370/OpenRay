@@ -7,7 +7,7 @@ import socket
 import subprocess
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from ...constants import REPO_ROOT, STAGE3_WORKERS, V2RAY_CORE_PATH
 from ..config_helpers import (
@@ -28,6 +28,24 @@ from .subprocess import _min_attempt_seconds, _stage3_env_int, _terminate_proc
 def _pool_reuse_enabled() -> bool:
     val = os.environ.get('OPENRAY_STAGE3_POOL_REUSE', '1').strip().lower()
     return val not in ('0', 'false', 'no', 'off')
+
+
+ProbeFn = Callable[[int, float], Any]
+
+
+def _probe_result_ok(result: Any) -> Optional[bool]:
+    if result is None:
+        return None
+    if isinstance(result, dict):
+        return all(bool(v) for v in result.values()) if result else False
+    return True if result else False
+
+
+def _run_probe(http_port: int, attempt_timeout: float, probe_fn: Optional[ProbeFn]) -> Any:
+    deadline = time.time() + attempt_timeout
+    if probe_fn is not None:
+        return probe_fn(http_port, deadline)
+    return probe_http_proxy(http_port, deadline)
 
 
 class _PoolWorker:
@@ -127,7 +145,9 @@ class _PoolWorker:
         timing.config_ms += (time.perf_counter() - t_swap) * 1000
         return ok
 
-    def _run_check_restart(self, uri: str, timeout_s: int, timing: TimingStats) -> Optional[bool]:
+    def _run_check_restart(
+        self, uri: str, timeout_s: int, timing: TimingStats, probe_fn: Optional[ProbeFn] = None
+    ) -> Optional[Any]:
         """Legacy one-shot Xray process per check (fallback)."""
         try:
             cfg = prepare_config_for_uri(uri, self.http_port)
@@ -162,26 +182,27 @@ class _PoolWorker:
 
             attempt_timeout = max(_min_attempt_seconds(), float(timeout_s))
             t_fetch = time.perf_counter()
-            ok = probe_http_proxy(self.http_port, time.time() + attempt_timeout)
+            ok = _run_probe(self.http_port, attempt_timeout, probe_fn)
             timing.fetch_ms += (time.perf_counter() - t_fetch) * 1000
 
             with self._lock:
                 self._stop_locked()
 
-            result = True if ok else False
-            record_check(result, timing)
-            return result
+            record_check(_probe_result_ok(ok), timing)
+            return ok
         except Exception:
             with self._lock:
                 self._stop_locked()
             record_check(None, timing)
             return None
 
-    def _run_check_reuse(self, uri: str, timeout_s: int, timing: TimingStats) -> Optional[bool]:
+    def _run_check_reuse(
+        self, uri: str, timeout_s: int, timing: TimingStats, probe_fn: Optional[ProbeFn] = None
+    ) -> Optional[Any]:
         try:
             from ...v2ray import build_outbound_for_uri
         except Exception:
-            return self._run_check_restart(uri, timeout_s, timing)
+            return self._run_check_restart(uri, timeout_s, timing, probe_fn)
 
         t_cfg = time.perf_counter()
         outbound = build_outbound_for_uri(uri)
@@ -206,22 +227,23 @@ class _PoolWorker:
                 self._jobs += 1
 
         if not swap_ok:
-            return self._run_check_restart(uri, timeout_s, timing)
+            return self._run_check_restart(uri, timeout_s, timing, probe_fn)
 
         attempt_timeout = max(_min_attempt_seconds(), float(timeout_s))
         t_fetch = time.perf_counter()
-        ok = probe_http_proxy(self.http_port, time.time() + attempt_timeout)
+        ok = _run_probe(self.http_port, attempt_timeout, probe_fn)
         timing.fetch_ms += (time.perf_counter() - t_fetch) * 1000
 
-        result = True if ok else False
-        record_check(result, timing)
-        return result
+        record_check(_probe_result_ok(ok), timing)
+        return ok
 
-    def run_check(self, uri: str, timeout_s: int) -> Optional[bool]:
+    def run_check(
+        self, uri: str, timeout_s: int, probe_fn: Optional[ProbeFn] = None
+    ) -> Optional[Any]:
         timing = TimingStats()
         if self._reuse:
-            return self._run_check_reuse(uri, timeout_s, timing)
-        return self._run_check_restart(uri, timeout_s, timing)
+            return self._run_check_reuse(uri, timeout_s, timing, probe_fn)
+        return self._run_check_restart(uri, timeout_s, timing, probe_fn)
 
 
 class PoolBackend(Stage3Backend):

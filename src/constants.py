@@ -383,6 +383,20 @@ STAGE3_API_ADDR = os.environ.get('OPENRAY_STAGE3_API_ADDR', '127.0.0.1:10085').s
 STAGE3_TCP_PREFILTER = _env_int('OPENRAY_STAGE3_TCP_PREFILTER', 1, 0, 1)
 STAGE3_GRPC_SWAP = _env_int('OPENRAY_STAGE3_GRPC_SWAP', 1, 0, 1)
 
+# Site access checks (proxies that can reach specific sites without being blocked)
+SITE_ACCESS_DIR = os.path.join(OUTPUT_DIR, 'site_access')
+SITE_ACCESS_TARGETS = [
+    {
+        'id': 'aistudio',
+        'url': 'https://aistudio.google.com/welcome',
+        'blocked_codes': (403,),
+        'output_file': 'aistudio.txt',
+    },
+]
+SITE_ACCESS_COMBINED_FILE = 'all_sites.txt'
+SITE_ACCESS_TIMEOUT_S = _env_int('OPENRAY_SITE_ACCESS_TIMEOUT_S', STAGE3_EXISTING_TIMEOUT_S, 5, 120)
+SITE_ACCESS_POOL_SIZE = _env_int('OPENRAY_SITE_ACCESS_POOL_SIZE', STAGE3_POOL_SIZE, 1, 512)
+
 # Limit for number of new URIs processed per run (overridable)
 NEW_URIS_LIMIT_ENABLED = _env_int('OPENRAY_NEW_URIS_LIMIT_ENABLED', 1, 0, 1)
 NEW_URIS_LIMIT = _env_int('OPENRAY_NEW_URIS_LIMIT', 25000, 1, 1000000)

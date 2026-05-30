@@ -80,6 +80,16 @@ jobs:
         OPENRAY_STAGE3_NEW_TIMEOUT_S: "10"
       run: python -m src.main
 
+    # Check which alive proxies can access configured sites (e.g. Google AI Studio)
+    - name: Run site access checker
+      env:
+        OPENRAY_STAGE3_BACKEND: pool
+        OPENRAY_STAGE3_POOL_SIZE: "32"
+        OPENRAY_STAGE3_WORKERS: "32"
+        OPENRAY_STAGE3_JITTER_MS: "0"
+        OPENRAY_SITE_ACCESS_TIMEOUT_S: "10"
+      run: python -m src.site_access_check
+
     # Reset tested state if proxy count is below threshold
     - name: Reset tested state when proxy count < 500
       run: |
