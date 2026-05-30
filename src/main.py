@@ -5,6 +5,12 @@ import os
 import time
 from typing import Dict, List, Optional, Set, Tuple
 
+from .alive_check_state import (
+    default_count_entry,
+    is_in_alive_cooldown,
+    record_alive_failure,
+    record_alive_success,
+)
 from .common import log, progress, sha1_hex, get_proxy_connection_hash, get_v2rayn_connection_key, get_openray_dedup_key
 import json
 from .constants import (
@@ -25,7 +31,8 @@ from .constants import (
     STAGE3_TCP_PREFILTER,
     NEW_URIS_LIMIT_ENABLED,
     NEW_URIS_LIMIT,
-    EXISTING_PROXY_FAILURE_LIMIT,
+    ALIVE_CHECK_COOLDOWN_H,
+    ALIVE_DEATH_AFTER_H,
 )
 from .geo import _build_country_counters, _country_flag
 from .grouping import regroup_available_by_country, write_grouped_outputs
@@ -183,19 +190,7 @@ def _update_check_counts_for_proxies(proxies: List[str], counter_type: str = "gl
     updated_count = 0
     for p in unique_proxies:
         if p not in counts:
-            counts[p] = {
-                "global": 0,
-                "iran": {
-                    "total": 0,
-                    "operators": {
-                        "mci": 0,
-                        "irancell": 0,
-                        "tci": 0,
-                        "others": 0
-                    }
-                },
-                "consecutive_failures": 0
-            }
+            counts[p] = default_count_entry()
 
         # Update the global counter
         if counter_type == "global":
@@ -214,6 +209,7 @@ def _update_check_counts_for_proxies(proxies: List[str], counter_type: str = "gl
             counts[p]["global"] = old_count + 1
 
         counts[p]["consecutive_failures"] = 0  # Reset consecutive failures on success
+        record_alive_success(counts, p)
         updated_count += 1
 
     if updated_count > 0:
@@ -257,19 +253,7 @@ def _sync_check_counts_with_available_file() -> None:
         # Add entries for new proxies (with 0 counts)
         for proxy in current_proxies:
             if proxy not in counts:
-                counts[proxy] = {
-                    "global": 0,
-                    "iran": {
-                        "total": 0,
-                        "operators": {
-                            "mci": 0,
-                            "irancell": 0,
-                            "tci": 0,
-                            "others": 0
-                        }
-                    },
-                    "consecutive_failures": 0
-                }
+                counts[proxy] = default_count_entry()
                 added_count += 1
 
         # Save if there were changes
@@ -473,24 +457,40 @@ def main() -> int:
                 else:
                     subset = alive[: int(STAGE3_MAX)]
                     kept_subset: List[str] = []
-                    
-                    # Load check counts for tracking consecutive failures
+                    now = time.time()
+
+                    # Load check counts for alive backoff / failure streak tracking
                     counts = _load_check_counts()
 
-                    tcp_pass = subset
+                    cooldown_skipped = [
+                        u for u in subset if is_in_alive_cooldown(u, counts, now)
+                    ]
+                    to_check = [u for u in subset if u not in cooldown_skipped]
+                    kept_subset.extend(cooldown_skipped)
+                    if cooldown_skipped:
+                        log(
+                            f"Alive check cooldown: skipping {len(cooldown_skipped)} proxies "
+                            f"({ALIVE_CHECK_COOLDOWN_H}h after last failure)"
+                        )
+
+                    tcp_pass = to_check
                     tcp_fail_set: Set[str] = set()
-                    if int(STAGE3_TCP_PREFILTER) == 1:
+                    if int(STAGE3_TCP_PREFILTER) == 1 and to_check:
                         tcp_pass, tcp_fail = tcp_prefilter_existing(
-                            subset, host_map_existing, max_workers=PING_WORKERS
+                            to_check, host_map_existing, max_workers=PING_WORKERS
                         )
                         tcp_fail_set = set(tcp_fail)
                         log(f"Stage 3 TCP prefilter: pass={len(tcp_pass)} fail={len(tcp_fail)}")
 
                     print("Start Stage 3 (with retries) for existing proxies")
-                    stage3_results = get_engine().validate_many(
-                        tcp_pass, timeout_s=int(STAGE3_EXISTING_TIMEOUT_S)
-                    )
+                    stage3_results: Dict[str, Optional[bool]] = {}
+                    if to_check:
+                        stage3_results = get_engine().validate_many(
+                            tcp_pass, timeout_s=int(STAGE3_EXISTING_TIMEOUT_S)
+                        )
                     for u in progress(subset, total=len(subset)):
+                        if u in cooldown_skipped:
+                            continue
                         if u in tcp_fail_set:
                             success = False
                         else:
@@ -498,18 +498,16 @@ def main() -> int:
                         if success:
                             kept_subset.append(u)
                             successful_this_run.append(u)
-                            if u in counts:
-                                counts[u]["consecutive_failures"] = 0
+                            record_alive_success(counts, u)
                         else:
-                            if u not in counts:
-                                counts[u] = {"main": 0, "iran": 0, "consecutive_failures": 0}
-                            
-                            counts[u]["consecutive_failures"] += 1
-                            
-                            if counts[u]["consecutive_failures"] < int(EXISTING_PROXY_FAILURE_LIMIT):
-                                kept_subset.append(u)
+                            remove = record_alive_failure(counts, u, now)
+                            if remove:
+                                log(
+                                    f"Proxy {u[:50]}... alive failure streak reached "
+                                    f"{ALIVE_DEATH_AFTER_H}h. Removing it."
+                                )
                             else:
-                                log(f"Proxy {u[:50]}... reached failure limit ({EXISTING_PROXY_FAILURE_LIMIT}). Removing it.")
+                                kept_subset.append(u)
 
                     # Save updated check counts after revalidation
                     _save_check_counts(counts)

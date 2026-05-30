@@ -447,9 +447,12 @@ V2RAY_CORE_PATH = _auto_find_v2ray_core()
 # Streak selection parameters (overridable)
 CONSECUTIVE_REQUIRED = _env_int('OPENRAY_STREAK_REQUIRED', 5, 1, 100)
 
-# Failure tolerance for existing proxies
-# Proxies will be removed only after failing this many times
+# Failure tolerance for existing proxies (legacy counter; alive removal uses backoff below)
 EXISTING_PROXY_FAILURE_LIMIT = _env_int('OPENRAY_EXISTING_PROXY_FAILURE_LIMIT', 24, 1, 1000)
+
+# Alive check backoff: skip recheck for N hours after failure; remove after continuous failure window
+ALIVE_CHECK_COOLDOWN_H = _env_int('OPENRAY_ALIVE_CHECK_COOLDOWN_H', 8, 1, 168)
+ALIVE_DEATH_AFTER_H = _env_int('OPENRAY_ALIVE_DEATH_AFTER_H', 72, 1, 720)
 
 # Debug mode - set OPENRAY_DEBUG=1 to enable detailed parameter logging
 if os.environ.get('OPENRAY_DEBUG', '').strip() in ('1', 'true', 'yes'):
