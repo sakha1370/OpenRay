@@ -361,6 +361,8 @@ def _normalize_trojan(uri: str, parsed) -> str:
 
         # Pre-read SNI to allow host==sni suppression
         sni_value = query_params.get('sni', [None])[0] if 'sni' in query_params else None
+        header_type_raw = query_params.get('headerType', [None])[0] if 'headerType' in query_params else None
+        header_type_canon = _canonicalize_vmess_header_type(header_type_raw)
 
         for param in connection_params:
             if param not in query_params or not query_params[param]:
@@ -376,11 +378,16 @@ def _normalize_trojan(uri: str, parsed) -> str:
                     continue
                 value = base_path
 
-            # Normalize type: treat missing or explicit "tcp" as the same
+            # Normalize type: treat missing, "tcp", or raw/none as plain TCP
             if param == 'type':
-                # Empty, "tcp" or default should not distinguish connections
                 if not value or value.lower() == 'tcp':
                     continue
+                if value.lower() == 'raw' and header_type_canon is None:
+                    continue
+
+            # Redundant default header type on plain TCP transport
+            if param == 'headerType' and _canonicalize_vmess_header_type(value) is None:
+                continue
 
             # If host header equals SNI, treat as redundant
             if param == 'host' and sni_value and value == sni_value:
@@ -575,8 +582,9 @@ def _v2ray_query_params(query: str) -> dict:
 
 def _v2ray_fields_from_query(fields: dict, q: dict) -> None:
     """Populate transport/TLS fields from query params (mirrors FmtBase.getItemFormQuery)."""
-    fields['network'] = q.get('type') or 'tcp'
-    fields['headerType'] = q.get('headerType')
+    net, header_type = _canonicalize_vmess_transport(q.get('type'), q.get('headerType'))
+    fields['network'] = net
+    fields['headerType'] = header_type
     fields['host'] = q.get('host')
     fields['path'] = q.get('path')
     fields['seed'] = q.get('seed')

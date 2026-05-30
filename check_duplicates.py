@@ -20,8 +20,8 @@ from src.common import get_openray_dedup_key, normalize_proxy_uri
 
 # Known regression case: tcp/"" vs raw/"none" for the same VMess server
 DEFAULT_SAMPLES = [
-    "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo3ZTczMWVjMy1mOGUxLTQzZjYtOTJjZi0zOTc4ZDE0NzA1YzRAcjNtcmNnMDA3MTE3ZmI4LmN5YmVydmVuYS5jb206NTAwOTk/#%5BOpenRay%5D%20%F0%9F%87%B9%F0%9F%87%BC%20TW-507",
-    "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo3ZTczMWVjMy1mOGUxLTQzZjYtOTJjZi0zOTc4ZDE0NzA1YzRAcjNtcmNnMDA3MTE3ZmI4LmN5YmVydmVuYS5jb206NTAwOTk=#%5BOpenRay%5D%20%F0%9F%87%B9%F0%9F%87%BC%20TW-255"
+"vless://%40IR_NETLIFY@194.59.183.234:666#%5BOpenRay%5D%20%F0%9F%87%A9%F0%9F%87%AA%20DE-16478",
+"vless://%40IR_NETLIFY@194.59.183.234:666?encryption=none&security=none&type=tcp&headerType=none#%5BOpenRay%5D%20%F0%9F%87%A9%F0%9F%87%AA%20DE-16194"
 ]
 
 
