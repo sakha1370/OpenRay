@@ -21,7 +21,6 @@ class SiteAccessBackend(Stage3Backend):
         pool_size: Optional[int] = None,
     ):
         self._targets: List[SiteTarget] = list(targets)
-        self._probe_fn: ProbeFn = self._build_probe_fn()
         path = (V2RAY_CORE_PATH or '').strip()
         if not path or not os.path.exists(path):
             self._enabled = False
@@ -51,20 +50,30 @@ class SiteAccessBackend(Stage3Backend):
         for w in self._workers:
             self._queue.put(w)
 
-    def _build_probe_fn(self) -> ProbeFn:
-        targets = self._targets
+    def _probe_fn_for_targets(self, targets: Sequence[SiteTarget]) -> ProbeFn:
+        target_list = list(targets)
 
         def probe_fn(http_port: int, deadline: float):
-            return probe_all_targets(http_port, deadline, targets)
+            return probe_all_targets(http_port, deadline, target_list)
 
         return probe_fn
 
-    def validate_one(self, uri: str, timeout_s: int = 60) -> Optional[Dict[str, bool]]:
+    def validate_one(
+        self,
+        uri: str,
+        timeout_s: int = 60,
+        targets: Optional[Sequence[SiteTarget]] = None,
+    ) -> Optional[Dict[str, bool]]:
         if not self._enabled:
             return None
+        test_targets = list(targets) if targets is not None else self._targets
+        if not test_targets:
+            return {}
         worker = self._queue.get()
         try:
-            result = worker.run_check(uri, timeout_s, probe_fn=self._probe_fn)
+            result = worker.run_check(
+                uri, timeout_s, probe_fn=self._probe_fn_for_targets(test_targets)
+            )
             if isinstance(result, dict):
                 return result
             return None
@@ -72,7 +81,10 @@ class SiteAccessBackend(Stage3Backend):
             self._queue.put(worker)
 
     def validate_many(
-        self, uris: List[str], timeout_s: int
+        self,
+        uris: List[str],
+        timeout_s: int,
+        targets_by_uri: Optional[Dict[str, List[SiteTarget]]] = None,
     ) -> Dict[str, Optional[Dict[str, bool]]]:
         if not self._enabled:
             return {u: None for u in uris if u}
@@ -81,7 +93,10 @@ class SiteAccessBackend(Stage3Backend):
         lock = threading.Lock()
 
         def _job(u: str) -> None:
-            r = self.validate_one(u, timeout_s)
+            per_uri_targets = None
+            if targets_by_uri is not None:
+                per_uri_targets = targets_by_uri.get(u, [])
+            r = self.validate_one(u, timeout_s, targets=per_uri_targets)
             with lock:
                 results[u] = r
 
