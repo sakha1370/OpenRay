@@ -64,7 +64,7 @@ def probe_all_targets(
     targets: Sequence[SiteTarget],
     user_agent: str = USER_AGENT,
 ) -> Dict[str, bool]:
-    """Test each target (any URL may pass) within the deadline; return {target_id: passed}."""
+    """Test each target (all URLs must pass) within the deadline; return {target_id: passed}."""
     results: Dict[str, bool] = {}
     for target in targets:
         site_id = target['id']
@@ -73,11 +73,12 @@ def probe_all_targets(
             continue
         blocked_codes = target.get('blocked_codes', (403,))
         allowed_codes = target.get('allowed_codes')
-        passed = False
+        passed = True
         for url in target['urls']:
-            if passed or time.time() >= deadline:
+            if time.time() >= deadline:
+                passed = False
                 break
-            if probe_url_not_blocked(
+            if not probe_url_not_blocked(
                 http_port,
                 url,
                 deadline,
@@ -85,7 +86,8 @@ def probe_all_targets(
                 allowed_codes=allowed_codes,
                 user_agent=user_agent,
             ):
-                passed = True
+                passed = False
+                break
         results[site_id] = passed
     return results
 

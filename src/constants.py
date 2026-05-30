@@ -396,7 +396,7 @@ SITE_ACCESS_TARGETS = [
         'id': 'cursor',
         'urls': (
             'https://agentn.global.api5.cursor.sh',
-            'https://api3.cursor.sh',
+            # 'https://api3.cursor.sh',
         ),
         'allowed_codes': (200,),
         'output_file': 'cursor.txt',
