@@ -123,11 +123,11 @@ def normalize_proxy_uri(uri: str) -> str:
 
 
 def _canonicalize_vmess_header_type(header_type: str | None) -> str | None:
-    """Treat empty / none / --- as the same VMess header type (v2rayNG default)."""
+    """Treat empty / none / --- / auto as the same VMess header type (v2rayNG default)."""
     if header_type is None:
         return None
     low = str(header_type).strip().lower()
-    if low in ('', '---', 'none'):
+    if low in ('', '---', 'none', 'auto'):
         return None
     return low
 
@@ -156,6 +156,34 @@ def _canonicalize_vmess_security(tls: str | None) -> str | None:
     if low in ('tls', 'reality'):
         return low
     return low
+
+
+def _fully_unquote(value: str | None) -> str | None:
+    """Decode percent-encoding until stable (handles double-encoded share links)."""
+    if value is None:
+        return None
+    from urllib.parse import unquote
+
+    s = str(value)
+    if not s:
+        return s
+    for _ in range(4):
+        decoded = unquote(s)
+        if decoded == s:
+            break
+        s = decoded
+    return s
+
+
+def _canonicalize_v2ray_path(path: str | None) -> str | None:
+    """Normalize WS/gRPC path values from share links."""
+    value = _fully_unquote(path)
+    if not value:
+        return None
+    base = value.split('?', 1)[0]
+    if base in ('', '/'):
+        return None
+    return base
 
 
 def _normalize_vmess(uri: str, parsed) -> str:
@@ -218,7 +246,7 @@ def _normalize_vmess(uri: str, parsed) -> str:
         )
         type_val = header_type if header_type else 'none'
         host = normalize_value(obj.get('host'))
-        path = normalize_value(obj.get('path'))
+        path = _canonicalize_v2ray_path(normalize_value(obj.get('path')))
         tls = _canonicalize_vmess_security(normalize_value(obj.get('tls')))
         sni = normalize_value(obj.get('sni'))
         alpn = normalize_value(obj.get('alpn'))
@@ -274,9 +302,9 @@ def _normalize_vless(uri: str, parsed) -> str:
         uuid = path_parts[0]
         host_port = path_parts[1]
 
-        # Parse query parameters
+        # Parse query parameters (case-insensitive keys)
         from urllib.parse import parse_qs
-        query_params = parse_qs(parsed.query)
+        query_params = {k.lower(): v for k, v in parse_qs(parsed.query).items()}
 
         # Extract connection-defining parameters
         normalized_params = {}
@@ -298,7 +326,13 @@ def _normalize_vless(uri: str, parsed) -> str:
         for param in connection_params:
             if param in query_params and query_params[param]:
                 value = query_params[param][0]
-                if value:  # Only include non-empty values
+                if param == 'path':
+                    value = _canonicalize_v2ray_path(value)
+                    if not value:
+                        continue
+                elif value:
+                    value = _fully_unquote(value)
+                if value:
                     normalized_params[param] = value
 
         # Normalize defaults
@@ -341,8 +375,8 @@ def _normalize_trojan(uri: str, parsed) -> str:
         if not password:
             return uri
 
-        # Parse query parameters
-        query_params = parse_qs(parsed.query)
+        # Parse query parameters (case-insensitive keys: Host vs host)
+        query_params = {k.lower(): v for k, v in parse_qs(parsed.query).items()}
 
         # Extract connection-defining parameters
         conn_params = {}
@@ -369,14 +403,11 @@ def _normalize_trojan(uri: str, parsed) -> str:
                 continue
             value = query_params[param][0]
 
-            # Normalize path: ignore pure "/" or "/?..." paths
+            # Normalize path: ignore pure "/" or "/?..." paths; fully decode encoding
             if param == 'path':
-                # Drop any query-like part inside path (e.g., "/?ed=2560")
-                base_path = value.split('?', 1)[0] if value else value
-                if base_path in ('', '/'):
-                    # No meaningful path difference → skip
+                value = _canonicalize_v2ray_path(value)
+                if not value:
                     continue
-                value = base_path
 
             # Normalize type: treat missing, "tcp", or raw/none as plain TCP
             if param == 'type':
@@ -393,7 +424,9 @@ def _normalize_trojan(uri: str, parsed) -> str:
             if param == 'host' and sni_value and value == sni_value:
                 continue
 
-            if value:  # Only include non-empty values
+            if value:
+                if param in ('host', 'serviceName', 'authority'):
+                    value = _fully_unquote(value)
                 conn_params[param] = value
 
         # Normalize defaults
@@ -575,9 +608,19 @@ def _v2ray_query_params(query: str) -> dict:
             k, v = part.split('=', 1)
         else:
             k, v = part, ''
-        from urllib.parse import unquote
-        params[k] = unquote(v)
+        params[k.lower()] = _fully_unquote(v) if v else ''
     return params
+
+
+def _finalize_v2ray_dedup_fields(fields: dict) -> None:
+    """Apply cross-field rules before building the dedup key."""
+    fields['fingerPrint'] = None
+    host = fields.get('host')
+    sni = fields.get('sni')
+    if host and sni and str(host).strip().lower() == str(sni).strip().lower():
+        fields['host'] = None
+    if fields.get('alpn'):
+        fields['alpn'] = _fully_unquote(fields['alpn'])
 
 
 def _v2ray_fields_from_query(fields: dict, q: dict) -> None:
@@ -585,14 +628,14 @@ def _v2ray_fields_from_query(fields: dict, q: dict) -> None:
     net, header_type = _canonicalize_vmess_transport(q.get('type'), q.get('headerType'))
     fields['network'] = net
     fields['headerType'] = header_type
-    fields['host'] = q.get('host')
-    fields['path'] = q.get('path')
-    fields['seed'] = q.get('seed')
+    fields['host'] = _fully_unquote(q.get('host'))
+    fields['path'] = _canonicalize_v2ray_path(q.get('path'))
+    fields['seed'] = _canonicalize_v2ray_path(q.get('seed'))
     fields['quicSecurity'] = q.get('quicSecurity')
     fields['quicKey'] = q.get('key')
     fields['mode'] = q.get('mode')
-    fields['serviceName'] = q.get('serviceName')
-    fields['authority'] = q.get('authority')
+    fields['serviceName'] = _fully_unquote(q.get('serviceName'))
+    fields['authority'] = _fully_unquote(q.get('authority'))
     fields['xhttpMode'] = q.get('mode')
     sec = q.get('security')
     fields['security'] = sec if sec in ('tls', 'reality') else None
@@ -652,18 +695,17 @@ def get_openray_dedup_key(uri: str) -> str:
                 fields['server'] = str(obj.get('add') or '').lower()
                 fields['serverPort'] = str(obj.get('port') or '')
                 fields['password'] = obj.get('id') or None
-                scy = obj.get('scy')
-                fields['method'] = scy if scy not in (None, '') else 'auto'
+                fields['method'] = 'auto'  # v2rayNG ignores VMess scy for duplicate detection
                 fields['network'] = net
                 fields['headerType'] = header_type
                 fields['host'] = obj.get('host') or None
-                fields['path'] = obj.get('path') or None
+                fields['path'] = _canonicalize_v2ray_path(obj.get('path'))
                 if net == 'grpc':
                     fields['mode'] = obj.get('type') or None
-                    fields['serviceName'] = obj.get('path') or None
-                    fields['authority'] = obj.get('host') or None
+                    fields['serviceName'] = _fully_unquote(obj.get('path'))
+                    fields['authority'] = _fully_unquote(obj.get('host'))
                 elif net == 'kcp':
-                    fields['seed'] = obj.get('path') or None
+                    fields['seed'] = _canonicalize_v2ray_path(obj.get('path'))
                 fields['security'] = _canonicalize_vmess_security(obj.get('tls'))
                 fields['sni'] = obj.get('sni') or None
                 fields['fingerPrint'] = obj.get('fp') or None
@@ -675,7 +717,7 @@ def get_openray_dedup_key(uri: str) -> str:
             fields['serverPort'] = str(parsed.port) if parsed.port else '-1'
             fields['password'] = unquote(parsed.username) if parsed.username else None
             q = _v2ray_query_params(parsed.query)
-            fields['method'] = q.get('encryption') or 'none'
+            fields['method'] = 'none'  # v2rayNG ignores VLESS encryption for duplicate detection
             _v2ray_fields_from_query(fields, q)
 
         elif scheme == 'trojan':
@@ -699,6 +741,7 @@ def get_openray_dedup_key(uri: str) -> str:
             # No dedicated v2rayNG-style parser: collapse cosmetic differences only.
             return _get_generic_dedup_key(scheme, base_uri)
 
+        _finalize_v2ray_dedup_fields(fields)
         return scheme + '|' + '|'.join(
             (fields[f] if fields[f] is not None else '') for f in _V2RAY_DEDUP_FIELDS
         )

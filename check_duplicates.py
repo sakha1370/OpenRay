@@ -15,20 +15,102 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Iterable
 
 from src.common import get_openray_dedup_key, normalize_proxy_uri
+from src.constants import AVAILABLE_FILE
 
-# Known regression case: tcp/"" vs raw/"none" for the same VMess server
+# Known regression case: double-encoded vs single-encoded WS path
 DEFAULT_SAMPLES = [
-"vless://%40IR_NETLIFY@194.59.183.234:666#%5BOpenRay%5D%20%F0%9F%87%A9%F0%9F%87%AA%20DE-16478",
-"vless://%40IR_NETLIFY@194.59.183.234:666?encryption=none&security=none&type=tcp&headerType=none#%5BOpenRay%5D%20%F0%9F%87%A9%F0%9F%87%AA%20DE-16194"
+    "trojan://8r%3C%5B9%27l6hAO%238ZQi@43.168.16.112:443?security=tls&sni=Koma-YT.PAGeS.Dev&type=ws&path=%252FtrTelegram%25F0%259F%2587%25A8%25F0%259F%2587%25B3%2520%2540WangCai2&Host=Koma-YT.PAGeS.Dev#%5BOpenRay%5D%20%F0%9F%87%AD%F0%9F%87%B0%20HK-1543",
+    "trojan://8r%3C%5B9%27l6hAO%238ZQi@43.168.16.112:443?security=tls&sni=Koma-YT.PAGeS.Dev&type=ws&path=%2FtrTelegram%F0%9F%87%A8%F0%9F%87%B3%20%40WangCai2&Host=Koma-YT.PAGeS.Dev#%5BOpenRay%5D%20%F0%9F%87%AD%F0%9F%87%B0%20HK-1577",
 ]
+
+
+@dataclass(frozen=True)
+class ProxyDedupInfo:
+    line_no: int
+    uri: str
+    key: str
+    norm: str
+
+
+def load_proxies_from_file(path: str) -> list[str]:
+    with open(path, encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+
+def analyze_proxies(proxies: Iterable[str], *, line_offset: int = 1) -> list[ProxyDedupInfo]:
+    rows: list[ProxyDedupInfo] = []
+    for i, proxy in enumerate(proxies, line_offset):
+        rows.append(
+            ProxyDedupInfo(
+                line_no=i,
+                uri=proxy,
+                key=get_openray_dedup_key(proxy),
+                norm=normalize_proxy_uri(proxy),
+            )
+        )
+    return rows
+
+
+def group_by_key(rows: list[ProxyDedupInfo]) -> dict[str, list[ProxyDedupInfo]]:
+    groups: dict[str, list[ProxyDedupInfo]] = defaultdict(list)
+    for row in rows:
+        groups[row.key].append(row)
+    return dict(groups)
+
+
+def group_by_norm(rows: list[ProxyDedupInfo]) -> dict[str, list[ProxyDedupInfo]]:
+    groups: dict[str, list[ProxyDedupInfo]] = defaultdict(list)
+    for row in rows:
+        groups[row.norm].append(row)
+    return dict(groups)
+
+
+def connection_bucket(row: ProxyDedupInfo) -> str:
+    """Coarse bucket: scheme + first 4 dedup fields (server, port, password, method)."""
+    parts = row.key.split("|", 5)
+    if len(parts) >= 5:
+        return "|".join(parts[:5])
+    return row.key
+
+
+def group_by_connection_bucket(rows: list[ProxyDedupInfo]) -> dict[str, list[ProxyDedupInfo]]:
+    groups: dict[str, list[ProxyDedupInfo]] = defaultdict(list)
+    for row in rows:
+        groups[connection_bucket(row)].append(row)
+    return dict(groups)
+
+
+def find_duplicate_key_groups(groups: dict[str, list[ProxyDedupInfo]]) -> dict[str, list[ProxyDedupInfo]]:
+    return {k: items for k, items in groups.items() if len(items) > 1}
+
+
+def find_norm_key_mismatches(rows: list[ProxyDedupInfo]) -> list[tuple[str, set[str], list[ProxyDedupInfo]]]:
+    """Same normalized URI but different dedup keys."""
+    issues: list[tuple[str, set[str], list[ProxyDedupInfo]]] = []
+    for norm, items in group_by_norm(rows).items():
+        keys = {item.key for item in items}
+        if len(keys) > 1:
+            issues.append((norm, keys, items))
+    return issues
+
+
+def find_bucket_key_mismatches(rows: list[ProxyDedupInfo]) -> list[tuple[str, set[str], list[ProxyDedupInfo]]]:
+    """Same server/port/password but different dedup keys (likely dedup bug)."""
+    issues: list[tuple[str, set[str], list[ProxyDedupInfo]]] = []
+    for bucket, items in group_by_connection_bucket(rows).items():
+        keys = {item.key for item in items}
+        if len(keys) > 1:
+            issues.append((bucket, keys, items))
+    return issues
 
 
 def _load_proxies(args: argparse.Namespace) -> list[str]:
     if args.file:
-        with open(args.file, encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        return load_proxies_from_file(args.file)
     if args.proxies:
         return list(args.proxies)
     return list(DEFAULT_SAMPLES)
@@ -45,13 +127,11 @@ def main() -> int:
         print("Need at least two proxy URIs to compare.", file=sys.stderr)
         return 2
 
-    groups: dict[str, list[tuple[int, str]]] = defaultdict(list)
-    for i, proxy in enumerate(proxies, 1):
-        key = get_openray_dedup_key(proxy)
-        norm = normalize_proxy_uri(proxy)
-        groups[key].append((i, proxy))
-        print(f"{i} norm: {norm}")
-        print(f"{i} key : {key}")
+    rows = analyze_proxies(proxies)
+    groups = group_by_key(rows)
+    for row in rows:
+        print(f"{row.line_no} norm: {row.norm}")
+        print(f"{row.line_no} key : {row.key}")
 
     unique = len(groups)
     print(f"unique keys: {unique}")
@@ -62,7 +142,7 @@ def main() -> int:
 
     print("FAIL: proxies are NOT treated as duplicates")
     for key, items in groups.items():
-        indices = ", ".join(str(idx) for idx, _ in items)
+        indices = ", ".join(str(item.line_no) for item in items)
         print(f"  group [{indices}]: {key[:80]}{'...' if len(key) > 80 else ''}")
     return 1
 
