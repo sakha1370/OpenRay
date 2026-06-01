@@ -636,16 +636,6 @@ proxies:
     path: /http#Telegram@V2ray_Alpha/?ed=2560
     headers:
       Host: google.com
-- name: OpenRay  FR-496
-  type: vless
-  server: ov-france1.09vpn.com
-  port: 80
-  uuid: f5c47e9c-914a-4a91-a81e-a5a77bc10fc1
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-france1.09vpn.com
 - name: OpenRay  AL-8
   type: vless
   server: 45.15.170.237
@@ -656,6 +646,16 @@ proxies:
     path: /vless/
     headers:
       Host: 45.15.170.237
+- name: OpenRay  FR-496
+  type: vless
+  server: ov-france1.09vpn.com
+  port: 80
+  uuid: f5c47e9c-914a-4a91-a81e-a5a77bc10fc1
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-france1.09vpn.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -728,16 +728,16 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay Dynamic-11796
+- name: OpenRay  CA-11856
   type: vless
-  server: saas.sin.fan
+  server: 104.16.250.22
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed
+    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11720
@@ -750,16 +750,16 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11856
+- name: OpenRay Dynamic-11796
   type: vless
-  server: 104.16.250.22
+  server: saas.sin.fan
   port: 443
   uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
   network: ws
   tls: true
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
-    path: /?ed=2048
+    path: /?ed
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11854
@@ -968,17 +968,17 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  FR-496
   - OpenRay  AL-8
+  - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  CA-11854
   - OpenRay Dynamic-11790
   - OpenRay  US-11398
@@ -1044,17 +1044,17 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  FR-496
   - OpenRay  AL-8
+  - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay  MY-21
   - OpenRay  CA-11855
   - OpenRay Dynamic-11779
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11796
-  - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay  CA-11720
+  - OpenRay Dynamic-11796
   - OpenRay  CA-11854
   - OpenRay Dynamic-11790
   - OpenRay  US-11398
