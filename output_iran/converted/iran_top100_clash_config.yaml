@@ -246,18 +246,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -270,6 +258,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -628,18 +628,6 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
-- name: OpenRay  MY-21
-  type: vmess
-  server: 47.250.45.234
-  port: 8613
-  uuid: 80039b4d-bac0-4f89-82c7-54fad3b0a1ea
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.250.45.234
 - name: OpenRay Dynamic-11710
   type: vless
   server: mybb.com
@@ -652,30 +640,6 @@ proxies:
     path: /?ed=2560
     headers:
       Host: rayan-007.nastaran.dpdns.org
-- name: OpenRay Dynamic-11790
-  type: vless
-  server: cloudflare-ip.mofashi.ltd
-  port: 443
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
-- name: OpenRay  CA-11854
-  type: vless
-  server: 104.18.185.26
-  port: 443
-  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
-  network: ws
-  tls: true
-  servername: lively-brook-c471.nedena3319.workers.dev
-  ws-opts:
-    path: /?ed=2048
-    headers:
-      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  CA-11720
   type: vless
   server: 104.18.125.5
@@ -698,6 +662,18 @@ proxies:
     path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay  CA-11854
+  type: vless
+  server: 104.18.185.26
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed=2048
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay Dynamic-11796
   type: vless
   server: saas.sin.fan
@@ -708,6 +684,18 @@ proxies:
   servername: lively-brook-c471.nedena3319.workers.dev
   ws-opts:
     path: /?ed
+    headers:
+      Host: lively-brook-c471.nedena3319.workers.dev
+- name: OpenRay Dynamic-11790
+  type: vless
+  server: cloudflare-ip.mofashi.ltd
+  port: 443
+  uuid: 17ebee4e-97ea-4cad-8737-cc228478ca9d
+  network: ws
+  tls: true
+  servername: lively-brook-c471.nedena3319.workers.dev
+  ws-opts:
+    path: /?ed=2048
     headers:
       Host: lively-brook-c471.nedena3319.workers.dev
 - name: OpenRay  US-11398
@@ -939,6 +927,19 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
+- name: OpenRay  NL-421
+  type: vless
+  server: 51.158.206.93
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
 
 proxy-groups:
 - name: AUTO
@@ -961,8 +962,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -994,13 +995,12 @@ proxy-groups:
   - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
-  - OpenRay  MY-21
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11790
-  - OpenRay  CA-11854
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay  CA-11854
   - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay  MY-24
@@ -1021,6 +1021,7 @@ proxy-groups:
   - OpenRay  CA-12542
   - OpenRay Dynamic-11767
   - OpenRay  NL-114
+  - OpenRay  NL-421
 - name: PROXY
   type: select
   proxies:
@@ -1039,8 +1040,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -1072,13 +1073,12 @@ proxy-groups:
   - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
-  - OpenRay  MY-21
   - OpenRay Dynamic-11710
-  - OpenRay Dynamic-11790
-  - OpenRay  CA-11854
   - OpenRay  CA-11720
   - OpenRay  CA-11856
+  - OpenRay  CA-11854
   - OpenRay Dynamic-11796
+  - OpenRay Dynamic-11790
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay  MY-24
@@ -1099,6 +1099,7 @@ proxy-groups:
   - OpenRay  CA-12542
   - OpenRay Dynamic-11767
   - OpenRay  NL-114
+  - OpenRay  NL-421
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
