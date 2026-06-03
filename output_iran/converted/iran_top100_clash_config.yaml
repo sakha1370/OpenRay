@@ -234,18 +234,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -258,6 +246,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -743,9 +743,9 @@ proxies:
       /?ed=2560Join---V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz
     headers:
       Host: wetfleagidc-8tsbi8xd-v3.wet-flea-gidc.workers.dev
-- name: OpenRay  NL-114
+- name: OpenRay  NL-421
   type: vless
-  server: 51.158.206.103
+  server: 51.158.206.93
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -756,9 +756,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-421
+- name: OpenRay  NL-114
   type: vless
-  server: 51.158.206.93
+  server: 51.158.206.103
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -898,8 +898,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -942,8 +942,8 @@ proxy-groups:
   - OpenRay Dynamic-11711
   - OpenRay  CA-11689
   - OpenRay  CA-11834
-  - OpenRay  NL-114
   - OpenRay  NL-421
+  - OpenRay  NL-114
   - OpenRay  NL-426
   - OpenRay  DE-5320
   - OpenRay  DE-5378
@@ -970,8 +970,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-57
   - OpenRay  HK-188
+  - OpenRay  KZ-57
   - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
@@ -1014,8 +1014,8 @@ proxy-groups:
   - OpenRay Dynamic-11711
   - OpenRay  CA-11689
   - OpenRay  CA-11834
-  - OpenRay  NL-114
   - OpenRay  NL-421
+  - OpenRay  NL-114
   - OpenRay  NL-426
   - OpenRay  DE-5320
   - OpenRay  DE-5378
