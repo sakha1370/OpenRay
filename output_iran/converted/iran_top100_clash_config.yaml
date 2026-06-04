@@ -413,18 +413,6 @@ proxies:
     path: /
     headers:
       Host: 45.148.31.0
-- name: OpenRay  HU-7
-  type: vless
-  server: 5.182.38.91
-  port: 17267
-  uuid: 1c7fcc38-e6be-43c5-875f-b8de2516b9f2
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
-    short-id: 4ae260
-  client-fingerprint: chrome
 - name: OpenRay  KZ-62
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -437,6 +425,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  HU-7
+  type: vless
+  server: 5.182.38.91
+  port: 17267
+  uuid: 1c7fcc38-e6be-43c5-875f-b8de2516b9f2
+  network: tcp
+  tls: true
+  servername: yahoo.com
+  reality-opts:
+    public-key: SnWZg6ORcQepuWLI1EVCTTVc4KyfDiGWR4o_CXCMhgk
+    short-id: 4ae260
+  client-fingerprint: chrome
 - name: OpenRay  KZ-76
   type: vmess
   server: 38.107.234.57
@@ -731,9 +731,9 @@ proxies:
       /?ed=2560Join---V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz---@V2rayBaaz
     headers:
       Host: wetfleagidc-8tsbi8xd-v3.wet-flea-gidc.workers.dev
-- name: OpenRay  NL-114
+- name: OpenRay  NL-421
   type: vless
-  server: 51.158.206.103
+  server: 51.158.206.93
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -744,9 +744,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-421
+- name: OpenRay  NL-114
   type: vless
-  server: 51.158.206.93
+  server: 51.158.206.103
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -927,8 +927,8 @@ proxy-groups:
   - OpenRay  AL-10
   - OpenRay  FR-513
   - OpenRay  DK-1
-  - OpenRay  HU-7
   - OpenRay  KZ-62
+  - OpenRay  HU-7
   - OpenRay  KZ-76
   - OpenRay  CA-12448
   - OpenRay  CA-12450
@@ -955,8 +955,8 @@ proxy-groups:
   - OpenRay Dynamic-11711
   - OpenRay  CA-11689
   - OpenRay  CA-11834
-  - OpenRay  NL-114
   - OpenRay  NL-421
+  - OpenRay  NL-114
   - OpenRay  NL-426
   - OpenRay  DE-5320
   - OpenRay  DE-5378
@@ -1000,8 +1000,8 @@ proxy-groups:
   - OpenRay  AL-10
   - OpenRay  FR-513
   - OpenRay  DK-1
-  - OpenRay  HU-7
   - OpenRay  KZ-62
+  - OpenRay  HU-7
   - OpenRay  KZ-76
   - OpenRay  CA-12448
   - OpenRay  CA-12450
@@ -1028,8 +1028,8 @@ proxy-groups:
   - OpenRay Dynamic-11711
   - OpenRay  CA-11689
   - OpenRay  CA-11834
-  - OpenRay  NL-114
   - OpenRay  NL-421
+  - OpenRay  NL-114
   - OpenRay  NL-426
   - OpenRay  DE-5320
   - OpenRay  DE-5378
