@@ -815,6 +815,18 @@ proxies:
     public-key: Cs45TZ-4YKa8fWZ72YJcIcQCKipWsoYNZHEqFvs-PTE
     short-id: a6aef5143d94
   client-fingerprint: chrome
+- name: OpenRay  HU-21
+  type: vmess
+  server: pq-Hungary1.09vpn.com
+  port: 80
+  uuid: 703f722a-4bdf-4e9d-9afd-a681fdf87c74
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: pq-Hungary1.09vpn.com
 - name: OpenRay  FI-240
   type: vless
   server: email.swiftraci.org
@@ -828,18 +840,6 @@ proxies:
     public-key: Cs45TZ-4YKa8fWZ72YJcIcQCKipWsoYNZHEqFvs-PTE
     short-id: 4c4d5ed45c74
   client-fingerprint: chrome
-- name: OpenRay  HU-21
-  type: vmess
-  server: pq-Hungary1.09vpn.com
-  port: 80
-  uuid: 703f722a-4bdf-4e9d-9afd-a681fdf87c74
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: pq-Hungary1.09vpn.com
 - name: OpenRay  JP-608
   type: vless
   server: 116.80.58.239
@@ -962,8 +962,8 @@ proxy-groups:
   - OpenRay  DE-5378
   - OpenRay  FI-214
   - OpenRay  FI-244
-  - OpenRay  FI-240
   - OpenRay  HU-21
+  - OpenRay  FI-240
   - OpenRay  JP-608
   - OpenRay  SA-1
   - OpenRay  SA-2
@@ -1035,8 +1035,8 @@ proxy-groups:
   - OpenRay  DE-5378
   - OpenRay  FI-214
   - OpenRay  FI-244
-  - OpenRay  FI-240
   - OpenRay  HU-21
+  - OpenRay  FI-240
   - OpenRay  JP-608
   - OpenRay  SA-1
   - OpenRay  SA-2
