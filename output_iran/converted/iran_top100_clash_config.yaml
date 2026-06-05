@@ -802,32 +802,6 @@ proxies:
     path: /vmess/
     headers:
       Host: pq-Hungary1.09vpn.com
-- name: OpenRay  FI-244
-  type: vless
-  server: email.swiftraci.org
-  port: 443
-  uuid: 7eb4a87d-e22f-4eb3-a793-ee3d6200fdc6
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.microsoft.com
-  reality-opts:
-    public-key: Cs45TZ-4YKa8fWZ72YJcIcQCKipWsoYNZHEqFvs-PTE
-    short-id: a6aef5143d94
-  client-fingerprint: chrome
-- name: OpenRay  FI-240
-  type: vless
-  server: email.swiftraci.org
-  port: 443
-  uuid: fdc622b6-985c-40a0-8bcb-b6497804769a
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.tradingview.com
-  reality-opts:
-    public-key: Cs45TZ-4YKa8fWZ72YJcIcQCKipWsoYNZHEqFvs-PTE
-    short-id: 4c4d5ed45c74
-  client-fingerprint: chrome
 - name: OpenRay  JP-608
   type: vless
   server: 116.80.58.239
@@ -893,6 +867,32 @@ proxies:
     path: /lMnsZUN4/
     headers:
       Host: 104.17.77.77
+- name: OpenRay  NL-23
+  type: vless
+  server: 51.158.206.80
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-13
+  type: vless
+  server: 51.158.206.98
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
 
 proxy-groups:
 - name: AUTO
@@ -963,13 +963,13 @@ proxy-groups:
   - OpenRay  DE-5378
   - OpenRay  FI-214
   - OpenRay  HU-21
-  - OpenRay  FI-244
-  - OpenRay  FI-240
   - OpenRay  JP-608
   - OpenRay  SA-1
   - OpenRay  SA-2
   - OpenRay  CA-14153
   - OpenRay  CA-14307
+  - OpenRay  NL-23
+  - OpenRay  NL-13
 - name: PROXY
   type: select
   proxies:
@@ -1036,13 +1036,13 @@ proxy-groups:
   - OpenRay  DE-5378
   - OpenRay  FI-214
   - OpenRay  HU-21
-  - OpenRay  FI-244
-  - OpenRay  FI-240
   - OpenRay  JP-608
   - OpenRay  SA-1
   - OpenRay  SA-2
   - OpenRay  CA-14153
   - OpenRay  CA-14307
+  - OpenRay  NL-23
+  - OpenRay  NL-13
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
