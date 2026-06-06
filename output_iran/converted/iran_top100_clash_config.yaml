@@ -234,18 +234,6 @@ proxies:
     path: /vmess/
     headers:
       Host: google.com
-- name: OpenRay  KZ-53
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 38.107.234.57
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -258,6 +246,18 @@ proxies:
     path: /arki?ed=2048
     headers:
       Host: 47.244.120.197
+- name: OpenRay  KZ-53
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 38.107.234.57
 - name: OpenRay  KZ-64
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -584,6 +584,14 @@ proxies:
       /eyJqdW5rIjoib0RnakxTZUZvOSIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbXX0=?ed=2560
     headers:
       Host: 002.inc-electrocell-001-002.workers.dev
+- name: OpenRay  TW-2
+  type: vmess
+  server: 165.154.195.38
+  port: 35034
+  uuid: 959a8caf-4cea-43d0-a548-3628e7ddfafc
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  BA-1
   type: vless
   server: pq-bosniaandherzegovina1.09vpn.com
@@ -594,14 +602,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-bosniaandherzegovina1.09vpn.com
-- name: OpenRay  TW-2
-  type: vmess
-  server: 165.154.195.38
-  port: 35034
-  uuid: 959a8caf-4cea-43d0-a548-3628e7ddfafc
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  BA-2
   type: vless
   server: 45.15.178.124
@@ -888,8 +888,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  AL-7
   - OpenRay  KZ-57
-  - OpenRay  KZ-53
   - OpenRay  HK-188
+  - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
@@ -918,8 +918,8 @@ proxy-groups:
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-12595
-  - OpenRay  BA-1
   - OpenRay  TW-2
+  - OpenRay  BA-1
   - OpenRay  BA-2
   - OpenRay  NL-775
   - OpenRay  HU-22
@@ -959,8 +959,8 @@ proxy-groups:
   - OpenRay  GR-1
   - OpenRay  AL-7
   - OpenRay  KZ-57
-  - OpenRay  KZ-53
   - OpenRay  HK-188
+  - OpenRay  KZ-53
   - OpenRay  KZ-64
   - OpenRay  FR-389
   - OpenRay  KZ-67
@@ -989,8 +989,8 @@ proxy-groups:
   - OpenRay  US-11398
   - OpenRay  GB-133
   - OpenRay Dynamic-12595
-  - OpenRay  BA-1
   - OpenRay  TW-2
+  - OpenRay  BA-1
   - OpenRay  BA-2
   - OpenRay  NL-775
   - OpenRay  HU-22
