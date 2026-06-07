@@ -222,18 +222,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-albania1.09vpn.com
-- name: OpenRay  KZ-53
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 38.107.234.57
 - name: OpenRay  KZ-57
   type: vmess
   server: 38.107.234.57
@@ -246,6 +234,18 @@ proxies:
     path: /vmess/
     headers:
       Host: google.com
+- name: OpenRay  KZ-53
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 38.107.234.57
 - name: OpenRay  HK-188
   type: vmess
   server: 47.244.120.197
@@ -887,8 +887,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-53
   - OpenRay  KZ-57
+  - OpenRay  KZ-53
   - OpenRay  HK-188
   - OpenRay  KZ-64
   - OpenRay  KZ-67
@@ -958,8 +958,8 @@ proxy-groups:
   - OpenRay  AM-4
   - OpenRay  GR-1
   - OpenRay  AL-7
-  - OpenRay  KZ-53
   - OpenRay  KZ-57
+  - OpenRay  KZ-53
   - OpenRay  HK-188
   - OpenRay  KZ-64
   - OpenRay  KZ-67
