@@ -105,18 +105,6 @@ proxies:
     public-key: dSSDPTK6AHfAdRAXD9i4rzqcNIY65RxlF25UyCKdiyo
     short-id: fa
   client-fingerprint: chrome
-- name: OpenRay  JP-433
-  type: vless
-  server: 45.89.109.25
-  port: 18278
-  uuid: 7a30b7fc-4868-4d1d-84b8-16a3d3df0139
-  network: raw
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: 8Fglzc7t2LS4r1vQWlVMNe_EsFdhMawlxeDacbhmiAg
-    short-id: f0
-  client-fingerprint: chrome
 - name: OpenRay  US-11241
   type: vless
   server: 137.184.218.169
@@ -212,16 +200,6 @@ proxies:
     public-key: MmEVCRy11fz67vYJQWyA2a_ZPMBzv2le2cus1XSSI0E
     short-id: 958639bf55e679
   client-fingerprint: chrome
-- name: OpenRay  AL-7
-  type: vless
-  server: pq-albania1.09vpn.com
-  port: 80
-  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: pq-albania1.09vpn.com
 - name: OpenRay  KZ-53
   type: vmess
   server: 38.107.234.57
@@ -366,18 +344,6 @@ proxies:
     path: /vless/
     headers:
       Host: 152.228.162.19
-- name: OpenRay  AL-10
-  type: vmess
-  server: 45.15.170.237
-  port: 80
-  uuid: 820d4b4f-3357-4dc7-9381-6e5fd52b5f39
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  DK-1
   type: vless
   server: 45.148.31.0
@@ -500,16 +466,6 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
-- name: OpenRay  AL-8
-  type: vless
-  server: 45.15.170.237
-  port: 80
-  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -600,16 +556,6 @@ proxies:
     path: /vless/
     headers:
       Host: sc-thenetherlands1.09vpn.com
-- name: OpenRay  BA-2
-  type: vless
-  server: 45.15.178.124
-  port: 80
-  uuid: 75e1fde7-6bf6-48ef-ba43-400e960e185b
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 45.15.178.124
 - name: OpenRay  HU-22
   type: vmess
   server: pq-Hungary1.09vpn.com
@@ -855,6 +801,18 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 5c8a8e6c615b
   client-fingerprint: chrome
+- name: OpenRay  HU-27
+  type: vmess
+  server: 45.12.132.183
+  port: 80
+  uuid: 703f722a-4bdf-4e9d-9afd-a681fdf87c74
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 45.12.132.183
 
 proxy-groups:
 - name: AUTO
@@ -865,7 +823,6 @@ proxy-groups:
   proxies:
   - OpenRay  KZ-11
   - OpenRay  KZ-9
-  - OpenRay  JP-433
   - OpenRay  US-11241
   - OpenRay  US-11414
   - OpenRay  HK-53
@@ -874,7 +831,6 @@ proxy-groups:
   - OpenRay  US-11668
   - OpenRay  AM-4
   - OpenRay  GR-1
-  - OpenRay  AL-7
   - OpenRay  KZ-53
   - OpenRay  KZ-57
   - OpenRay  KZ-64
@@ -887,7 +843,6 @@ proxy-groups:
   - OpenRay  US-11399
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-62
   - OpenRay  HU-7
@@ -899,7 +854,6 @@ proxy-groups:
   - OpenRay  DE-3220
   - OpenRay  DE-3173
   - OpenRay  FR-496
-  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
@@ -908,7 +862,6 @@ proxy-groups:
   - OpenRay  TW-2
   - OpenRay  BA-1
   - OpenRay  NL-775
-  - OpenRay  BA-2
   - OpenRay  HU-22
   - OpenRay  CA-14192
   - OpenRay Dynamic-11711
@@ -929,13 +882,13 @@ proxy-groups:
   - OpenRay  NL-13
   - OpenRay  CH-12
   - OpenRay  FI-291
+  - OpenRay  HU-27
 - name: PROXY
   type: select
   proxies:
   - AUTO
   - OpenRay  KZ-11
   - OpenRay  KZ-9
-  - OpenRay  JP-433
   - OpenRay  US-11241
   - OpenRay  US-11414
   - OpenRay  HK-53
@@ -944,7 +897,6 @@ proxy-groups:
   - OpenRay  US-11668
   - OpenRay  AM-4
   - OpenRay  GR-1
-  - OpenRay  AL-7
   - OpenRay  KZ-53
   - OpenRay  KZ-57
   - OpenRay  KZ-64
@@ -957,7 +909,6 @@ proxy-groups:
   - OpenRay  US-11399
   - OpenRay  PH-6
   - OpenRay  FR-513
-  - OpenRay  AL-10
   - OpenRay  DK-1
   - OpenRay  KZ-62
   - OpenRay  HU-7
@@ -969,7 +920,6 @@ proxy-groups:
   - OpenRay  DE-3220
   - OpenRay  DE-3173
   - OpenRay  FR-496
-  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
@@ -978,7 +928,6 @@ proxy-groups:
   - OpenRay  TW-2
   - OpenRay  BA-1
   - OpenRay  NL-775
-  - OpenRay  BA-2
   - OpenRay  HU-22
   - OpenRay  CA-14192
   - OpenRay Dynamic-11711
@@ -999,6 +948,7 @@ proxy-groups:
   - OpenRay  NL-13
   - OpenRay  CH-12
   - OpenRay  FI-291
+  - OpenRay  HU-27
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
