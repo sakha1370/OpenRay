@@ -490,16 +490,6 @@ proxies:
     path: /http#Telegram@V2ray_Alpha/?ed=2560
     headers:
       Host: google.com
-- name: OpenRay  AL-8
-  type: vless
-  server: 45.15.170.237
-  port: 80
-  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 45.15.170.237
 - name: OpenRay  FR-496
   type: vless
   server: ov-france1.09vpn.com
@@ -510,6 +500,16 @@ proxies:
     path: /vless/
     headers:
       Host: ov-france1.09vpn.com
+- name: OpenRay  AL-8
+  type: vless
+  server: 45.15.170.237
+  port: 80
+  uuid: 8910cbb3-33b1-4266-a243-ac780ac63394
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 45.15.170.237
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -910,8 +910,8 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  AL-8
   - OpenRay  FR-496
+  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
@@ -981,8 +981,8 @@ proxy-groups:
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
-  - OpenRay  AL-8
   - OpenRay  FR-496
+  - OpenRay  AL-8
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
