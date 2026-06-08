@@ -602,16 +602,6 @@ proxies:
     path: /vless/
     headers:
       Host: pq-bosniaandherzegovina1.09vpn.com
-- name: OpenRay  BA-2
-  type: vless
-  server: 45.15.178.124
-  port: 80
-  uuid: 75e1fde7-6bf6-48ef-ba43-400e960e185b
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 45.15.178.124
 - name: OpenRay  NL-775
   type: vless
   server: sc-thenetherlands1.09vpn.com
@@ -622,6 +612,16 @@ proxies:
     path: /vless/
     headers:
       Host: sc-thenetherlands1.09vpn.com
+- name: OpenRay  BA-2
+  type: vless
+  server: 45.15.178.124
+  port: 80
+  uuid: 75e1fde7-6bf6-48ef-ba43-400e960e185b
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: 45.15.178.124
 - name: OpenRay  HU-22
   type: vmess
   server: pq-Hungary1.09vpn.com
@@ -920,8 +920,8 @@ proxy-groups:
   - OpenRay Dynamic-12595
   - OpenRay  TW-2
   - OpenRay  BA-1
-  - OpenRay  BA-2
   - OpenRay  NL-775
+  - OpenRay  BA-2
   - OpenRay  HU-22
   - OpenRay  CA-14192
   - OpenRay Dynamic-11711
@@ -991,8 +991,8 @@ proxy-groups:
   - OpenRay Dynamic-12595
   - OpenRay  TW-2
   - OpenRay  BA-1
-  - OpenRay  BA-2
   - OpenRay  NL-775
+  - OpenRay  BA-2
   - OpenRay  HU-22
   - OpenRay  CA-14192
   - OpenRay Dynamic-11711
