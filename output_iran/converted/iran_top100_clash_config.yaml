@@ -536,16 +536,6 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  BA-1
-  type: vless
-  server: pq-bosniaandherzegovina1.09vpn.com
-  port: 80
-  uuid: 75e1fde7-6bf6-48ef-ba43-400e960e185b
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: pq-bosniaandherzegovina1.09vpn.com
 - name: OpenRay  NL-775
   type: vless
   server: sc-thenetherlands1.09vpn.com
@@ -813,6 +803,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 45.12.132.183
+- name: OpenRay  HU-26
+  type: vmess
+  server: 45.12.132.183
+  port: 80
+  uuid: 703f722a-4bdf-4e9d-9afd-a681fdf87c74
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: 45.12.132.183
 
 proxy-groups:
 - name: AUTO
@@ -860,7 +862,6 @@ proxy-groups:
   - OpenRay  US-11398
   - OpenRay Dynamic-12595
   - OpenRay  TW-2
-  - OpenRay  BA-1
   - OpenRay  NL-775
   - OpenRay  HU-22
   - OpenRay  CA-14192
@@ -883,6 +884,7 @@ proxy-groups:
   - OpenRay  CH-12
   - OpenRay  FI-291
   - OpenRay  HU-27
+  - OpenRay  HU-26
 - name: PROXY
   type: select
   proxies:
@@ -926,7 +928,6 @@ proxy-groups:
   - OpenRay  US-11398
   - OpenRay Dynamic-12595
   - OpenRay  TW-2
-  - OpenRay  BA-1
   - OpenRay  NL-775
   - OpenRay  HU-22
   - OpenRay  CA-14192
@@ -949,6 +950,7 @@ proxy-groups:
   - OpenRay  CH-12
   - OpenRay  FI-291
   - OpenRay  HU-27
+  - OpenRay  HU-26
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
