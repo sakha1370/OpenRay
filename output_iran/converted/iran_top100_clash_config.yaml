@@ -400,16 +400,6 @@ proxies:
     path: /http
     headers:
       Host: de.vpnbase.net
-- name: OpenRay  FR-496
-  type: vless
-  server: ov-france1.09vpn.com
-  port: 80
-  uuid: f5c47e9c-914a-4a91-a81e-a5a77bc10fc1
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-france1.09vpn.com
 - name: OpenRay  DE-3173
   type: vless
   server: 162.19.228.119
@@ -420,6 +410,16 @@ proxies:
     path: /http#Telegram@V2ray_Alpha/?ed=2560
     headers:
       Host: google.com
+- name: OpenRay  FR-496
+  type: vless
+  server: ov-france1.09vpn.com
+  port: 80
+  uuid: f5c47e9c-914a-4a91-a81e-a5a77bc10fc1
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-france1.09vpn.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -780,8 +780,8 @@ proxy-groups:
   - OpenRay  CA-11586
   - OpenRay  LV-16
   - OpenRay  DE-3220
-  - OpenRay  FR-496
   - OpenRay  DE-3173
+  - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
@@ -840,8 +840,8 @@ proxy-groups:
   - OpenRay  CA-11586
   - OpenRay  LV-16
   - OpenRay  DE-3220
-  - OpenRay  FR-496
   - OpenRay  DE-3173
+  - OpenRay  FR-496
   - OpenRay  KZ-58
   - OpenRay  HK-301
   - OpenRay Dynamic-11710
