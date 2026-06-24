@@ -586,6 +586,18 @@ proxies:
     public-key: VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE
     short-id: 775eb6408888248e
   client-fingerprint: chrome
+- name: OpenRay  SA-2
+  type: vless
+  server: 81.208.170.142
+  port: 1500
+  uuid: e332f028-d343-5b44-8016-b3130f39e133
+  network: grpc
+  tls: true
+  servername: www.ebay.com
+  reality-opts:
+    public-key: VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE
+    short-id: 775eb6408888248e
+  client-fingerprint: chrome
 - name: OpenRay  JP-608
   type: vless
   server: 116.80.58.239
@@ -598,18 +610,6 @@ proxies:
   reality-opts:
     public-key: qhTzYYIgBzDLNYR79oxftqdo1kzL-1_hGJKfqrOliCY
     short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  SA-2
-  type: vless
-  server: 81.208.170.142
-  port: 1500
-  uuid: e332f028-d343-5b44-8016-b3130f39e133
-  network: grpc
-  tls: true
-  servername: www.ebay.com
-  reality-opts:
-    public-key: VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE
-    short-id: 775eb6408888248e
   client-fingerprint: chrome
 - name: OpenRay  CA-14153
   type: vmess
@@ -772,61 +772,9 @@ proxies:
       /eyJqdW5rIjoiSFM1N0lLQmx2UU1qRzlnTiIsInByb3RvY29sIjoidmwiLCJtb2RlIjoicHJveHlpcCIsInBhbmVsSVBzIjpbXX0=?ed=2560
     headers:
       Host: 057.electrocellco-cf-057.workers.dev
-- name: OpenRay  NL-9
-  type: vless
-  server: 51.158.206.87
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-419
-  type: vless
-  server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
 - name: OpenRay  NL-4
   type: vless
   server: 51.158.206.96
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-115
-  type: vless
-  server: 51.158.206.86
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-7
-  type: vless
-  server: 51.158.206.97
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -850,9 +798,61 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
+- name: OpenRay  NL-7
+  type: vless
+  server: 51.158.206.97
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-419
+  type: vless
+  server: 51.158.206.34
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
 - name: OpenRay  US-9872
   type: vless
   server: 15.204.97.198
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-9
+  type: vless
+  server: 51.158.206.87
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-115
+  type: vless
+  server: 51.158.206.86
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -927,8 +927,8 @@ proxy-groups:
   - OpenRay  DE-5320
   - OpenRay  DE-5378
   - OpenRay  SA-1
-  - OpenRay  JP-608
   - OpenRay  SA-2
+  - OpenRay  JP-608
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  NL-23
@@ -942,13 +942,13 @@ proxy-groups:
   - OpenRay  MY-42
   - OpenRay Dynamic-14085
   - OpenRay  RU-4090
-  - OpenRay  NL-9
-  - OpenRay  NL-419
   - OpenRay  NL-4
-  - OpenRay  NL-115
-  - OpenRay  NL-7
   - OpenRay  US-9824
+  - OpenRay  NL-7
+  - OpenRay  NL-419
   - OpenRay  US-9872
+  - OpenRay  NL-9
+  - OpenRay  NL-115
   - OpenRay  US-10580
 - name: PROXY
   type: select
@@ -997,8 +997,8 @@ proxy-groups:
   - OpenRay  DE-5320
   - OpenRay  DE-5378
   - OpenRay  SA-1
-  - OpenRay  JP-608
   - OpenRay  SA-2
+  - OpenRay  JP-608
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  NL-23
@@ -1012,13 +1012,13 @@ proxy-groups:
   - OpenRay  MY-42
   - OpenRay Dynamic-14085
   - OpenRay  RU-4090
-  - OpenRay  NL-9
-  - OpenRay  NL-419
   - OpenRay  NL-4
-  - OpenRay  NL-115
-  - OpenRay  NL-7
   - OpenRay  US-9824
+  - OpenRay  NL-7
+  - OpenRay  NL-419
   - OpenRay  US-9872
+  - OpenRay  NL-9
+  - OpenRay  NL-115
   - OpenRay  US-10580
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
