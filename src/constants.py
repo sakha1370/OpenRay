@@ -394,6 +394,13 @@ SITE_ACCESS_TARGETS = [
         'output_file': 'aistudio.txt',
     },
     {
+        'id': 'jetbrain',
+        'version': 1,
+        'url': 'https://analytics.services.jetbrains.com/',
+        'blocked_codes': (403,),
+        'output_file': 'jetbrain.txt',
+    },
+    {
         'id': 'cursor',
         'version': 2,
         'urls': (
