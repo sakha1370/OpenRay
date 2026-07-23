@@ -390,16 +390,6 @@ proxies:
     path: /http
     headers:
       Host: de.vpnbase.net
-- name: OpenRay  DE-3173
-  type: vless
-  server: 162.19.228.119
-  port: 80
-  uuid: dc8eccdb-ecfa-435f-9ac1-5dc4882e7b51
-  network: ws
-  ws-opts:
-    path: /http#Telegram@V2ray_Alpha/?ed=2560
-    headers:
-      Host: google.com
 - name: OpenRay  KZ-58
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -412,6 +402,16 @@ proxies:
     path: /vmess/
     headers:
       Host: 3h-kazakhstan1.09vpn.com
+- name: OpenRay  DE-3173
+  type: vless
+  server: 162.19.228.119
+  port: 80
+  uuid: dc8eccdb-ecfa-435f-9ac1-5dc4882e7b51
+  network: ws
+  ws-opts:
+    path: /http#Telegram@V2ray_Alpha/?ed=2560
+    headers:
+      Host: google.com
 - name: OpenRay  HK-301
   type: vmess
   server: 47.244.120.197
@@ -755,9 +755,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
+- name: OpenRay  NL-4
   type: vless
-  server: 51.158.206.34
+  server: 51.158.206.96
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -768,9 +768,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-4
+- name: OpenRay  NL-419
   type: vless
-  server: 51.158.206.96
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -846,9 +846,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-7
+- name: OpenRay  NL-115
   type: vless
-  server: 51.158.206.97
+  server: 51.158.206.86
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -859,9 +859,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-115
+- name: OpenRay  NL-7
   type: vless
-  server: 51.158.206.86
+  server: 51.158.206.97
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -932,8 +932,8 @@ proxy-groups:
   - OpenRay  FR-496
   - OpenRay  LV-16
   - OpenRay  DE-3220
-  - OpenRay  DE-3173
   - OpenRay  KZ-58
+  - OpenRay  DE-3173
   - OpenRay  HK-301
   - OpenRay  US-11398
   - OpenRay Dynamic-12595
@@ -962,15 +962,15 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-419
   - OpenRay  NL-4
+  - OpenRay  NL-419
   - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-113
   - OpenRay  NL-6
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-102
 - name: PROXY
@@ -1003,8 +1003,8 @@ proxy-groups:
   - OpenRay  FR-496
   - OpenRay  LV-16
   - OpenRay  DE-3220
-  - OpenRay  DE-3173
   - OpenRay  KZ-58
+  - OpenRay  DE-3173
   - OpenRay  HK-301
   - OpenRay  US-11398
   - OpenRay Dynamic-12595
@@ -1033,15 +1033,15 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-419
   - OpenRay  NL-4
+  - OpenRay  NL-419
   - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-113
   - OpenRay  NL-6
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-102
 rules:
