@@ -532,21 +532,21 @@ proxies:
     public-key: cDaDzPr3PlS3NM8lreHZbdo-Mhqz8vMBzMSkHXhGIUA
     short-id: e8ab71d0
   client-fingerprint: chrome
-- name: OpenRay  DE-5378
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
 - name: OpenRay  DE-5320
   type: vless
   server: ov-germany1.09vpn.com
   port: 80
   uuid: 7d74eae4-8a06-4306-a923-ad686f30bf26
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-germany1.09vpn.com
+- name: OpenRay  DE-5378
+  type: vless
+  server: ov-germany1.09vpn.com
+  port: 80
+  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
   network: ws
   ws-opts:
     path: /vless/
@@ -755,9 +755,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-4
+- name: OpenRay  NL-419
   type: vless
-  server: 51.158.206.96
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -781,22 +781,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
+- name: OpenRay  NL-4
   type: vless
-  server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-11
-  type: vless
-  server: 51.158.206.12
+  server: 51.158.206.96
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -820,6 +807,19 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
+- name: OpenRay  NL-11
+  type: vless
+  server: 51.158.206.12
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
 - name: OpenRay  NL-418
   type: vless
   server: 51.158.206.26
@@ -833,9 +833,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-115
+- name: OpenRay  NL-7
   type: vless
-  server: 51.158.206.86
+  server: 51.158.206.97
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -846,9 +846,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-7
+- name: OpenRay  NL-115
   type: vless
-  server: 51.158.206.97
+  server: 51.158.206.86
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -944,8 +944,8 @@ proxy-groups:
   - OpenRay  NL-114
   - OpenRay  NL-421
   - OpenRay  NL-426
-  - OpenRay  DE-5378
   - OpenRay  DE-5320
+  - OpenRay  DE-5378
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  SA-1
@@ -962,14 +962,14 @@ proxy-groups:
   - OpenRay  US-9824
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-4
-  - OpenRay  NL-9
   - OpenRay  NL-419
-  - OpenRay  NL-11
+  - OpenRay  NL-9
+  - OpenRay  NL-4
   - OpenRay  NL-113
+  - OpenRay  NL-11
   - OpenRay  NL-418
-  - OpenRay  NL-115
   - OpenRay  NL-7
+  - OpenRay  NL-115
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-102
@@ -1015,8 +1015,8 @@ proxy-groups:
   - OpenRay  NL-114
   - OpenRay  NL-421
   - OpenRay  NL-426
-  - OpenRay  DE-5378
   - OpenRay  DE-5320
+  - OpenRay  DE-5378
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  SA-1
@@ -1033,14 +1033,14 @@ proxy-groups:
   - OpenRay  US-9824
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-4
-  - OpenRay  NL-9
   - OpenRay  NL-419
-  - OpenRay  NL-11
+  - OpenRay  NL-9
+  - OpenRay  NL-4
   - OpenRay  NL-113
+  - OpenRay  NL-11
   - OpenRay  NL-418
-  - OpenRay  NL-115
   - OpenRay  NL-7
+  - OpenRay  NL-115
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-102
