@@ -703,19 +703,6 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-9
-  type: vless
-  server: 51.158.206.87
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
 - name: OpenRay  NL-4
   type: vless
   server: 51.158.206.96
@@ -732,6 +719,19 @@ proxies:
 - name: OpenRay  NL-419
   type: vless
   server: 51.158.206.34
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-9
+  type: vless
+  server: 51.158.206.87
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -781,9 +781,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-7
+- name: OpenRay  NL-115
   type: vless
-  server: 51.158.206.97
+  server: 51.158.206.86
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -794,9 +794,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-115
+- name: OpenRay  NL-7
   type: vless
-  server: 51.158.206.86
+  server: 51.158.206.97
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -975,19 +975,6 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: fc994ae7eb10
   client-fingerprint: chrome
-- name: OpenRay  US-11400
-  type: vless
-  server: 147.182.212.232
-  port: 56565
-  uuid: 7b188eea-b08f-42c2-bac7-d3b0e74218b8
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.paypal.com
-  reality-opts:
-    public-key: Td03Ae-cuYLq4xg7MSps58c_yRUcbbwtZLXm0ywabjY
-    short-id: ''
-  client-fingerprint: chrome
 - name: OpenRay  FI-342
   type: vless
   server: staging.lastilhame.monster
@@ -1000,6 +987,19 @@ proxies:
   reality-opts:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 18e4d2d21241
+  client-fingerprint: chrome
+- name: OpenRay  US-11400
+  type: vless
+  server: 147.182.212.232
+  port: 56565
+  uuid: 7b188eea-b08f-42c2-bac7-d3b0e74218b8
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.paypal.com
+  reality-opts:
+    public-key: Td03Ae-cuYLq4xg7MSps58c_yRUcbbwtZLXm0ywabjY
+    short-id: ''
   client-fingerprint: chrome
 - name: OpenRay  DE-5929
   type: vless
@@ -1083,14 +1083,14 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-9
   - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-113
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-102
@@ -1104,8 +1104,8 @@ proxy-groups:
   - OpenRay  FI-300
   - OpenRay  FI-307
   - OpenRay  FI-333
-  - OpenRay  US-11400
   - OpenRay  FI-342
+  - OpenRay  US-11400
   - OpenRay  DE-5929
   - OpenRay  FI-402
 - name: PROXY
@@ -1163,14 +1163,14 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-9
   - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-113
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-102
@@ -1184,8 +1184,8 @@ proxy-groups:
   - OpenRay  FI-300
   - OpenRay  FI-307
   - OpenRay  FI-333
-  - OpenRay  US-11400
   - OpenRay  FI-342
+  - OpenRay  US-11400
   - OpenRay  DE-5929
   - OpenRay  FI-402
 rules:
