@@ -691,19 +691,6 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
-  type: vless
-  server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
 - name: OpenRay  NL-4
   type: vless
   server: 51.158.206.96
@@ -730,9 +717,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-11
+- name: OpenRay  NL-419
   type: vless
-  server: 51.158.206.12
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -746,6 +733,19 @@ proxies:
 - name: OpenRay  NL-113
   type: vless
   server: 51.158.206.20
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-11
+  type: vless
+  server: 51.158.206.12
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -989,16 +989,6 @@ proxies:
     public-key: Td03Ae-cuYLq4xg7MSps58c_yRUcbbwtZLXm0ywabjY
     short-id: ''
   client-fingerprint: chrome
-- name: OpenRay  DE-5929
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 18535741-e8b3-4b43-9348-785b55936751
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
 - name: OpenRay  FI-402
   type: vless
   server: staging.lastilhame.monster
@@ -1012,6 +1002,16 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 2a80364e93d9
   client-fingerprint: chrome
+- name: OpenRay  DE-5929
+  type: vless
+  server: ov-germany1.09vpn.com
+  port: 80
+  uuid: 18535741-e8b3-4b43-9348-785b55936751
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-germany1.09vpn.com
 
 proxy-groups:
 - name: AUTO
@@ -1070,11 +1070,11 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-419
   - OpenRay  NL-4
   - OpenRay  NL-9
-  - OpenRay  NL-11
+  - OpenRay  NL-419
   - OpenRay  NL-113
+  - OpenRay  NL-11
   - OpenRay  NL-418
   - OpenRay  NL-115
   - OpenRay  NL-7
@@ -1093,8 +1093,8 @@ proxy-groups:
   - OpenRay  FI-333
   - OpenRay  FI-342
   - OpenRay  US-11400
-  - OpenRay  DE-5929
   - OpenRay  FI-402
+  - OpenRay  DE-5929
 - name: PROXY
   type: select
   proxies:
@@ -1149,11 +1149,11 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-10580
   - OpenRay  US-9848
-  - OpenRay  NL-419
   - OpenRay  NL-4
   - OpenRay  NL-9
-  - OpenRay  NL-11
+  - OpenRay  NL-419
   - OpenRay  NL-113
+  - OpenRay  NL-11
   - OpenRay  NL-418
   - OpenRay  NL-115
   - OpenRay  NL-7
@@ -1172,8 +1172,8 @@ proxy-groups:
   - OpenRay  FI-333
   - OpenRay  FI-342
   - OpenRay  US-11400
-  - OpenRay  DE-5929
   - OpenRay  FI-402
+  - OpenRay  DE-5929
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
