@@ -21189,6 +21189,17 @@ proxies:
   port: 8080
   uuid: 6bfcc22f-c80f-481b-b82b-bf28ed3e9f82
   network: tcp
+- name: OpenRay  DE-21967
+  type: vless
+  server: 146.75.119.82
+  port: 80
+  uuid: 2f298412-a011-463a-aa17-d4d0ea660a86
+  network: ws
+  ws-opts:
+    path: 
+      ws/?ed=2048/@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr@vpnserverrr/?2048
+    headers:
+      Host: rb24.ir
 - name: OpenRay  US-22963
   type: vless
   server: 8.39.125.213
@@ -29630,6 +29641,32 @@ proxies:
     public-key: YHI3GuZf_OtRdFuJwJiTR0nmDESjiDtMV0v1BXG9U2M
     short-id: 09c6f40d743af241
   client-fingerprint: firefox
+- name: OpenRay  US-24013
+  type: vmess
+  server: us.klxiaogou.com
+  port: 41963
+  uuid: 7a4830df-5391-4748-b1c7-b6857ad04acb
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: us.klxiaogou.com
+  ws-opts:
+    path: /124
+    headers:
+      Host: us.klxiaogou.com
+- name: OpenRay  US-24014
+  type: vless
+  server: 140.248.186.45
+  port: 443
+  uuid: '%58pnTeam-19'
+  network: ws
+  tls: true
+  servername: ssl.fastly.com
+  ws-opts:
+    path: /
+    headers:
+      Host: Appxdn.global.ssl.fastly.net
 - name: OpenRay  NL-426
   type: vless
   server: 77.246.109.191
@@ -40443,6 +40480,18 @@ proxies:
     public-key: VaKp9XjMqT7lA4F3b6hpdF6fmsiY4B_hz6MzT6fv938
     short-id: ''
   client-fingerprint: firefox
+- name: OpenRay  RU-32567
+  type: vless
+  server: 185.178.208.176
+  port: 443
+  uuid: f871348a-3327-499a-bcc8-60362d3477d7
+  network: ws
+  tls: true
+  servername: founders-blog.online
+  ws-opts:
+    path: /stream/615428/socket
+    headers:
+      Host: founders-blog.online
 - name: OpenRay  KR-2289
   type: vless
   server: 220.71.172.2
@@ -41074,6 +41123,18 @@ proxies:
 - name: OpenRay  KR-2574
   type: vless
   server: 43.200.183.115
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  network: tcp
+  tls: true
+  servername: www.apple.com
+  reality-opts:
+    public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
+    short-id: 628b3c90c98ead4f
+  client-fingerprint: chrome
+- name: OpenRay  KR-2575
+  type: vless
+  server: 3.34.137.130
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   network: tcp
@@ -86723,6 +86784,7 @@ proxy-groups:
   - OpenRay  DE-21964
   - OpenRay  DE-21965
   - OpenRay  DE-21966
+  - OpenRay  DE-21967
   - OpenRay  US-22963
   - OpenRay  US-22379
   - OpenRay  US-22872
@@ -87570,6 +87632,8 @@ proxy-groups:
   - OpenRay  US-24010
   - OpenRay  US-24011
   - OpenRay  US-24012
+  - OpenRay  US-24013
+  - OpenRay  US-24014
   - OpenRay  NL-426
   - OpenRay  NL-9792
   - OpenRay  NL-9480
@@ -88506,6 +88570,7 @@ proxy-groups:
   - OpenRay  RU-32564
   - OpenRay  RU-32565
   - OpenRay  RU-32566
+  - OpenRay  RU-32567
   - OpenRay  KR-2289
   - OpenRay  KR-2291
   - OpenRay  KR-2290
@@ -88560,6 +88625,7 @@ proxy-groups:
   - OpenRay  KR-2540
   - OpenRay  KR-2573
   - OpenRay  KR-2574
+  - OpenRay  KR-2575
   - OpenRay  FR-4100
   - OpenRay  FR-4114
   - OpenRay  FR-4115
@@ -94417,6 +94483,7 @@ proxy-groups:
   - OpenRay  DE-21964
   - OpenRay  DE-21965
   - OpenRay  DE-21966
+  - OpenRay  DE-21967
   - OpenRay  US-22963
   - OpenRay  US-22379
   - OpenRay  US-22872
@@ -95264,6 +95331,8 @@ proxy-groups:
   - OpenRay  US-24010
   - OpenRay  US-24011
   - OpenRay  US-24012
+  - OpenRay  US-24013
+  - OpenRay  US-24014
   - OpenRay  NL-426
   - OpenRay  NL-9792
   - OpenRay  NL-9480
@@ -96200,6 +96269,7 @@ proxy-groups:
   - OpenRay  RU-32564
   - OpenRay  RU-32565
   - OpenRay  RU-32566
+  - OpenRay  RU-32567
   - OpenRay  KR-2289
   - OpenRay  KR-2291
   - OpenRay  KR-2290
@@ -96254,6 +96324,7 @@ proxy-groups:
   - OpenRay  KR-2540
   - OpenRay  KR-2573
   - OpenRay  KR-2574
+  - OpenRay  KR-2575
   - OpenRay  FR-4100
   - OpenRay  FR-4114
   - OpenRay  FR-4115
