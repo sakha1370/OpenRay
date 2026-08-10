@@ -31837,6 +31837,43 @@ proxies:
     public-key: TlpXTLz1Y-v8B6q9MX55U6eypjfL0LCSNE5zQP4yRHw
     short-id: bbc68cec8bb8d2e3
   client-fingerprint: firefox
+- name: OpenRay  NL-10428
+  type: vless
+  server: 78.17.125.201
+  port: 13868
+  uuid: 06d44c57-8e1a-41f4-b9c4-65d35869e078
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: booking.com
+  reality-opts:
+    public-key: sgpya-5ohMKCjzyrDe4RWz7b8O9XegDzQ88oHCV45Gk
+    short-id: e852dc
+  client-fingerprint: chrome
+- name: OpenRay  NL-10429
+  type: vless
+  server: 51.158.206.25
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-10430
+  type: vless
+  server: 46.8.231.32
+  port: 2053
+  uuid: baf122c2-6d36-4046-8586-8ebc2a2acdc4
+  network: ws
+  tls: true
+  ws-opts:
+    path: /Norman/stream
+    headers:
+      Host: 46.8.231.32
 - name: OpenRay  FI-4824
   type: vless
   server: 5.61.91.206
@@ -33581,6 +33618,32 @@ proxies:
     public-key: 7gzxsxnqwoh1HEfp02BQpEmMaIFHqz4RL8h68hZqsjc
     short-id: 6ea3daaac3d6bede
   client-fingerprint: firefox
+- name: OpenRay  FI-4992
+  type: vless
+  server: nele.neobo-tooth.ru
+  port: 2053
+  uuid: b6c29ae7-4748-4049-b642-b695c0d2c776
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: vk.ru
+  reality-opts:
+    public-key: TSOm7XIZvGzYoCbh_lFFA9PTQJqI-JU5kKIAffGmUWg
+    short-id: 5e39e518bfac6392
+  client-fingerprint: chrome
+- name: OpenRay  FI-4993
+  type: vless
+  server: 78.17.112.103
+  port: 13868
+  uuid: 06d44c57-8e1a-41f4-b9c4-65d35869e078
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.epicgames.com
+  reality-opts:
+    public-key: 8SX8GXMe3lXOyY_acO4HFXXYJn_rOOf4zkYFrifV1Tk
+    short-id: e852dc
+  client-fingerprint: chrome
 - name: OpenRay  RU-32453
   type: vless
   server: 83.217.192.58
@@ -38970,6 +39033,18 @@ proxies:
     public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
     short-id: 628b3c90c98ead4f
   client-fingerprint: chrome
+- name: OpenRay  KR-2612
+  type: vless
+  server: 43.201.105.217
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  network: tcp
+  tls: true
+  servername: www.apple.com
+  reality-opts:
+    public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
+    short-id: 628b3c90c98ead4f
+  client-fingerprint: chrome
 - name: OpenRay  FR-4137
   type: vless
   server: 57.130.53.127
@@ -41451,6 +41526,18 @@ proxies:
 - name: OpenRay  SG-2400
   type: vless
   server: 13.251.89.171
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  network: tcp
+  tls: true
+  servername: www.apple.com
+  reality-opts:
+    public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
+    short-id: 628b3c90c98ead4f
+  client-fingerprint: chrome
+- name: OpenRay  SG-2401
+  type: vless
+  server: 18.143.189.133
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   network: tcp
@@ -85793,6 +85880,9 @@ proxy-groups:
   - OpenRay  NL-10423
   - OpenRay  NL-10424
   - OpenRay  NL-10427
+  - OpenRay  NL-10428
+  - OpenRay  NL-10429
+  - OpenRay  NL-10430
   - OpenRay  FI-4824
   - OpenRay  FI-4849
   - OpenRay  FI-4865
@@ -85936,6 +86026,8 @@ proxy-groups:
   - OpenRay  FI-4986
   - OpenRay  FI-4990
   - OpenRay  FI-4991
+  - OpenRay  FI-4992
+  - OpenRay  FI-4993
   - OpenRay  RU-32453
   - OpenRay  RU-32539
   - OpenRay  RU-32468
@@ -86409,6 +86501,7 @@ proxy-groups:
   - OpenRay  KR-2540
   - OpenRay  KR-2609
   - OpenRay  KR-2611
+  - OpenRay  KR-2612
   - OpenRay  FR-4137
   - OpenRay  FR-4144
   - OpenRay  FR-4145
@@ -86630,6 +86723,7 @@ proxy-groups:
   - OpenRay  SG-2396
   - OpenRay  SG-2397
   - OpenRay  SG-2400
+  - OpenRay  SG-2401
   - OpenRay  HK-1662
   - OpenRay  HK-301
   - OpenRay  HK-1509
@@ -93267,6 +93361,9 @@ proxy-groups:
   - OpenRay  NL-10423
   - OpenRay  NL-10424
   - OpenRay  NL-10427
+  - OpenRay  NL-10428
+  - OpenRay  NL-10429
+  - OpenRay  NL-10430
   - OpenRay  FI-4824
   - OpenRay  FI-4849
   - OpenRay  FI-4865
@@ -93410,6 +93507,8 @@ proxy-groups:
   - OpenRay  FI-4986
   - OpenRay  FI-4990
   - OpenRay  FI-4991
+  - OpenRay  FI-4992
+  - OpenRay  FI-4993
   - OpenRay  RU-32453
   - OpenRay  RU-32539
   - OpenRay  RU-32468
@@ -93883,6 +93982,7 @@ proxy-groups:
   - OpenRay  KR-2540
   - OpenRay  KR-2609
   - OpenRay  KR-2611
+  - OpenRay  KR-2612
   - OpenRay  FR-4137
   - OpenRay  FR-4144
   - OpenRay  FR-4145
@@ -94104,6 +94204,7 @@ proxy-groups:
   - OpenRay  SG-2396
   - OpenRay  SG-2397
   - OpenRay  SG-2400
+  - OpenRay  SG-2401
   - OpenRay  HK-1662
   - OpenRay  HK-301
   - OpenRay  HK-1509
