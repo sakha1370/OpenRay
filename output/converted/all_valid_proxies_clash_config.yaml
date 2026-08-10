@@ -32376,6 +32376,31 @@ proxies:
   uuid: f50e364f-f5c9-4552-b0d9-13e4de24b9f0
   network: grpc
   tls: true
+- name: OpenRay  NL-10403
+  type: vless
+  server: 78.159.245.182
+  port: 15565
+  uuid: e04a778c-4c83-4fe0-9f52-e6b7bcb59c7c
+  network: grpc
+  tls: true
+  servername: iv.kommersant.ru
+  reality-opts:
+    public-key: 5nRL3eh_pQWHdej0It-V9mOapVLSi4PgkgjG9iqhpSw
+    short-id: a5bd715862513387
+  client-fingerprint: qq
+- name: OpenRay  NL-10404
+  type: vless
+  server: 185.141.227.183
+  port: 40013
+  uuid: 41784775-8846-4579-9d9d-9ad6ea802e2e
+  network: raw
+  flow: xtls-rprx-vision
+  tls: true
+  servername: ads.x5.ru
+  reality-opts:
+    public-key: uHCIeXxIcEoZ89kaNNBIKsy4axPMsBb2xeOMww7d1DY
+    short-id: 1a6b1f9d0e
+  client-fingerprint: qq
 - name: OpenRay  FI-4621
   type: vless
   server: 83.147.216.66
@@ -39956,6 +39981,16 @@ proxies:
     path: /v1
     headers:
       Host: 201.24.118.145
+- name: OpenRay  RU-32685
+  type: vless
+  server: 194.26.229.209
+  port: 4100
+  uuid: 9b4ba157-f60b-4a5b-b326-4d561eb826d4
+  network: ws
+  ws-opts:
+    path: /v1
+    headers:
+      Host: 194.26.229.209
 - name: OpenRay  KR-2289
   type: vless
   server: 220.71.172.2
@@ -42624,6 +42659,18 @@ proxies:
 - name: OpenRay  SG-2370
   type: vless
   server: 13.214.146.151
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  network: tcp
+  tls: true
+  servername: www.apple.com
+  reality-opts:
+    public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
+    short-id: 628b3c90c98ead4f
+  client-fingerprint: chrome
+- name: OpenRay  SG-2371
+  type: vless
+  server: 18.142.114.65
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   network: tcp
@@ -45316,6 +45363,18 @@ proxies:
   network: tcp
   tls: true
   servername: it1-akn.astralweb.tech
+- name: OpenRay  IT-804
+  type: vless
+  server: 116.204.164.27
+  port: 7443
+  uuid: c82e5af9-5fef-4fdd-9454-2682873e1563
+  network: ws
+  tls: true
+  servername: c6dbx99g6stb418qeo.t3jmlj0r152zji4htdkm9.workers.dev
+  ws-opts:
+    path: /@Marisa_kristi
+    headers:
+      Host: c6dbx99g6stb418qeo.t3jmlj0r152zji4htdkm9.workers.dev
 - name: OpenRay  JP-3996
   type: vless
   server: 14.137.238.144
@@ -72892,6 +72951,18 @@ proxies:
     public-key: CTfSuRE6fUPYVBJGsmOYnP3UketmmTJSQP45OcoGI2k
     short-id: 285db1978fd0d8c1
   client-fingerprint: chrome
+- name: OpenRay  AE-134
+  type: vless
+  server: 31.57.228.166
+  port: 20513
+  uuid: eb8c46f5-68ae-46dc-aea3-50c8cef41897
+  network: raw
+  tls: true
+  servername: updates.cdn-apple.com
+  reality-opts:
+    public-key: CTfSuRE6fUPYVBJGsmOYnP3UketmmTJSQP45OcoGI2k
+    short-id: 285db1978fd0d8c1
+  client-fingerprint: chrome
 - name: OpenRay  BG-69
   type: vless
   server: 45.142.120.30
@@ -88338,6 +88409,8 @@ proxy-groups:
   - OpenRay  NL-10399
   - OpenRay  NL-10400
   - OpenRay  NL-10402
+  - OpenRay  NL-10403
+  - OpenRay  NL-10404
   - OpenRay  FI-4621
   - OpenRay  FI-4859
   - OpenRay  FI-4861
@@ -88989,6 +89062,7 @@ proxy-groups:
   - OpenRay  RU-32670
   - OpenRay  RU-32671
   - OpenRay  RU-32684
+  - OpenRay  RU-32685
   - OpenRay  KR-2289
   - OpenRay  KR-2546
   - OpenRay  KR-2548
@@ -89227,6 +89301,7 @@ proxy-groups:
   - OpenRay  SG-2367
   - OpenRay  SG-2369
   - OpenRay  SG-2370
+  - OpenRay  SG-2371
   - OpenRay  HK-2246
   - OpenRay  HK-2300
   - OpenRay  HK-2359
@@ -89486,6 +89561,7 @@ proxy-groups:
   - OpenRay  IT-136
   - OpenRay  IT-802
   - OpenRay  IT-803
+  - OpenRay  IT-804
   - OpenRay  JP-3996
   - OpenRay  JP-3902
   - OpenRay  JP-2804
@@ -91897,6 +91973,7 @@ proxy-groups:
   - OpenRay  AE-131
   - OpenRay  AE-132
   - OpenRay  AE-133
+  - OpenRay  AE-134
   - OpenRay  BG-69
   - OpenRay  BG-71
   - OpenRay  BG-68
@@ -96063,6 +96140,8 @@ proxy-groups:
   - OpenRay  NL-10399
   - OpenRay  NL-10400
   - OpenRay  NL-10402
+  - OpenRay  NL-10403
+  - OpenRay  NL-10404
   - OpenRay  FI-4621
   - OpenRay  FI-4859
   - OpenRay  FI-4861
@@ -96714,6 +96793,7 @@ proxy-groups:
   - OpenRay  RU-32670
   - OpenRay  RU-32671
   - OpenRay  RU-32684
+  - OpenRay  RU-32685
   - OpenRay  KR-2289
   - OpenRay  KR-2546
   - OpenRay  KR-2548
@@ -96952,6 +97032,7 @@ proxy-groups:
   - OpenRay  SG-2367
   - OpenRay  SG-2369
   - OpenRay  SG-2370
+  - OpenRay  SG-2371
   - OpenRay  HK-2246
   - OpenRay  HK-2300
   - OpenRay  HK-2359
@@ -97211,6 +97292,7 @@ proxy-groups:
   - OpenRay  IT-136
   - OpenRay  IT-802
   - OpenRay  IT-803
+  - OpenRay  IT-804
   - OpenRay  JP-3996
   - OpenRay  JP-3902
   - OpenRay  JP-2804
@@ -99622,6 +99704,7 @@ proxy-groups:
   - OpenRay  AE-131
   - OpenRay  AE-132
   - OpenRay  AE-133
+  - OpenRay  AE-134
   - OpenRay  BG-69
   - OpenRay  BG-71
   - OpenRay  BG-68
