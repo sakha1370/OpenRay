@@ -292,18 +292,6 @@ proxies:
     path: /vmess/
     headers:
       Host: 38.107.234.57
-- name: OpenRay  CA-12450
-  type: vless
-  server: 188.114.98.134
-  port: 443
-  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
-  network: ws
-  tls: true
-  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
-  ws-opts:
-    path: /yraL4HRbwB8cMc0F?ed=2560
-    headers:
-      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  CA-12448
   type: vless
   server: 188.114.96.7
@@ -314,6 +302,18 @@ proxies:
   servername: o94yv7lIF0-AnXiSd9EFeHVVS7mxn6Bh.z-ULe-IKA-d-e-Ne-k-E.WORKERs.DEv
   ws-opts:
     path: /dbJqwUHWfrXV0Z3Q?ed=2560
+    headers:
+      Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
+- name: OpenRay  CA-12450
+  type: vless
+  server: 188.114.98.134
+  port: 443
+  uuid: ba49d874-fe02-465d-82d3-ed981dc7694f
+  network: ws
+  tls: true
+  servername: o94yv7LiF0-AnxIsd9EFehVvs7mXn6bh.z-UlE-ikA-d-e-nE-k-E.WorkeRs.dEv
+  ws-opts:
+    path: /yraL4HRbwB8cMc0F?ed=2560
     headers:
       Host: o94yv7lif0-anxisd9efehvvs7mxn6bh.z-ule-ika-d-e-ne-k-e.workers.dev
 - name: OpenRay  LV-16
@@ -704,9 +704,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-4
+- name: OpenRay  NL-419
   type: vless
-  server: 51.158.206.96
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -717,9 +717,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
+- name: OpenRay  NL-4
   type: vless
-  server: 51.158.206.34
+  server: 51.158.206.96
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -756,9 +756,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-7
+- name: OpenRay  NL-115
   type: vless
-  server: 51.158.206.97
+  server: 51.158.206.86
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -769,9 +769,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-115
+- name: OpenRay  NL-7
   type: vless
-  server: 51.158.206.86
+  server: 51.158.206.97
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -1025,8 +1025,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  KZ-62
   - OpenRay  KZ-76
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
@@ -1059,12 +1059,12 @@ proxy-groups:
   - OpenRay  US-10580
   - OpenRay  US-9848
   - OpenRay  NL-9
-  - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1103,8 +1103,8 @@ proxy-groups:
   - OpenRay  PH-6
   - OpenRay  KZ-62
   - OpenRay  KZ-76
-  - OpenRay  CA-12450
   - OpenRay  CA-12448
+  - OpenRay  CA-12450
   - OpenRay  LV-16
   - OpenRay  DE-3220
   - OpenRay  DE-3173
@@ -1137,12 +1137,12 @@ proxy-groups:
   - OpenRay  US-10580
   - OpenRay  US-9848
   - OpenRay  NL-9
-  - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-418
-  - OpenRay  NL-7
   - OpenRay  NL-115
+  - OpenRay  NL-7
   - OpenRay  NL-15
   - OpenRay  NL-6
   - OpenRay  NL-113
