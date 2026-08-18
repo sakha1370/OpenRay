@@ -10818,6 +10818,31 @@ proxies:
     path: /
     headers:
       Host: 104.16.7.70
+- name: OpenRay  CA-27848
+  type: vless
+  server: 104.18.37.127
+  port: 80
+  uuid: aecb39c3-254b-45f2-bb94-e07b95c5feec
+  network: ws
+  ws-opts:
+    path: /
+    headers:
+      Host: kh.khmer.qzz.io
+- name: OpenRay  CA-27849
+  type: vless
+  server: lizca2.footballfantasyforum.com
+  port: 443
+  uuid: 716426fa-bcb7-4eb9-b460-36399ebf740d
+  network: tcp
+  tls: true
+- name: OpenRay  CA-27850
+  type: vless
+  server: lizca2.footballfantasyforum.com
+  port: 443
+  uuid: 716426fa-bcb7-4eb9-b460-36399ebf740d
+  network: tcp
+  tls: true
+  servername: lizca2.footballfantasyforum.com
 - name: OpenRay Dynamic-26465
   type: vless
   server: lt.mmhh.eu.cc
@@ -33380,6 +33405,30 @@ proxies:
     public-key: GYD0NwdNDlDIAkRGIMqRC7RuhZTScmSw2SlknoRNrDo
     short-id: 521959f62377e2fa
   client-fingerprint: chrome
+- name: OpenRay  US-24886
+  type: vless
+  server: 151.101.56.7
+  port: 443
+  uuid: 9934f538-e22f-48f7-80bc-856d7041a38a
+  network: ws
+  tls: true
+  servername: ssl.fastly.com
+  ws-opts:
+    path: /
+    headers:
+      Host: SvnTeamChannel.global.ssl.fastly.net
+- name: OpenRay  US-24887
+  type: vless
+  server: 199.232.78.159
+  port: 443
+  uuid: 9934f538-e22f-48f7-80bc-856d7041a38a
+  network: ws
+  tls: true
+  servername: ssl.fastly.com
+  ws-opts:
+    path: /
+    headers:
+      Host: SvnTeamChannel.global.ssl.fastly.net
 - name: OpenRay  NL-10830
   type: vless
   server: 89.106.86.108
@@ -52136,6 +52185,43 @@ proxies:
     public-key: bnRIb3Er1i-K6NGGByCO9UbGfOvu43ZoiK7ulPd1SzU
     short-id: aabbccdd
   client-fingerprint: firefox
+- name: OpenRay  RU-33996
+  type: vless
+  server: 212.233.91.170
+  port: 20031
+  uuid: fca74439-d3f4-4247-8be2-d5654bb418a9
+  network: raw
+  flow: xtls-rprx-vision
+  tls: true
+  servername: dzen.ru
+  reality-opts:
+    public-key: 4raAAZ8J0PHOu1Vkj2dYIJ0zUgewHdtcq_0sj2WSgjU
+    short-id: abcd1234
+  client-fingerprint: qq
+- name: OpenRay  RU-33997
+  type: vless
+  server: 95.129.236.252
+  port: 443
+  uuid: 5d7dd293-2ff5-4108-881b-2929acb956f5
+  network: ws
+  tls: true
+  servername: benzin.benz.ink
+  ws-opts:
+    path: /api/v2/vms/stream/genka
+    headers:
+      Host: 95.129.236.252
+- name: OpenRay  RU-33998
+  type: vless
+  server: 186.246.12.85
+  port: 2053
+  uuid: f62a1751-c1e4-4612-90e7-bd5781c1aede
+  network: ws
+  tls: true
+  servername: bz2.wba-pn.ru
+  ws-opts:
+    path: /
+    headers:
+      Host: 186.246.12.85
 - name: OpenRay  KR-2549
   type: vless
   server: ako.pagate.top
@@ -53007,6 +53093,18 @@ proxies:
 - name: OpenRay  KR-2770
   type: vless
   server: 3.34.178.193
+  port: 8686
+  uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
+  network: tcp
+  tls: true
+  servername: www.apple.com
+  reality-opts:
+    public-key: A3NXnUIT-W0m1Y_leRnv5so2IeCvk9FCFgL31PulfTw
+    short-id: 628b3c90c98ead4f
+  client-fingerprint: chrome
+- name: OpenRay  KR-2771
+  type: vless
+  server: 54.180.92.108
   port: 8686
   uuid: 1a17b19d-4896-4531-af79-6e91d8ef8228
   network: tcp
@@ -108711,6 +108809,9 @@ proxy-groups:
   - OpenRay  CA-27831
   - OpenRay  CA-27832
   - OpenRay  CA-27847
+  - OpenRay  CA-27848
+  - OpenRay  CA-27849
+  - OpenRay  CA-27850
   - OpenRay Dynamic-26465
   - OpenRay Dynamic-24347
   - OpenRay Dynamic-25569
@@ -110861,6 +110962,8 @@ proxy-groups:
   - OpenRay  US-24882
   - OpenRay  US-24883
   - OpenRay  US-24884
+  - OpenRay  US-24886
+  - OpenRay  US-24887
   - OpenRay  NL-10830
   - OpenRay  NL-10831
   - OpenRay  NL-10866
@@ -112489,6 +112592,9 @@ proxy-groups:
   - OpenRay  RU-33992
   - OpenRay  RU-33993
   - OpenRay  RU-33994
+  - OpenRay  RU-33996
+  - OpenRay  RU-33997
+  - OpenRay  RU-33998
   - OpenRay  KR-2549
   - OpenRay  KR-2743
   - OpenRay  KR-2675
@@ -112562,6 +112668,7 @@ proxy-groups:
   - OpenRay  KR-2768
   - OpenRay  KR-2769
   - OpenRay  KR-2770
+  - OpenRay  KR-2771
   - OpenRay  FR-4197
   - OpenRay  FR-4280
   - OpenRay  FR-4282
@@ -118438,6 +118545,9 @@ proxy-groups:
   - OpenRay  CA-27831
   - OpenRay  CA-27832
   - OpenRay  CA-27847
+  - OpenRay  CA-27848
+  - OpenRay  CA-27849
+  - OpenRay  CA-27850
   - OpenRay Dynamic-26465
   - OpenRay Dynamic-24347
   - OpenRay Dynamic-25569
@@ -120588,6 +120698,8 @@ proxy-groups:
   - OpenRay  US-24882
   - OpenRay  US-24883
   - OpenRay  US-24884
+  - OpenRay  US-24886
+  - OpenRay  US-24887
   - OpenRay  NL-10830
   - OpenRay  NL-10831
   - OpenRay  NL-10866
@@ -122216,6 +122328,9 @@ proxy-groups:
   - OpenRay  RU-33992
   - OpenRay  RU-33993
   - OpenRay  RU-33994
+  - OpenRay  RU-33996
+  - OpenRay  RU-33997
+  - OpenRay  RU-33998
   - OpenRay  KR-2549
   - OpenRay  KR-2743
   - OpenRay  KR-2675
@@ -122289,6 +122404,7 @@ proxy-groups:
   - OpenRay  KR-2768
   - OpenRay  KR-2769
   - OpenRay  KR-2770
+  - OpenRay  KR-2771
   - OpenRay  FR-4197
   - OpenRay  FR-4280
   - OpenRay  FR-4282
