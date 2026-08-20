@@ -23472,6 +23472,30 @@ proxies:
   port: 42638
   uuid: d29638a5-96e8-489b-8f02-9cd1e01ee6d8
   network: tcp
+- name: OpenRay  DE-22744
+  type: vless
+  server: 91.99.178.63
+  port: 36614
+  uuid: 4f04983c-bcaa-41ad-8da9-3cb530a55142
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: amazonaws-china.com
+  reality-opts:
+    public-key: nE7CcyQ_ZG0vGMplZ91L4L_oOB9q7annsWMINWp3nWM
+    short-id: 7d
+  client-fingerprint: chrome
+- name: OpenRay  DE-22745
+  type: vless
+  server: 146.75.119.82
+  port: 80
+  uuid: 621089a2-c75a-4ea6-a328-b0739e1fc64a
+  network: ws
+  ws-opts:
+    path: 
+      ws/?ed=2048/@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz@AzadMarz/?2048
+    headers:
+      Host: rb24.ir
 - name: OpenRay  US-24470
   type: vless
   server: 205.172.59.52
@@ -34184,6 +34208,41 @@ proxies:
     path: /assets/c4f035bec9562c640011/v4c37050480c8c4746fb5/sync
     headers:
       Host: fws02.tenvixa.ir
+- name: OpenRay  US-25026
+  type: vless
+  server: prisonk708-production.up.railway.app
+  port: 443
+  uuid: 1abcbe26-4974-d971-0379-66f1167b5883
+  network: ws
+  tls: true
+  servername: prisonk708-production.up.railway.app
+  ws-opts:
+    path: /ws/1abcbe26-4974-d971-0379-66f1167b5883
+    headers:
+      Host: prisonk708-production.up.railway.app
+- name: OpenRay  US-25027
+  type: vless
+  server: irhub-production.up.railway.app
+  port: 443
+  uuid: ca2b315e-f104-2236-7efc-2ea20533abd1
+  network: ws
+  tls: true
+  ws-opts:
+    path: /ws/ca2b315e-f104-2236-7efc-2ea20533abd1
+    headers:
+      Host: irhub-production.up.railway.app
+- name: OpenRay  US-25028
+  type: vless
+  server: irhub-production.up.railway.app
+  port: 443
+  uuid: ca2b315e-f104-2236-7efc-2ea20533abd1
+  network: ws
+  tls: true
+  servername: irhub-production.up.railway.app
+  ws-opts:
+    path: /ws/ca2b315e-f104-2236-7efc-2ea20533abd1
+    headers:
+      Host: irhub-production.up.railway.app
 - name: OpenRay  NL-10897
   type: vless
   server: video.she-happ.com
@@ -55586,6 +55645,19 @@ proxies:
     public-key: 8ZYjmjb0b2QJKCGMrcdhQNV28jZZPCKgIQbIdqChQ0w
     short-id: 00a61d55a07de885
   client-fingerprint: chrome
+- name: OpenRay  RU-34263
+  type: vless
+  server: 193.168.46.180
+  port: 443
+  uuid: 95ccf525-6103-4252-a3c2-ae3601953598
+  network: raw
+  flow: xtls-rprx-vision
+  tls: true
+  servername: rruu.persik.host
+  reality-opts:
+    public-key: D0FqzTuVSzCF8IcFo64SFIpMsaGV47LW3el2GCCVoFY
+    short-id: c1a7e9b4711d5f60
+  client-fingerprint: qq
 - name: OpenRay  KR-2549
   type: vless
   server: ako.pagate.top
@@ -117306,6 +117378,8 @@ proxy-groups:
   - OpenRay  DE-22740
   - OpenRay  DE-22741
   - OpenRay  DE-22743
+  - OpenRay  DE-22744
+  - OpenRay  DE-22745
   - OpenRay  US-24470
   - OpenRay  US-24960
   - OpenRay  US-24976
@@ -118358,6 +118432,9 @@ proxy-groups:
   - OpenRay  US-25023
   - OpenRay  US-25024
   - OpenRay  US-25025
+  - OpenRay  US-25026
+  - OpenRay  US-25027
+  - OpenRay  US-25028
   - OpenRay  NL-10897
   - OpenRay  NL-10986
   - OpenRay  NL-11015
@@ -120197,6 +120274,7 @@ proxy-groups:
   - OpenRay  RU-34259
   - OpenRay  RU-34260
   - OpenRay  RU-34262
+  - OpenRay  RU-34263
   - OpenRay  KR-2549
   - OpenRay  KR-2743
   - OpenRay  KR-2675
@@ -127651,6 +127729,8 @@ proxy-groups:
   - OpenRay  DE-22740
   - OpenRay  DE-22741
   - OpenRay  DE-22743
+  - OpenRay  DE-22744
+  - OpenRay  DE-22745
   - OpenRay  US-24470
   - OpenRay  US-24960
   - OpenRay  US-24976
@@ -128703,6 +128783,9 @@ proxy-groups:
   - OpenRay  US-25023
   - OpenRay  US-25024
   - OpenRay  US-25025
+  - OpenRay  US-25026
+  - OpenRay  US-25027
+  - OpenRay  US-25028
   - OpenRay  NL-10897
   - OpenRay  NL-10986
   - OpenRay  NL-11015
@@ -130542,6 +130625,7 @@ proxy-groups:
   - OpenRay  RU-34259
   - OpenRay  RU-34260
   - OpenRay  RU-34262
+  - OpenRay  RU-34263
   - OpenRay  KR-2549
   - OpenRay  KR-2743
   - OpenRay  KR-2675
