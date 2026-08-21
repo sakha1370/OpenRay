@@ -34794,6 +34794,29 @@ proxies:
     path: /api/connect
     headers:
       Host: 23.237.193.66
+- name: OpenRay  US-25130
+  type: vless
+  server: x4gbot-production.up.railway.app
+  port: 443
+  uuid: 875853e4-a643-8536-4f5f-ed704dd08066
+  network: ws
+  tls: true
+  ws-opts:
+    path: /ws/875853e4-a643-8536-4f5f-ed704dd08066
+    headers:
+      Host: x4gbot-production.up.railway.app
+- name: OpenRay  US-25131
+  type: vless
+  server: x4gbot-production.up.railway.app
+  port: 443
+  uuid: 875853e4-a643-8536-4f5f-ed704dd08066
+  network: ws
+  tls: true
+  servername: x4gbot-production.up.railway.app
+  ws-opts:
+    path: /ws/875853e4-a643-8536-4f5f-ed704dd08066
+    headers:
+      Host: x4gbot-production.up.railway.app
 - name: OpenRay  NL-11098
   type: vless
   server: 141.148.233.114
@@ -41517,6 +41540,29 @@ proxies:
   network: tcp
   flow: xtls-rprx-vision
   tls: true
+- name: OpenRay  NL-11140
+  type: vless
+  server: 78.159.246.204
+  port: 2027
+  uuid: 851ed0d8-a37b-452d-8ef2-5b6c2d28a060
+  network: raw
+  flow: xtls-rprx-vision
+  tls: true
+  servername: storage.yandex.net
+  reality-opts:
+    public-key: ISa-DZOI4LRRb9DHMFYm5oFqBXDjYzz0hVWUfWvzLmo
+    short-id: dc8109baf0f607ea
+  client-fingerprint: chrome
+- name: OpenRay  NL-11141
+  type: vmess
+  server: 176.120.17.21
+  port: 1015
+  uuid: 43531b5b-d94b-49ba-8a5e-7a6d4bb68459
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: astra.iraniangamersclub.ir
 - name: OpenRay  FI-5174
   type: vless
   server: 31.77.151.244
@@ -49782,6 +49828,18 @@ proxies:
     public-key: D0FqzTuVSzCF8IcFo64SFIpMsaGV47LW3el2GCCVoFY
     short-id: c1a7e9b4711d5f60
   client-fingerprint: qq
+- name: OpenRay  RU-34350
+  type: vless
+  server: 95.129.236.252
+  port: 443
+  uuid: 187d80b0-7060-4331-9c2f-8949d2947593
+  network: ws
+  tls: true
+  servername: benzin.benz.ink
+  ws-opts:
+    path: /api/v2/vms/stream/genka
+    headers:
+      Host: 95.129.236.252
 - name: OpenRay  KR-2634
   type: vless
   server: 151.245.106.49
@@ -113688,6 +113746,8 @@ proxy-groups:
   - OpenRay  US-25126
   - OpenRay  US-25127
   - OpenRay  US-25128
+  - OpenRay  US-25130
+  - OpenRay  US-25131
   - OpenRay  NL-11098
   - OpenRay  NL-11108
   - OpenRay  NL-11114
@@ -114241,6 +114301,8 @@ proxy-groups:
   - OpenRay  NL-11136
   - OpenRay  NL-11137
   - OpenRay  NL-11138
+  - OpenRay  NL-11140
+  - OpenRay  NL-11141
   - OpenRay  FI-5174
   - OpenRay  FI-5185
   - OpenRay  FI-5193
@@ -114943,6 +115005,7 @@ proxy-groups:
   - OpenRay  RU-34347
   - OpenRay  RU-34348
   - OpenRay  RU-34349
+  - OpenRay  RU-34350
   - OpenRay  KR-2634
   - OpenRay  KR-2044
   - OpenRay  KR-2341
@@ -123592,6 +123655,8 @@ proxy-groups:
   - OpenRay  US-25126
   - OpenRay  US-25127
   - OpenRay  US-25128
+  - OpenRay  US-25130
+  - OpenRay  US-25131
   - OpenRay  NL-11098
   - OpenRay  NL-11108
   - OpenRay  NL-11114
@@ -124145,6 +124210,8 @@ proxy-groups:
   - OpenRay  NL-11136
   - OpenRay  NL-11137
   - OpenRay  NL-11138
+  - OpenRay  NL-11140
+  - OpenRay  NL-11141
   - OpenRay  FI-5174
   - OpenRay  FI-5185
   - OpenRay  FI-5193
@@ -124847,6 +124914,7 @@ proxy-groups:
   - OpenRay  RU-34347
   - OpenRay  RU-34348
   - OpenRay  RU-34349
+  - OpenRay  RU-34350
   - OpenRay  KR-2634
   - OpenRay  KR-2044
   - OpenRay  KR-2341
