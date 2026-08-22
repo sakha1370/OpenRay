@@ -466,6 +466,16 @@ proxies:
     path: /vless/
     headers:
       Host: ov-germany1.09vpn.com
+- name: OpenRay  DE-5378
+  type: vless
+  server: ov-germany1.09vpn.com
+  port: 80
+  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
+  network: ws
+  ws-opts:
+    path: /vless/
+    headers:
+      Host: ov-germany1.09vpn.com
 - name: OpenRay  NL-426
   type: vless
   server: 77.246.109.191
@@ -478,16 +488,6 @@ proxies:
     public-key: cDaDzPr3PlS3NM8lreHZbdo-Mhqz8vMBzMSkHXhGIUA
     short-id: e8ab71d0
   client-fingerprint: chrome
-- name: OpenRay  DE-5378
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
 - name: OpenRay  CA-14153
   type: vmess
   server: 104.17.77.77
@@ -1040,8 +1040,8 @@ proxy-groups:
   - OpenRay  NL-114
   - OpenRay  NL-421
   - OpenRay  DE-5320
-  - OpenRay  NL-426
   - OpenRay  DE-5378
+  - OpenRay  NL-426
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  SA-1
@@ -1118,8 +1118,8 @@ proxy-groups:
   - OpenRay  NL-114
   - OpenRay  NL-421
   - OpenRay  DE-5320
-  - OpenRay  NL-426
   - OpenRay  DE-5378
+  - OpenRay  NL-426
   - OpenRay  CA-14153
   - OpenRay  CA-14307
   - OpenRay  SA-1
