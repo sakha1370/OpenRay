@@ -593,9 +593,9 @@ proxies:
     path: /arki
     headers:
       Host: 47.250.45.234
-- name: OpenRay  US-9872
+- name: OpenRay  US-9824
   type: vless
-  server: 15.204.97.198
+  server: 15.204.97.214
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -606,9 +606,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  US-9824
+- name: OpenRay  US-9872
   type: vless
-  server: 15.204.97.214
+  server: 15.204.97.198
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -645,19 +645,6 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
-  type: vless
-  server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
 - name: OpenRay  NL-4
   type: vless
   server: 51.158.206.96
@@ -674,6 +661,19 @@ proxies:
 - name: OpenRay  NL-9
   type: vless
   server: 51.158.206.87
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-419
+  type: vless
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -892,19 +892,6 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 18e4d2d21241
   client-fingerprint: chrome
-- name: OpenRay  US-11602
-  type: vless
-  server: 47.253.226.114
-  port: 443
-  uuid: 055a1ce8-2a16-4a0d-a2c2-22826c9b2413
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.cloudflare.com
-  reality-opts:
-    public-key: Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc
-    short-id: ''
-  client-fingerprint: chrome
 - name: OpenRay  FI-402
   type: vless
   server: staging.lastilhame.monster
@@ -917,6 +904,19 @@ proxies:
   reality-opts:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 2a80364e93d9
+  client-fingerprint: chrome
+- name: OpenRay  US-11602
+  type: vless
+  server: 47.253.226.114
+  port: 443
+  uuid: 055a1ce8-2a16-4a0d-a2c2-22826c9b2413
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.cloudflare.com
+  reality-opts:
+    public-key: Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc
+    short-id: ''
   client-fingerprint: chrome
 - name: OpenRay  DE-5929
   type: vless
@@ -1017,13 +1017,13 @@ proxy-groups:
   - OpenRay  PH-9
   - OpenRay  HK-335
   - OpenRay  MY-42
-  - OpenRay  US-9872
   - OpenRay  US-9824
+  - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-419
   - OpenRay  NL-4
   - OpenRay  NL-9
+  - OpenRay  NL-419
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1040,8 +1040,8 @@ proxy-groups:
   - OpenRay  FR-450
   - OpenRay  FI-333
   - OpenRay  FI-342
-  - OpenRay  US-11602
   - OpenRay  FI-402
+  - OpenRay  US-11602
   - OpenRay  DE-5929
   - OpenRay  US-11417
   - OpenRay  US-11400
@@ -1092,13 +1092,13 @@ proxy-groups:
   - OpenRay  PH-9
   - OpenRay  HK-335
   - OpenRay  MY-42
-  - OpenRay  US-9872
   - OpenRay  US-9824
+  - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-419
   - OpenRay  NL-4
   - OpenRay  NL-9
+  - OpenRay  NL-419
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1115,8 +1115,8 @@ proxy-groups:
   - OpenRay  FR-450
   - OpenRay  FI-333
   - OpenRay  FI-342
-  - OpenRay  US-11602
   - OpenRay  FI-402
+  - OpenRay  US-11602
   - OpenRay  DE-5929
   - OpenRay  US-11417
   - OpenRay  US-11400
