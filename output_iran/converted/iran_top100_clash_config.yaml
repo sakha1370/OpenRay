@@ -620,6 +620,19 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
+- name: OpenRay  NL-4
+  type: vless
+  server: 51.158.206.96
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
 - name: OpenRay  NL-9
   type: vless
   server: 51.158.206.87
@@ -636,19 +649,6 @@ proxies:
 - name: OpenRay  NL-419
   type: vless
   server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-4
-  type: vless
-  server: 51.158.206.96
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -802,19 +802,6 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: b27ba098687b
   client-fingerprint: chrome
-- name: OpenRay  FI-300
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: de38389f-5651-4f2f-8276-5aabf3b861c9
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.hollywoodreporter.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 225e930cfd4d
-  client-fingerprint: chrome
 - name: OpenRay  FR-450
   type: vless
   server: 62.210.91.2
@@ -827,6 +814,19 @@ proxies:
   reality-opts:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  FI-300
+  type: vless
+  server: staging.lastilhame.monster
+  port: 443
+  uuid: de38389f-5651-4f2f-8276-5aabf3b861c9
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: www.hollywoodreporter.com
+  reality-opts:
+    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
+    short-id: 225e930cfd4d
   client-fingerprint: chrome
 - name: OpenRay  FI-307
   type: vless
@@ -1014,9 +1014,9 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
+  - OpenRay  NL-4
   - OpenRay  NL-9
   - OpenRay  NL-419
-  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1028,8 +1028,8 @@ proxy-groups:
   - OpenRay  NL-10
   - OpenRay  FI-299
   - OpenRay  FI-301
-  - OpenRay  FI-300
   - OpenRay  FR-450
+  - OpenRay  FI-300
   - OpenRay  FI-307
   - OpenRay  FI-333
   - OpenRay  FI-342
@@ -1089,9 +1089,9 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
+  - OpenRay  NL-4
   - OpenRay  NL-9
   - OpenRay  NL-419
-  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1103,8 +1103,8 @@ proxy-groups:
   - OpenRay  NL-10
   - OpenRay  FI-299
   - OpenRay  FI-301
-  - OpenRay  FI-300
   - OpenRay  FR-450
+  - OpenRay  FI-300
   - OpenRay  FI-307
   - OpenRay  FI-333
   - OpenRay  FI-342
