@@ -155,6 +155,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 38.107.234.57
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-64
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -168,18 +180,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  KZ-67
   type: vmess
   server: 38.107.234.57
@@ -525,9 +525,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-9
+- name: OpenRay  NL-419
   type: vless
-  server: 51.158.206.87
+  server: 51.158.206.34
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -551,9 +551,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-419
+- name: OpenRay  NL-9
   type: vless
-  server: 51.158.206.34
+  server: 51.158.206.87
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -953,8 +953,8 @@ proxy-groups:
   - OpenRay  US-11414
   - OpenRay  AM-4
   - OpenRay  KZ-53
-  - OpenRay  KZ-64
   - OpenRay  KZ-57
+  - OpenRay  KZ-64
   - OpenRay  KZ-67
   - OpenRay  US-11399
   - OpenRay  US-9871
@@ -983,9 +983,9 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-9
-  - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-4
+  - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1029,8 +1029,8 @@ proxy-groups:
   - OpenRay  US-11414
   - OpenRay  AM-4
   - OpenRay  KZ-53
-  - OpenRay  KZ-64
   - OpenRay  KZ-57
+  - OpenRay  KZ-64
   - OpenRay  KZ-67
   - OpenRay  US-11399
   - OpenRay  US-9871
@@ -1059,9 +1059,9 @@ proxy-groups:
   - OpenRay  US-9872
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-9
-  - OpenRay  NL-4
   - OpenRay  NL-419
+  - OpenRay  NL-4
+  - OpenRay  NL-9
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
