@@ -155,6 +155,18 @@ proxies:
     path: /vmess/
     headers:
       Host: 38.107.234.57
+- name: OpenRay  KZ-57
+  type: vmess
+  server: 38.107.234.57
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /vmess/
+    headers:
+      Host: google.com
 - name: OpenRay  KZ-64
   type: vmess
   server: 3h-kazakhstan1.09vpn.com
@@ -168,18 +180,6 @@ proxies:
     headers:
       Host: 
         wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
 - name: OpenRay  KZ-67
   type: vmess
   server: 38.107.234.57
@@ -449,9 +449,9 @@ proxies:
     public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
     short-id: 5c8a8e6c615b
   client-fingerprint: chrome
-- name: OpenRay  US-9824
+- name: OpenRay  US-9872
   type: vless
-  server: 15.204.97.214
+  server: 15.204.97.198
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -462,9 +462,9 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  US-9872
+- name: OpenRay  US-9824
   type: vless
-  server: 15.204.97.198
+  server: 15.204.97.214
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -501,19 +501,6 @@ proxies:
     public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
     short-id: '01'
   client-fingerprint: chrome
-- name: OpenRay  NL-4
-  type: vless
-  server: 51.158.206.96
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
 - name: OpenRay  NL-9
   type: vless
   server: 51.158.206.87
@@ -530,6 +517,19 @@ proxies:
 - name: OpenRay  NL-419
   type: vless
   server: 51.158.206.34
+  port: 23576
+  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
+  network: tcp
+  flow: xtls-rprx-vision
+  tls: true
+  servername: fuck.rkn
+  reality-opts:
+    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
+    short-id: '01'
+  client-fingerprint: chrome
+- name: OpenRay  NL-4
+  type: vless
+  server: 51.158.206.96
   port: 23576
   uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
   network: tcp
@@ -823,14 +823,6 @@ proxies:
     public-key: J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk
     short-id: ee1716767f9b
   client-fingerprint: chrome
-- name: OpenRay  US-11471
-  type: vmess
-  server: 82.198.246.97
-  port: 180
-  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  DE-9603
   type: vless
   server: 57.129.41.216
@@ -841,6 +833,14 @@ proxies:
     path: /vless/
     headers:
       Host: 57.129.41.216
+- name: OpenRay  US-11471
+  type: vmess
+  server: 82.198.246.97
+  port: 180
+  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  DE-9569
   type: vless
   server: 57.129.41.216
@@ -907,7 +907,7 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  US-11453
+- name: OpenRay  US-11439
   type: vmess
   server: 82.198.246.97
   port: 180
@@ -915,7 +915,7 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  US-11439
+- name: OpenRay  US-11453
   type: vmess
   server: 82.198.246.97
   port: 180
@@ -945,8 +945,8 @@ proxy-groups:
   - OpenRay  US-11414
   - OpenRay  AM-4
   - OpenRay  KZ-53
-  - OpenRay  KZ-64
   - OpenRay  KZ-57
+  - OpenRay  KZ-64
   - OpenRay  KZ-67
   - OpenRay  US-11399
   - OpenRay  US-9871
@@ -969,13 +969,13 @@ proxy-groups:
   - OpenRay  NL-23
   - OpenRay  NL-13
   - OpenRay  FI-291
-  - OpenRay  US-9824
   - OpenRay  US-9872
+  - OpenRay  US-9824
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-4
   - OpenRay  NL-9
   - OpenRay  NL-419
+  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -998,8 +998,8 @@ proxy-groups:
   - OpenRay  US-11417
   - OpenRay  US-11400
   - OpenRay  FI-1077
-  - OpenRay  US-11471
   - OpenRay  DE-9603
+  - OpenRay  US-11471
   - OpenRay  DE-9569
   - OpenRay  US-11441
   - OpenRay  US-11468
@@ -1008,8 +1008,8 @@ proxy-groups:
   - OpenRay  US-11470
   - OpenRay  US-11438
   - OpenRay  US-11469
-  - OpenRay  US-11453
   - OpenRay  US-11439
+  - OpenRay  US-11453
   - OpenRay  US-11420
 - name: PROXY
   type: select
@@ -1021,8 +1021,8 @@ proxy-groups:
   - OpenRay  US-11414
   - OpenRay  AM-4
   - OpenRay  KZ-53
-  - OpenRay  KZ-64
   - OpenRay  KZ-57
+  - OpenRay  KZ-64
   - OpenRay  KZ-67
   - OpenRay  US-11399
   - OpenRay  US-9871
@@ -1045,13 +1045,13 @@ proxy-groups:
   - OpenRay  NL-23
   - OpenRay  NL-13
   - OpenRay  FI-291
-  - OpenRay  US-9824
   - OpenRay  US-9872
+  - OpenRay  US-9824
   - OpenRay  US-9848
   - OpenRay  US-10580
-  - OpenRay  NL-4
   - OpenRay  NL-9
   - OpenRay  NL-419
+  - OpenRay  NL-4
   - OpenRay  NL-11
   - OpenRay  NL-6
   - OpenRay  NL-113
@@ -1074,8 +1074,8 @@ proxy-groups:
   - OpenRay  US-11417
   - OpenRay  US-11400
   - OpenRay  FI-1077
-  - OpenRay  US-11471
   - OpenRay  DE-9603
+  - OpenRay  US-11471
   - OpenRay  DE-9569
   - OpenRay  US-11441
   - OpenRay  US-11468
@@ -1084,8 +1084,8 @@ proxy-groups:
   - OpenRay  US-11470
   - OpenRay  US-11438
   - OpenRay  US-11469
-  - OpenRay  US-11453
   - OpenRay  US-11439
+  - OpenRay  US-11453
   - OpenRay  US-11420
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
