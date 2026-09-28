@@ -833,14 +833,6 @@ proxies:
     path: /vless/
     headers:
       Host: 57.129.41.216
-- name: OpenRay  US-11471
-  type: vmess
-  server: 82.198.246.97
-  port: 180
-  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  DE-9569
   type: vless
   server: 57.129.41.216
@@ -851,6 +843,14 @@ proxies:
     path: /vless/
     headers:
       Host: 57.129.41.216
+- name: OpenRay  US-11471
+  type: vmess
+  server: 82.198.246.97
+  port: 180
+  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: OpenRay  US-11441
   type: vmess
   server: 82.198.246.97
@@ -907,14 +907,6 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  US-11439
-  type: vmess
-  server: 82.198.246.97
-  port: 180
-  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
-  alterId: 0
-  cipher: auto
-  network: tcp
 - name: OpenRay  US-11453
   type: vmess
   server: 82.198.246.97
@@ -923,7 +915,15 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: OpenRay  US-11420
+- name: OpenRay  US-11439
+  type: vmess
+  server: 82.198.246.97
+  port: 180
+  uuid: d13fc2f5-3e05-4795-81eb-44143a09e552
+  alterId: 0
+  cipher: auto
+  network: tcp
+- name: OpenRay  US-11454
   type: vmess
   server: 82.198.246.97
   port: 180
@@ -999,8 +999,8 @@ proxy-groups:
   - OpenRay  US-11400
   - OpenRay  FI-1077
   - OpenRay  DE-9603
-  - OpenRay  US-11471
   - OpenRay  DE-9569
+  - OpenRay  US-11471
   - OpenRay  US-11441
   - OpenRay  US-11468
   - OpenRay  US-11442
@@ -1008,9 +1008,9 @@ proxy-groups:
   - OpenRay  US-11470
   - OpenRay  US-11438
   - OpenRay  US-11469
-  - OpenRay  US-11439
   - OpenRay  US-11453
-  - OpenRay  US-11420
+  - OpenRay  US-11439
+  - OpenRay  US-11454
 - name: PROXY
   type: select
   proxies:
@@ -1075,8 +1075,8 @@ proxy-groups:
   - OpenRay  US-11400
   - OpenRay  FI-1077
   - OpenRay  DE-9603
-  - OpenRay  US-11471
   - OpenRay  DE-9569
+  - OpenRay  US-11471
   - OpenRay  US-11441
   - OpenRay  US-11468
   - OpenRay  US-11442
@@ -1084,9 +1084,9 @@ proxy-groups:
   - OpenRay  US-11470
   - OpenRay  US-11438
   - OpenRay  US-11469
-  - OpenRay  US-11439
   - OpenRay  US-11453
-  - OpenRay  US-11420
+  - OpenRay  US-11439
+  - OpenRay  US-11454
 rules:
 - DOMAIN-SUFFIX,ir,DIRECT
 - DOMAIN-SUFFIX,aparat.com,DIRECT
