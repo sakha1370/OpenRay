@@ -6,8 +6,7 @@
 
 [![Stars](https://img.shields.io/github/stars/sakha1370/OpenRay?style=for-the-badge&logo=github&color=gold)](https://github.com/sakha1370/OpenRay/stargazers)
 [![Forks](https://img.shields.io/github/forks/sakha1370/OpenRay?style=for-the-badge&logo=github&color=blue)](https://github.com/sakha1370/OpenRay/network/members)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg?style=for-the-badge&logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.13+-blue.svg?style=for-the-badge&logo=python)](https://python.org)
 [![Contributors](https://img.shields.io/github/contributors/sakha1370/OpenRay?style=for-the-badge&logo=people&color=green)](https://github.com/sakha1370/OpenRay/graphs/contributors)
 
 *Free, tested, and reliable proxy lists for everyone*
@@ -17,6 +16,20 @@
 </div>
 
 ---
+
+## Collector runtime
+
+The collector uses Python 3.13+, transactional SQLite, bounded asynchronous queues and pinned Xray, sing-box and mihomo cores. Subscription paths and URLs remain available. New candidates require an end-to-end successful check; infrastructure failures preserve existing connection health.
+
+```bash
+python -m pip install -r requirements.lock
+python -m pip install --no-deps --no-build-isolation -e .
+python tools/install_cores.py
+python -m openray migrate
+python -m openray run --report .state/latest-run.json
+```
+
+The run stages an immutable snapshot. Installation and publishing are separate commands with client validation gates. Read the [implementation evidence](docs/implementation.md), [operations and recovery guide](docs/operations.md), [compatibility contract](docs/compatibility.json), and [protocol matrix](docs/protocols.md) before a production cutover. The 24-hour endurance and representative week of network canaries remain deployment acceptance gates.
 
 ## ✨ Our Story
 
@@ -273,7 +286,7 @@ curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/outp
 </td>
 <td align="center" width="25%">
 <h4>⚡ Lightning Testing</h4>
-<p>Parallel processing with multi-stage validation: ICMP → TCP → TLS → Protocol</p>
+<p>Bounded asynchronous processing with authenticated, end-to-end protocol validation</p>
 </td>
 <td align="center" width="25%">
 <h4>📊 Intelligent Organization</h4>
@@ -288,8 +301,8 @@ curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/outp
 </div>
 
 ### 🚀 **Core Capabilities**
-- ✅ **8+ Proxy Protocols**: VMess, VLess, Trojan, Shadowsocks, SSR, Hysteria, TUIC, Juicity
-- ✅ **3-Stage Validation**: ICMP ping → TCP connect → Protocol verification
+- ✅ **Protocol-aware validation and exports**: see the [capability matrix](docs/protocols.md), including explicit unsupported outcomes
+- ✅ **End-to-end validation**: supervised protocol cores, authenticated loopback probes, deadlines and target policies
 - ✅ **Geographic Intelligence**: 50+ countries with flag indicators and regional optimization
 - ✅ **Auto-Generated Configs**: Ready-to-use Clash and Singbox configurations
 - ✅ **Stability Tracking**: Persistent monitoring with reliability streaks
@@ -297,9 +310,9 @@ curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/outp
 - ✅ **Operator-Specific Tracking**: Detailed Iran carrier analytics (MCI, Irancell, TCI, Others)
 
 ### 📊 **Data Structure & Analytics**
-The system tracks proxy reliability using a sophisticated scoring system:
+SQLite is authoritative for connection health and historical counters. This compatibility JSON is a materialized export, not a database checkpoint:
 
-**New JSON Structure:**
+**Exported score structure:**
 ```json
 {
   "vless://uuid@server:port": {
@@ -312,8 +325,7 @@ The system tracks proxy reliability using a sophisticated scoring system:
         "tci": 1,
         "others": 0
       }
-    },
-    "consecutive_failures": 0
+    }
   }
 }
 ```
@@ -421,7 +433,7 @@ sources.txt         # Global sources
 </td>
 <td align="center">
 <strong>✅ Success Rate</strong><br>
-<img src="https://img.shields.io/badge/90%25+-Working-success?style=for-the-badge">
+<a href="docs/implementation.md">Measured checks and remaining acceptance gates</a>
 </td>
 </tr>
 </table>

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openray"
+version = "2.0.0"
+description = "Transactional proxy discovery, validation and deterministic subscription exports"
+requires-python = ">=3.13"
+dependencies = ["httpx==0.28.1", "PyYAML==6.0.3", "psutil==7.2.2", "maxminddb==3.2.0", "dnspython==2.8.0"]
+
+[project.optional-dependencies]
+test = ["ruff==0.16.10"]
+legacy = ["grpcio==1.78.0"]
+
+[project.scripts]
+openray = "openray.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["openray*", "src*"]
+
+[tool.setuptools.package-data]
+openray = ["assets/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["integration: real core integration tests", "endurance: extended lifecycle tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E9", "F", "I"]

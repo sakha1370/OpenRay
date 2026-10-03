@@ -6,17 +6,25 @@ from typing import Dict, List, Optional, Tuple
 from ..net import connect_host_port
 from ..parsing import extract_port
 
-_TCP_SCHEMES = frozenset({
-    'vmess', 'vless', 'trojan', 'ss', 'ssr',
-    'hysteria', 'hysteria2', 'hy2', 'tuic', 'juicity', 'wireguard',
-})
+_TCP_SCHEMES = frozenset(
+    {
+        "vmess",
+        "vless",
+        "trojan",
+        "ss",
+        "ssr",
+    }
+)
 
 
 def _tcp_reachable(uri: str, host: Optional[str]) -> bool:
-    if not host:
-        return False
-    scheme = uri.split('://', 1)[0].lower()
+    # An advisory TCP probe cannot classify UDP protocols or unresolved DNS as dead.
+    scheme = uri.split("://", 1)[0].lower()
     if scheme not in _TCP_SCHEMES:
+        return True
+    from openray.domain import parse_uri
+
+    if parse_uri(uri).transport in {"kcp", "quic"} or not host:
         return True
     port = extract_port(uri)
     if port is None:

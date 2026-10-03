@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import time
 from typing import Dict, Optional
 
 
 class BackendKind(str, Enum):
-    SUBPROCESS = 'subprocess'
-    POOL = 'pool'
-    API = 'api'
+    SUBPROCESS = "subprocess"
+    POOL = "pool"
+    API = "api"
 
 
 @dataclass
@@ -40,6 +41,7 @@ class Stage3Summary:
     none_count: int = 0
     total_ms: float = 0.0
     timings: list = field(default_factory=list)
+    started: float = field(default_factory=time.monotonic)
 
     def record(self, result: Optional[bool], timing: TimingStats) -> None:
         self.checked += 1
@@ -66,9 +68,10 @@ class Stage3Summary:
         return s[idx] / 1000.0
 
     def proxies_per_min(self) -> float:
-        if self.total_ms <= 0:
+        wall_s = time.monotonic() - self.started
+        if wall_s <= 0:
             return 0.0
-        return (self.checked / self.total_ms) * 60000.0
+        return self.checked * 60 / wall_s
 
     def format_line(self) -> str:
         return (

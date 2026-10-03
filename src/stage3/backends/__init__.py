@@ -3,4 +3,4 @@ from .pool import PoolBackend
 from .subprocess import SubprocessBackend
 from .xray_api import XrayApiBackend
 
-__all__ = ['Stage3Backend', 'SubprocessBackend', 'PoolBackend', 'XrayApiBackend']
+__all__ = ["Stage3Backend", "SubprocessBackend", "PoolBackend", "XrayApiBackend"]

@@ -14,10 +14,11 @@ from concurrent.futures import ThreadPoolExecutor
 # Import from src package
 from src.constants import *
 
+
 def check_network_connectivity():
     """Test basic network connectivity."""
     print("\n🌐 NETWORK CONNECTIVITY TEST:")
-    test_hosts = [('8.8.8.8', 53), ('1.1.1.1', 443), ('208.67.222.222', 443)]
+    test_hosts = [("8.8.8.8", 53), ("1.1.1.1", 443), ("208.67.222.222", 443)]
 
     for host, port in test_hosts:
         try:
@@ -30,6 +31,7 @@ def check_network_connectivity():
             print(f"✅ {host}:{port} - {response_time:.1f}ms")
         except Exception as e:
             print(f"❌ {host}:{port} - Failed: {str(e)[:50]}")
+
 
 def check_worker_feasibility():
     """Test if worker pools can be created successfully."""
@@ -56,6 +58,7 @@ def check_worker_feasibility():
         print(f"✅ PING_WORKERS ({PING_WORKERS}) - OK")
     except Exception as e:
         print(f"❌ PING_WORKERS ({PING_WORKERS}) - Failed: {str(e)[:50]}")
+
 
 def analyze_parameters():
     """Analyze current parameter values for potential issues."""
@@ -102,6 +105,7 @@ def analyze_parameters():
     else:
         print("✅ No parameter issues detected")
 
+
 def memory_estimate():
     """Provide memory usage estimates."""
     print("\n💾 MEMORY USAGE ESTIMATE:")
@@ -124,10 +128,11 @@ def memory_estimate():
     else:
         print("✅ Memory usage looks reasonable")
 
+
 def show_current_parameters():
     """Display all current parameter values."""
     print("\n🎯 CURRENT PARAMETER VALUES:")
-    print("="*60)
+    print("=" * 60)
     print(f"WORKERS:")
     print(f"  FETCH_WORKERS: {FETCH_WORKERS}")
     print(f"  PING_WORKERS: {PING_WORKERS}")
@@ -141,7 +146,8 @@ def show_current_parameters():
     print(f"  STAGE3_MAX: {STAGE3_MAX}")
     print(f"  NEW_URIS_LIMIT: {NEW_URIS_LIMIT}")
     print(f"  CONSECUTIVE_REQUIRED: {CONSECUTIVE_REQUIRED}")
-    print("="*60)
+    print("=" * 60)
+
 
 def main():
     """Main function to run all checks."""
@@ -154,14 +160,15 @@ def main():
     analyze_parameters()
     memory_estimate()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("💡 TIPS:")
     print("   • Run with OPENRAY_DEBUG=1 to see debug info")
     print("   • Use environment variables to override parameters:")
     print("     OPENRAY_PING_WORKERS=16 OPENRAY_PING_TIMEOUT_MS=500")
     print("   • Monitor system resources during proxy testing")
     print("   • If you see errors, check system memory and CPU usage")
-    print("="*60)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

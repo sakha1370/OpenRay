@@ -1,0 +1,77 @@
+# Production engineering implementation and evidence
+
+Implementation baseline: `f26d036cc717ff954fd840da6578cbbb46dee1b9`; package version 2.0.0, connection identity version 2, SQLite schema 4. Local evidence was collected on 2026-10-02/03 with CPython 3.13.15 AMD64 on Windows 11 ARM64 using AMD64 emulation. Python is retained. The code, tests, workflows, deployment templates and recovery tooling are implemented; production network canary acceptance remains outstanding.
+
+## Phase 1 â€” contracts and baseline: completed locally
+
+`docs/compatibility.json` defines launch commands, raw subscriptions, rankings, countries/protocols, site lists, regional aliases, optional per-proxy Xray files, encoding and intentional changes. The original public URL paths remain intact, including 95 baseline country files and canonical protocol files when empty. Snapshot tests check deterministic output, deduplication, complete partitions, stale file removal and hash tampering. Synthetic credentials and a clearly synthetic TLS key/certificate are isolated in test fixtures. Imports no longer perform network probes or speed calibration.
+
+Benchmarks measure actual elapsed wall time with equal concurrency and controlled positive/negative endpoints. They record outcomes, CPU time, RSS, handles/FDs, children and latency percentiles. Historical claims of a 2â€“4x pool speedup have been removed. Real input is parsed/exported offline; backend comparisons do not rely on changing public proxies.
+
+## Phase 2 â€” correctness and lifecycle: completed locally
+
+Validation fails closed. ICMP, TCP openness, target exceptions, absent cores, unsupported protocols and unprocessed tails cannot promote candidates. An authenticated loopback HTTP inbound routes only through the candidate; `trust_env=False` prevents ambient proxy/NO_PROXY bypasses. Target policy checks status, redirects, bounded decoded content and optional SHA-256. The legacy expected-404/custom tester behavior is explicit. Cursor policy is version 2 and accepts only its configured status; the other site policies retain their original status behavior.
+
+Workers reserve ephemeral exclusive ports, release them immediately before spawn and verify listener PID ownership. Creation cancellation still adopts and reaps its process. Startup, lease, API swap and probe share a monotonic deadline. Cancellation/close terminate, kill when necessary and await every owned child. Pool swaps remove the old candidate first under an exclusive lease, avoiding the old lock/deadlock and duplicate-outbound problems. Shared teardown is serialized. Client schema checks also use owned cancellable subprocesses, private temporary caches and one shared deadline.
+
+Typed outcomes distinguish proxy failures from source/core/target failures, unsupported/configuration cases and policy blocks. Pending negative completions are durable before batch attribution. No positive control means ambiguous failures cannot affect proxy health, including small batches. An interrupted run is recovered conservatively. Global removal needs at least two confirmed failures spanning the configured 72-hour window; site blocks expire and version changes make them due again.
+
+Publishing is manifest-verified, locked and isolated in a detached temporary worktree based on fetched remote code. Only output paths are staged. Installation preflights every write and deletion and rejects symlinks/junctions even when they point inside the repository; a regression test proves source files survive and no output is partially installed. Normal pushes retry concurrency conflicts; no caller reset/stash/force push is used. Tests introduce a real competing remote commit in a local bare fixture and prove that both remote code changes and caller modifications survive.
+
+## Phase 3 â€” shared model and protocol adapters: completed with explicit capabilities
+
+`openray/domain.py` provides immutable protocol models, strict parsing and structured SHA-256 identity. Identity retains authentication, transport path/query, gRPC service, cipher, fingerprint, Reality fields, repeated-value order and unknown fields; presentation remarks are excluded. SS SIP002/full-base64, IPv6 and SSR variants are handled. Xray custom IDs map to its UUIDv5 convention. Concatenations, bad encodings, invalid ports/authentication and oversized input are rejected without printing credentials.
+
+`openray/render.py` is shared by validation and client conversion. Xray handles its supported TCP/WS/gRPC/HTTPUpgrade/XHTTP profiles; sing-box handles QUIC protocols and userspace WireGuard; mihomo supplies SSR capability. TLS/Reality, HTTPS proxy TLS, passwords, gRPC services, WebSocket query paths and supported fingerprint/plugin settings are carried through. VMess metadata is either represented or explicitly reported. WireGuard dual-stack addresses/reserved bytes are preserved where representable; unsupported multiple addresses of one family are reported for mihomo.
+
+Actual controlled server integrations prove VLESS, VMess, Trojan, Shadowsocks, SOCKS, HTTP, HTTPS, Hysteria 1/2, TUIC, WS queries, gRPC, Reality and userspace WireGuard. SSR's actual mihomo client schema is checked but representative server interoperability is still a release gate. Juicity has no faithful adapter among the installed cores and is explicitly unsupported. Unsupported format entries retain their raw connection and receive hash-only conversion-report omissions. No claim is made that every parseable URI supports every client profile.
+
+## Phase 4 â€” transactional state and migration: completed locally
+
+`openray/storage.py` replaces mutable JSON and full binary-history loads with SQLite WAL/FULL synchronization, foreign keys and explicit transactions. Tables separate canonical proxies, URI aliases, per-context scores, versioned target health, source cache, observations, pending attribution, leases, migration provenance, regional bundles and immutable snapshots. Old observation payloads can be archived while compact event identities preserve exactly-once semantics.
+
+Migration backs up and checksums its inputs, streams 28-byte history records, preserves scores using alias maxima and imports nested Iran operator totals correctly. It is repeatable and rejects truncated input transactionally. Backup uses SQLite's API, checks integrity and replaces a temporary verified copy atomically. Self/live-database backup destinations and restore overwrites are rejected. Restore reads its source immutably and does not change it.
+
+Schema 4 adds observation time ordering. Delayed regional bundles remain auditable and their historical successes count once, while newer health/target versions and another run's lease cannot be overwritten. Duplicate/colliding observations and bundles, nonfinite times and malformed regional payloads are covered by tests. Leases are exclusive across independent connections, expire and remain fair under batch caps; cooldown-zero does not duplicate a run's scores.
+
+The real migration rehearsal imported **2,979,711 history records**, **7,773 aliases** and **7,565 canonical connections**, with **7,555 active connections**. Deep verification compared every history timestamp/hash and all expected counters, checked database integrity and proved the legacy inputs' checksums unchanged. Preserved totals: global 732,697; Iran 195; Irancell 19; MCI 6; Others 137; TCI 33. The 7,623-line published input contains 60 malformed entries and eight semantic duplicates among its valid entries. Malformed originals remain in read-only seed files/checksummed backups; rejection is intentional and counted.
+
+## Phase 5 â€” bounded pipeline and performance: completed locally
+
+Source fetch and validation use bounded queues and worker counts. DNS is asynchronous/cancellable, cached and concurrency limited. DNS answers/redirects are checked against private-address policy, and a pinned connection backend retains the real origin's HTTP Host, TLS SNI and certificate verification. Distinct hostnames sharing an IP never share a TLS origin pool. This bridge uses the pinned HTTPX/httpcore internal backend API and has a real keep-alive TLS regression test; upgrades require that test.
+
+Fetches have deadlines, limited retry/backoff, conditional HTTP caching, LRU DNS entries, a 128 MiB source-cache bound, and bounded compressed wire/decoded bodies. Local inputs must be regular files. Sources and candidate health use persistent oldest-first traversal so a budget cannot starve later work. New/accepted/site categories have separate budget shares; exports get a reserved completion window. The reference subprocess backend remains the default; Xray pool/API reuse is available experimentally and recycles after 100 jobs. TCP prefilter stays off.
+
+Measured results are in `docs/evidence/`. These are host-specific component measurements, not a universal end-to-end speedup claim:
+
+| Measurement | Result |
+|---|---|
+| Real corpus parse + identity | 7,623 rows, 7,563 valid, 60 rejected, 7,555 unique; 1.042 s |
+| Real corpus render/serialize | 0.643 s; 7,896,005 bytes; 2,449 explicit per-format omissions |
+| Controlled core corpus | 16 checks, 12 positives / 4 refused endpoints, 4 workers, 3 rounds |
+| Reference subprocess median | 2.648 s, approximately 362 checks/minute |
+| Pool median | 2.879 s, approximately 333 checks/minute; 8.7% slower |
+| TCP prefilter median | 4.676 s, approximately 205 checks/minute; 76.6% slower |
+| Backend outcome mismatches | 0 across compared rounds |
+| Old full history load | 1.156 s; 549,937,152 peak RSS bytes |
+| Indexed SQLite history access | 0.183 s; 44,941,312 peak RSS bytes; 91.8% lower peak RSS |
+| 100,000 synthetic connections | Parse/identity 5.188 s; render 3.273 s; 416,235,520 RSS bytes after rendering |
+| Controlled smoke soak | 880 checks / 55 cycles / 30.27 s; 0 orphan processes, max Python RSS 59,969,536 bytes; handle growth 8 after warmup |
+
+The state-memory comparison measures isolated processes accessing the same 2.98-million-row history, not total collector/core memory. The 100k figure is post-render RSS, not peak memory or 100k remote validations. The soak is 30 seconds, not the 24-hour endurance gate. Timings vary with the host and startup/cache conditions. Profiling the controlled core run attributes the main wait to Windows socket/event-loop operations and lifecycle waits; it supplies no evidence that replacing Python would improve practical throughput. No Rust/Go rewrite was made. There is no verified 25% whole-pipeline speedup claim; preserving outcomes takes priority.
+
+## Phase 6 â€” deterministic artifacts, tests, CI and operations: completed locally
+
+Exports are deterministic views of one database transaction, with stable tie-breaking, country/protocol partition parity, site intersections, historical operator ranking and matching client names/tags. The manifest records every file's bytes/hash, producer code, template/MaxMind provenance, identity/database versions and core/rule lock hashes. A machine-readable conversion report makes capability losses explicit. All seven output pairs are schema checked by the actual pinned clients before automatic install/publication. Portable loopback profiles are the default; source TUN presets remain explicitly opt-in. Optional legacy Xray-per-proxy output is supported.
+
+The complete legacy corpus rehearsal produced **140 manifest files / 7,555 connections**, passing **14/14 actual client checks**. The test suite has **44 tests**, including substantial protocol subtests, migration/collision/crash recovery, multi-connection leases, outage attribution, bounded source decoding, DNS cancellation/TLS pool separation, core deadlines/cancellation, format/client schemas, deterministic snapshots and publishing races. All passed locally. Ruff lint/format, actionlint and Bash syntax checks passed. Later collector/publishing changes only alter snapshot producer metadata; client-validation evidence is reused only after comparing every output file's hash and size with the actually validated snapshot. A wheel built successfully and passed import/assets/export verification outside the checkout. That package check used the existing pinned dependencies through a separate virtual environment; it does not prove a clean network dependency installation. The evidence summary records the distinction.
+
+Linux/Windows CI and hourly reusable collector workflows are implemented with pinned action references. Collection has read-only repository permissions; a separate job publishes a validated artifact with write permission. Global runs queue rather than cancel each other. State checkpoints are integrity/digest checked on restore and preserved after completed/error runs. Regional operators publish append-only bundles to their data branch and the coordinator imports them exactly once. Run reports include typed outcomes, timing, latency, backlog, snapshot and bundle information. A persistent-disk systemd service/timer, backup/restore, dry-run retention and operational alert/rollback instructions are included.
+
+## Phase 7 â€” cleanup completed; operational acceptance outstanding
+
+The new `openray` package is authoritative. Legacy launch/converter/custom tester entry points remain thin facades. Duplicate parsing/conversion/validation code and misleading benchmark paths were replaced. Legacy cleanup commands now invoke explicit audited/transactional operations. Site-block helpers use expiring SQLite state instead of permanent JSON skips. The abandoned commented conversion workflow is removed. Eighty tracked generated worker configs are removed from the Git index, retained as ignored local artifacts, and future worker configs are private temporary files. Local databases, backups, snapshots, cores and detailed benchmark results are ignored; sanitized evidence is retained in docs. LF formatting is explicit.
+
+**Do not call the deployment fully accepted yet.** The following cannot be proven by this local session: the intended Linux runner execution, a 24-hour target-host endurance run, a representative week on the global network and every Iranian operator, and SSR server interoperability. No remote publication, production service installation or live-state cutover was performed. The repository's existing published outputs and legacy state inputs remain unchanged. The legacy seed history must stay until migration/restore and network-canary gates are accepted; removal now would destroy the rollback input.
+
+Additional limits: hosted runner loss before checkpoint upload can lose that run's observations; 90-day artifacts need offsite/persistent backups. Dependency versions are pinned but wheel-distribution hashes are not locked: primary PyPI API/index requests timed out in this environment, so a clean dependency reinstall was not verified. Core/rule pins are verified separately. Distinct candidate/event identities still require a long-term cardinality policy. Multi-file local installs require manifest verification for consistent reads. MaxMind and project distribution provenance need confirmation. Juicity remains explicitly unsupported, and platform-specific TUN/other architectures have no local acceptance evidence. See `docs/operations.md` for concrete commands and release gates.

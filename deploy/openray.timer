@@ -1,0 +1,11 @@
+[Unit]
+Description=Hourly OpenRay validation
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=60
+Unit=openray.service
+
+[Install]
+WantedBy=timers.target

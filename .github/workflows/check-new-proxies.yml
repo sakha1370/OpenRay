@@ -1,111 +1,11 @@
 name: Check New Proxies
-
-# Trigger workflow
 on:
-  # schedule:
-  #   # Run at minute 0 of every hour
-  #   - cron: '0 * * * *'
-  workflow_dispatch:  # Allow manual trigger
-
-# Permissions (top-level fallback)
+  workflow_dispatch:
 permissions:
   contents: write
-
-concurrency:
-  group: check-new-proxies
-  cancel-in-progress: false   # Queue new runs until the previous one finishes
-
+  actions: read
 jobs:
-  check-new-proxies:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    # Checkout repository with full history
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-        persist-credentials: false
-
-    - name: Configure Git user
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
-    # Set up Python
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
-
-    # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install tqdm
-        pip install aiohttp
-        pip install aioping
-        pip install geoip2
-        pip install pyyaml
-        pip install ruamel.yaml
-        pip install requests
-        pip install -r requirment.txt
-
-    # Install Xray core
-    - name: Install Xray core
-      run: |
-        # Download and install Xray (extract to isolated directory to avoid overwrite prompts)
-        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        mkdir -p xray-dist
-        unzip -q -n Xray-linux-64.zip -d xray-dist
-        chmod +x xray-dist/xray
-        sudo mv xray-dist/xray /usr/local/bin/
-        rm -rf xray-dist Xray-linux-64.zip
-        # Verify installation
-        xray version
-
-    # Run proxy checker script for new proxies only
-    - name: Run new proxies checker
-      env:
-        OPENRAY_RECHECK_EXISTING: "0"
-        OPENRAY_STAGE3_BACKEND: pool
-        OPENRAY_STAGE3_JITTER_MS: "0"
-      run: python -m src.main
-
-    # Run the converter scripts
-    - name: Convert proxy lists to Clash and Singbox formats
-      run: |
-        python src/converter/sub2clash_singbox.py \
-          ./output/all_valid_proxies.txt \
-          src/converter/config.yaml \
-          src/converter/singbox.json \
-          ./output/converted/all_valid_proxies_clash_config.yaml \
-          ./output/converted/all_valid_proxies_singbox_config.json
-
-    # Commit and push changes directly to the main
-    - name: Commit and push changes (no rebase, ignore conflicts)
-      run: |
-    
-        # Fetch latest main
-        git fetch origin main
-    
-        # Try merge without rebase
-        if ! git merge origin/main --no-edit; then
-          echo "⚠️ Merge conflict detected. Discarding local changes..."
-          git merge --abort || true
-          git reset --hard origin/main
-          exit 0
-        fi
-    
-        # Add files
-        git add .state/ output/ output_iran/
-    
-        # Commit only if there are changes
-        if ! git diff --cached --quiet; then
-          git commit -m "Update proxy lists [skip ci]"
-          git push https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git main
-        else
-          echo "No changes to commit."
-        fi
+  collector:
+    uses: ./.github/workflows/collector.yml
+    with:
+      mode: discovery

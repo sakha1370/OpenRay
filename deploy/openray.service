@@ -1,0 +1,28 @@
+[Unit]
+Description=OpenRay transactional collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=openray
+Group=openray
+WorkingDirectory=/opt/openray
+Environment=OPENRAY_RUN_BUDGET_S=3000
+Environment=OPENRAY_MEMORY_MB=2048
+Environment=OPENRAY_STAGE3_WORKERS=8
+ExecStart=/opt/openray/.venv/bin/python -m openray run --report /opt/openray/.state/latest-run.json
+TimeoutStopSec=5
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/openray/.state
+MemoryMax=2G
+TasksMax=128
+LimitNOFILE=4096
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

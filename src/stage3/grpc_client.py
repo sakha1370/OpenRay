@@ -10,14 +10,14 @@ from .config_helpers import CANDIDATE_OUTBOUND_TAG, write_config
 
 def _encode_remove_outbound_request(tag: str) -> bytes:
     """Minimal protobuf wire encoding for RemoveOutboundRequest { string tag = 1; }."""
-    tag_bytes = tag.encode('utf-8')
+    tag_bytes = tag.encode("utf-8")
     if len(tag_bytes) > 127:
-        raise ValueError('tag too long')
+        raise ValueError("tag too long")
     return bytes([0x0A, len(tag_bytes)]) + tag_bytes
 
 
 def _api_timeout_s() -> int:
-    val = os.environ.get('OPENRAY_STAGE3_API_TIMEOUT_S')
+    val = os.environ.get("OPENRAY_STAGE3_API_TIMEOUT_S")
     if val is None:
         return 5
     try:
@@ -27,26 +27,22 @@ def _api_timeout_s() -> int:
 
 
 def _grpc_swap_enabled() -> bool:
-    val = os.environ.get('OPENRAY_STAGE3_GRPC_SWAP', '1').strip().lower()
-    return val not in ('0', 'false', 'no', 'off')
+    val = os.environ.get("OPENRAY_STAGE3_GRPC_SWAP", "1").strip().lower()
+    return val not in ("0", "false", "no", "off")
 
 
 def _creationflags() -> int:
-    return (
-        subprocess.CREATE_NO_WINDOW
-        if os.name == 'nt' and hasattr(subprocess, 'CREATE_NO_WINDOW')
-        else 0
-    )
+    return subprocess.CREATE_NO_WINDOW if os.name == "nt" and hasattr(subprocess, "CREATE_NO_WINDOW") else 0
 
 
 class XrayApiSession:
     """Persistent gRPC channel for HandlerService/RemoveOutbound on one Xray daemon."""
 
-    _REMOVE_METHOD = '/xray.app.proxyman.command.HandlerService/RemoveOutbound'
+    _REMOVE_METHOD = "/xray.app.proxyman.command.HandlerService/RemoveOutbound"
 
     def __init__(self, api_addr: str):
         self.api_addr = api_addr
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._channel = None
         self._stub = None
 
@@ -58,10 +54,10 @@ class XrayApiSession:
         except ImportError:
             return False
 
-        host, _, port_s = self.api_addr.rpartition(':')
+        host, _, port_s = self.api_addr.rpartition(":")
         if not host:
-            host, port_s = '127.0.0.1', self.api_addr
-        target = f'{host}:{port_s}'
+            host, port_s = "127.0.0.1", self.api_addr
+        target = f"{host}:{port_s}"
         try:
             self._channel = grpc.insecure_channel(target)
             self._stub = self._channel.unary_unary(
@@ -100,12 +96,12 @@ class XrayApiSession:
 
 def remove_outbound_via_cli(core_path: str, api_addr: str, tag: str) -> bool:
     """Remove an outbound via `xray api rmo` (best-effort)."""
-    path = (core_path or '').strip()
+    path = (core_path or "").strip()
     if not path or not tag:
         return False
     try:
         proc = subprocess.run(
-            [path, 'api', 'rmo', f'-server={api_addr}', tag],
+            [path, "api", "rmo", f"-server={api_addr}", tag],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=_api_timeout_s(),
@@ -118,12 +114,12 @@ def remove_outbound_via_cli(core_path: str, api_addr: str, tag: str) -> bool:
 
 def add_outbound_via_cli(core_path: str, api_addr: str, outbound_path: str) -> bool:
     """Add outbound(s) from JSON file via `xray api ado`."""
-    path = (core_path or '').strip()
+    path = (core_path or "").strip()
     if not path or not outbound_path or not os.path.exists(outbound_path):
         return False
     try:
         proc = subprocess.run(
-            [path, 'api', 'ado', f'-server={api_addr}', outbound_path],
+            [path, "api", "ado", f"-server={api_addr}", outbound_path],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=_api_timeout_s(),
@@ -144,13 +140,15 @@ def swap_candidate_outbound(
 ) -> bool:
     """Replace the candidate outbound on a running daemon without restarting Xray."""
     ob = dict(outbound)
-    ob['tag'] = tag
-    write_config(outbound_path, {'outbounds': [ob]})
+    ob["tag"] = tag
+    write_config(outbound_path, {"outbounds": [ob]})
     removed = False
     if session is not None:
         removed = session.remove_outbound(tag)
     if not removed:
-        remove_outbound_via_cli(core_path, api_addr, tag)
+        removed = remove_outbound_via_cli(core_path, api_addr, tag)
+    if not removed:
+        return False
     return add_outbound_via_cli(core_path, api_addr, outbound_path)
 
 
@@ -173,7 +171,7 @@ def add_outbound_from_config(
     if not core_path or not outbound_path:
         return False
     ob = dict(outbound)
-    if not ob.get('tag'):
-        ob['tag'] = CANDIDATE_OUTBOUND_TAG
-    write_config(outbound_path, {'outbounds': [ob]})
+    if not ob.get("tag"):
+        ob["tag"] = CANDIDATE_OUTBOUND_TAG
+    write_config(outbound_path, {"outbounds": [ob]})
     return add_outbound_via_cli(core_path, api_addr, outbound_path)

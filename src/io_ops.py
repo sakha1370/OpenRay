@@ -1,492 +1,125 @@
-from __future__ import annotations
+"""Compatibility file helpers. SQLite is authoritative for history; imports are read-only."""
 
-import json
 import os
-import hashlib
-import struct
 import time
-from typing import Iterable, List, Set, Dict
+from pathlib import Path
+from openray.config import Settings
+from openray.files import atomic_write, lines_text
+from openray.storage import Store
+from .constants import STATE_DIR, OUTPUT_DIR, AVAILABLE_FILE, TESTED_FILE
 
-# Dynamic constants handling for runtime overrides
-import os
-import sys
+TESTED_BIN_FILE = TESTED_FILE + ".bin"
 
-# Get repository root
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Default values for standalone usage
-DEFAULT_STATE_DIR = os.path.join(REPO_ROOT, '.state')
-DEFAULT_OUTPUT_DIR = os.path.join(REPO_ROOT, 'output')
-DEFAULT_TESTED_FILE = os.path.join(DEFAULT_STATE_DIR, 'tested.txt')
-DEFAULT_AVAILABLE_FILE = os.path.join(DEFAULT_OUTPUT_DIR, 'all_valid_proxies.txt')
 
 def get_state_dir():
-    """Get current STATE_DIR, checking for runtime overrides"""
-    try:
-        # Try to get from constants module if it's loaded
-        if 'constants' in sys.modules:
-            return sys.modules['constants'].STATE_DIR
-        # Try relative import
-        from . import constants as C
-        return C.STATE_DIR
-    except (ImportError, AttributeError):
-        return DEFAULT_STATE_DIR
+    return STATE_DIR
+
 
 def get_output_dir():
-    """Get current OUTPUT_DIR, checking for runtime overrides"""
-    try:
-        if 'constants' in sys.modules:
-            return sys.modules['constants'].OUTPUT_DIR
-        from . import constants as C
-        return C.OUTPUT_DIR
-    except (ImportError, AttributeError):
-        return DEFAULT_OUTPUT_DIR
+    return OUTPUT_DIR
+
 
 def get_available_file():
-    """Get current AVAILABLE_FILE, checking for runtime overrides"""
-    try:
-        if 'constants' in sys.modules:
-            return sys.modules['constants'].AVAILABLE_FILE
-        from . import constants as C
-        return C.AVAILABLE_FILE
-    except (ImportError, AttributeError):
-        return DEFAULT_AVAILABLE_FILE
+    return AVAILABLE_FILE
 
 
 def get_tested_file():
-    """Get current TESTED_FILE, checking for runtime overrides"""
-    try:
-        # Always check sys.modules first for runtime modifications
-        if 'constants' in sys.modules:
-            return sys.modules['constants'].TESTED_FILE
-        # Fallback to relative import
-        from . import constants as C
-        return C.TESTED_FILE
-    except (ImportError, AttributeError):
-        return DEFAULT_TESTED_FILE
-
-# For backward compatibility, set some globals
-try:
-    STATE_DIR = get_state_dir()
-    OUTPUT_DIR = get_output_dir()
-    AVAILABLE_FILE = get_available_file()
-except:
-    STATE_DIR = DEFAULT_STATE_DIR
-    OUTPUT_DIR = DEFAULT_OUTPUT_DIR
-    AVAILABLE_FILE = DEFAULT_AVAILABLE_FILE
+    return TESTED_FILE
 
 
-def ensure_dirs() -> None:
-    os.makedirs(get_state_dir(), exist_ok=True)
-    os.makedirs(get_output_dir(), exist_ok=True)
-
-
-def read_lines(path: str) -> List[str]:
-    if not os.path.exists(path):
-        return []
-    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-        return [line.rstrip('\r\n') for line in f]
-
-
-def append_lines(path: str, lines: Iterable[str]) -> None:
-    if not lines:
-        return
-    with open(path, 'a', encoding='utf-8', errors='ignore') as f:
-        for line in lines:
-            f.write(line)
-            if not line.endswith('\n'):
-                f.write('\n')
-
-
-def write_text_file_atomic(path: str, lines: List[str]) -> None:
-    try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-    except Exception:
-        pass
-    tmp = path + '.tmp'
-    with open(tmp, 'w', encoding='utf-8', errors='ignore') as f:
-        for ln in lines:
-            f.write(ln)
-            f.write('\n')
-    os.replace(tmp, path)
-
-
-# Persistence helpers
-
-def load_tested_hashes() -> Set[str]:
-    tested: Set[str] = set()
-    for line in read_lines(get_tested_file()):
-        h = line.strip()
-        if h:
-            tested.add(h)
-    return tested
-
-
-def load_existing_available() -> Set[str]:
-    existing: Set[str] = set()
-    for line in read_lines(get_available_file()):
-        s = line.strip()
-        if s:
-            existing.add(s)
-    return existing
-
-
-# Optimized tested hashes storage using binary format
 def get_tested_bin_file():
-    return get_tested_file() + '.bin'
-
-def hash_to_bytes(hash_str: str) -> bytes:
-    """Convert hex hash string to 20 bytes."""
-    return bytes.fromhex(hash_str)
-
-def bytes_to_hash(hash_bytes: bytes) -> str:
-    """Convert 20 bytes back to hex hash string."""
-    return hash_bytes.hex()
-
-def load_tested_hashes_optimized() -> Set[str]:
-    """Load tested hashes from all tested files (multi-file support)."""
-    # Check for rotation before loading
-    if should_rotate_tested_file():
-        print(f"File rotation needed before loading. Current file size: {os.path.getsize(get_current_tested_file()) / (1024 * 1024):.1f}MB")
-        rotate_tested_file()
-
-    tested: Set[str] = set()
-
-    # Get all tested files
-    tested_files = get_all_tested_files()
-
-    # Try optimized binary format first for each file
-    for tested_file in tested_files:
-        bin_file = tested_file + '.bin'
-        if os.path.exists(bin_file):
-            try:
-                with open(bin_file, 'rb') as f:
-                    # Read file in chunks for memory efficiency
-                    while True:
-                        # Read timestamp (8 bytes) + hash (20 bytes) = 28 bytes per entry
-                        entry = f.read(28)
-                        if not entry:
-                            break
-                        if len(entry) != 28:
-                            continue  # Skip malformed entries
-                        timestamp, hash_bytes = struct.unpack('>Q20s', entry)
-                        tested.add(bytes_to_hash(hash_bytes))
-            except Exception:
-                # If .bin is not effective (corrupted/unreadable), remove it and fall back to text
-                try:
-                    os.remove(bin_file)
-                except Exception:
-                    pass
-                try:
-                    for line in read_lines(tested_file):
-                        h = line.strip()
-                        if h:
-                            tested.add(h)
-                except Exception:
-                    pass  # Skip corrupted files
-        else:
-            # Load from text format
-            try:
-                for line in read_lines(tested_file):
-                    h = line.strip()
-                    if h:
-                        tested.add(h)
-            except Exception:
-                pass  # Skip corrupted files
-
-    # Only migrate to optimized format if we're loading from a single file
-    # and the binary file doesn't already exist or is smaller than expected
-    tested_bin_file = get_tested_bin_file()
-    should_migrate = (
-        tested and
-        len(get_all_tested_files()) == 1 and  # Only migrate if loading from single file
-        (not os.path.exists(tested_bin_file) or
-         os.path.getsize(tested_bin_file) < len(tested) * 28 * 0.9)  # Allow 10% size variance
-    )
-
-    if should_migrate:
-        try:
-            migrate_to_optimized_format(tested)
-        except Exception:
-            pass  # Migration failure shouldn't break loading
-
-    return tested
-
-def migrate_to_optimized_format(hashes: Set[str]) -> None:
-    """Migrate existing text format to optimized binary format."""
-    if not hashes:
-        return
-
-    current_time = int(time.time())
-    entries = []
-
-    for hash_str in hashes:
-        hash_str = hash_str.strip()
-        if not hash_str:
-            continue
-        try:
-            hash_bytes = hash_to_bytes(hash_str)
-            entries.append(struct.pack('>Q20s', current_time, hash_bytes))
-        except Exception as e:
-            # Log invalid hashes but continue
-            print(f"Warning: Skipping invalid hash: {hash_str[:16]}... ({e})")
-            continue
-
-    if entries:
-        try:
-            # Write all entries at once for better performance
-            tested_bin_file = get_tested_bin_file()
-            with open(tested_bin_file + '.tmp', 'wb') as f:
-                f.write(b''.join(entries))
-            os.replace(tested_bin_file + '.tmp', tested_bin_file)
-            print(f"Successfully migrated {len(entries)} hashes to binary format")
-        except Exception as e:
-            print(f"Migration failed: {e}")
-            pass  # Migration failure is non-critical
-
-def append_tested_hashes_optimized(new_hashes: Iterable[str]) -> None:
-    """Append new hashes to current active tested file with rotation support."""
-    if not new_hashes:
-        return
-
-    # Check if we need to rotate first
-    if should_rotate_tested_file():
-        # Rotate immediately if current file is already at/over limit
-        print("Current tested file is at or above size limit, rotating before append...")
-        rotate_tested_file()
-
-    # Get current active file (text) and its binary companion
-    current_file = get_current_tested_file()
-    bin_file = current_file + '.bin'
-
-    # Load existing hashes to check for duplicates (from all files)
-    existing_hashes = load_tested_hashes_optimized()
-    current_time = int(time.time())
-    new_entries = []
-
-    for hash_str in new_hashes:
-        hash_str = hash_str.strip()
-        if not hash_str or hash_str in existing_hashes:
-            continue
-
-        try:
-            hash_bytes = hash_to_bytes(hash_str)
-            new_entries.append(struct.pack('>Q20s', current_time, hash_bytes))
-            existing_hashes.add(hash_str)
-        except Exception:
-            continue  # Skip invalid hashes
-
-    if new_entries:
-        try:
-            # Check combined binary size before writing (this is what actually grows)
-            current_size_bytes = 0
-            try:
-                if os.path.exists(bin_file):
-                    current_size_bytes += os.path.getsize(bin_file)
-            except OSError:
-                pass
-
-            # Each binary entry is exactly 28 bytes
-            estimated_new_size_mb = (current_size_bytes + len(new_entries) * 28) / (1024 * 1024)
-
-            if estimated_new_size_mb >= 10:
-                # Rotate to new file when the *binary* representation would cross 10MB
-                new_file = rotate_tested_file()
-                current_file = new_file
-                bin_file = new_file + '.bin'
-
-            with open(bin_file, 'ab') as f:
-                for entry in new_entries:
-                    f.write(entry)
-        except Exception:
-            # .bin not effective (e.g., write failure) -> remove it and fall back to text format
-            try:
-                if os.path.exists(bin_file):
-                    os.remove(bin_file)
-            except Exception:
-                pass
-
-            try:
-                # Check file size for text format too
-                if os.path.exists(current_file):
-                    current_size_mb = os.path.getsize(current_file) / (1024 * 1024)
-                    # Estimate size increase (each hash is ~41 bytes)
-                    estimated_new_size_mb = current_size_mb + (len(new_entries) * 41) / (1024 * 1024)
-
-                    if estimated_new_size_mb >= 10:
-                        # Rotate to new file
-                        new_file = rotate_tested_file()
-                        current_file = new_file
-
-                append_lines(current_file, (h for h in new_hashes if h.strip()))
-            except Exception as e:
-                print(f"Failed to append hashes: {e}")
-
-def cleanup_old_hashes(days_to_keep: int = 30) -> int:
-    """Remove hashes older than specified days. Returns number of removed entries."""
-    if not os.path.exists(get_tested_bin_file()):
-        return 0
-
-    cutoff_time = int(time.time()) - (days_to_keep * 24 * 60 * 60)
-    kept_entries = []
-    removed_count = 0
-
-    try:
-        tested_bin_file = get_tested_bin_file()
-        with open(tested_bin_file, 'rb') as f:
-            while True:
-                entry = f.read(28)
-                if not entry:
-                    break
-                if len(entry) != 28:
-                    continue
-                timestamp, hash_bytes = struct.unpack('>Q20s', entry)
-                if timestamp >= cutoff_time:
-                    kept_entries.append(entry)
-                else:
-                    removed_count += 1
-
-        if removed_count > 0:
-            # Rewrite file with only kept entries
-            with open(tested_bin_file + '.tmp', 'wb') as f:
-                for entry in kept_entries:
-                    f.write(entry)
-            os.replace(tested_bin_file + '.tmp', tested_bin_file)
-
-    except Exception:
-        pass  # Cleanup failure is non-critical
-
-    return removed_count
-
-def get_storage_stats() -> Dict[str, int]:
-    """Get statistics about current storage usage."""
-    stats = {
-        'text_file_size': 0,
-        'binary_file_size': 0,
-        'text_entries': 0,
-        'binary_entries': 0,
-        'unique_hashes': 0
-    }
-
-    # Text file stats
-    tested_file = get_tested_file()
-    if os.path.exists(tested_file):
-        stats['text_file_size'] = os.path.getsize(tested_file)
-        try:
-            with open(tested_file, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = [line.strip() for line in f if line.strip()]
-                stats['text_entries'] = len(lines)
-                stats['unique_hashes'] = len(set(lines))
-        except Exception:
-            pass
-
-    # Binary file stats
-    tested_bin_file = get_tested_bin_file()
-    if os.path.exists(tested_bin_file):
-        stats['binary_file_size'] = os.path.getsize(tested_bin_file)
-        stats['binary_entries'] = stats['binary_file_size'] // 28  # 28 bytes per entry
-
-    return stats
+    return TESTED_BIN_FILE
 
 
-def get_current_tested_file() -> str:
-    """Get the current active tested file (tested.txt, tested_1.txt, tested_2.txt, etc.)."""
-    tested_file = get_tested_file()
-    state_dir = os.path.dirname(tested_file)
-    base_name = os.path.basename(tested_file)  # "tested.txt"
-
-    # Find all tested files
-    tested_files = []
-    if os.path.exists(state_dir):
-        for file in os.listdir(state_dir):
-            if file.startswith("tested") and file.endswith(".txt"):
-                tested_files.append(file)
-
-    if not tested_files:
-        # No files exist, return the base file
-        return tested_file
-
-    # Sort files to find the highest numbered one
-    tested_files.sort(key=lambda x: int(x.split('_')[1].split('.')[0]) if '_' in x else 0)
-
-    # Get the last (highest numbered) file
-    current_file = tested_files[-1]
-    return os.path.join(state_dir, current_file)
+def ensure_dirs():
+    Path(STATE_DIR).mkdir(parents=True, exist_ok=True)
+    Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 
-def should_rotate_tested_file(max_size_mb: int = 10) -> bool:
-    """Check if current tested file should be rotated based on size."""
-    current_file = get_current_tested_file()
-    if not os.path.exists(current_file):
-        return False
-    # Consider both text and binary representations when deciding rotation
-    size_bytes = 0
-    try:
-        size_bytes += os.path.getsize(current_file)
-    except OSError:
-        pass
-
-    bin_file = current_file + '.bin'
-    try:
-        if os.path.exists(bin_file):
-            size_bytes += os.path.getsize(bin_file)
-    except OSError:
-        pass
-
-    size_mb = size_bytes / (1024 * 1024)
-    return size_mb >= max_size_mb
+def read_lines(path):
+    p = Path(path)
+    return p.read_text(encoding="utf-8").splitlines() if p.exists() else []
 
 
-def rotate_tested_file() -> str:
-    """Rotate to next numbered tested file. Returns the new file path."""
-    current_file = get_current_tested_file()
-    state_dir = os.path.dirname(current_file)
-    tested_file = get_tested_file()
-    base_name = os.path.basename(tested_file)  # "tested.txt"
-
-    # Determine next file number
-    if current_file == tested_file:
-        next_file = os.path.join(state_dir, "tested_1.txt")
-    else:
-        # Extract number from current file (e.g., "tested_2.txt" -> 2)
-        current_num = int(os.path.basename(current_file).split('_')[1].split('.')[0])
-        next_num = current_num + 1
-        next_file = os.path.join(state_dir, f"tested_{next_num}.txt")
-
-    print(f"Rotated to new file: {os.path.basename(next_file)}")
-    return next_file
+def write_text_file_atomic(path, lines):
+    atomic_write(Path(path), lines_text(lines))
 
 
-def get_all_tested_files() -> List[str]:
-    """Get all tested files in order (tested.txt, tested_1.txt, tested_2.txt, etc.)."""
-    tested_file = get_tested_file()
-    state_dir = os.path.dirname(tested_file)
-    tested_files = []
+def append_lines(path, lines):
+    from openray.locking import file_lock
 
-    # Always check the main .state directory for tested files
-    main_state_dir = os.path.join(os.path.dirname(state_dir), '.state')
-    dirs_to_check = [state_dir]
+    p = Path(path)
+    with file_lock(p.with_suffix(p.suffix + ".lock")):
+        write_text_file_atomic(p, read_lines(p) + list(lines))
 
-    # If we're in a different state directory (like .state_iran), also check the main .state directory
-    # UNLESS this is the Iran-specific context which should only use its own state
-    is_iran_context = 'iran' in state_dir
-    if state_dir != main_state_dir and os.path.exists(main_state_dir) and not is_iran_context:
-        dirs_to_check.append(main_state_dir)
 
-    for check_dir in dirs_to_check:
-        if os.path.exists(check_dir):
-            for file in os.listdir(check_dir):
-                if file.startswith("tested") and (file.endswith(".txt") or file.endswith(".txt.bin")):
-                    # For binary files, remove the .bin extension to get the base name
-                    base_file = file
-                    if file.endswith(".bin"):
-                        base_file = file[:-4]  # Remove .bin extension
-                    file_path = os.path.join(check_dir, base_file)
-                    # Avoid duplicates
-                    if file_path not in tested_files:
-                        tested_files.append(file_path)
+def load_existing_available():
+    return set(read_lines(AVAILABLE_FILE))
 
-    # Sort files by number (tested.txt first, then tested_1.txt, tested_2.txt, etc.)
-    tested_files.sort(key=lambda x: int(os.path.basename(x).split('_')[1].split('.')[0]) if '_' in os.path.basename(x) else 0)
 
-    return tested_files
+def hash_to_bytes(value):
+    raw = bytes.fromhex(value)
+    if len(raw) != 20:
+        raise ValueError("SHA1 requires twenty bytes")
+    return raw
+
+
+def bytes_to_hash(value):
+    return value.hex()
+
+
+def load_tested_hashes_optimized():
+    with Store(Settings.from_env().database) as store:
+        return {bytes(r[0]).hex() for r in store.db.execute("SELECT hash FROM legacy_tested")}
+
+
+load_tested_hashes = load_tested_hashes_optimized
+
+
+def append_tested_hashes_optimized(hashes):
+    with Store(Settings.from_env().database) as store, store.transaction() as db:
+        db.executemany(
+            "INSERT OR IGNORE INTO legacy_tested VALUES(?,?)",
+            [(hash_to_bytes(h), int(time.time())) for h in hashes],
+        )
+
+
+migrate_to_optimized_format = append_tested_hashes_optimized
+
+
+def cleanup_old_hashes(days_to_keep=90):
+    from openray.maintenance import maintain
+
+    with Store(Settings.from_env().database) as store:
+        return maintain(store, days_to_keep, True)["legacy_hashes_to_prune"]
+
+
+def get_storage_stats():
+    with Store(Settings.from_env().database) as store:
+        return dict(store.status(), binary_size_mb=store.path.stat().st_size / (1024 * 1024))
+
+
+def get_all_tested_files():
+    return [str(p) for p in sorted(Path(STATE_DIR).glob("tested*.txt*")) if p.is_file()]
+
+
+def get_current_tested_file():
+    files = get_all_tested_files()
+    return files[-1] if files else TESTED_FILE
+
+
+def should_rotate_tested_file(max_size_mb=10):
+    return False
+
+
+def rotate_tested_file():
+    raise RuntimeError("SQLite replaces legacy history rotation; use openray maintenance")
+
+
+def load_streaks():
+    return {}
+
+
+def save_streaks(values):
+    if values:
+        raise ValueError("host-keyed streak state was retired; use connection health")

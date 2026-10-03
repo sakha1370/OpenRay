@@ -1,74 +1,15 @@
-# Stage 3 performance baseline
+# Measured Stage 3 baseline
 
-Measure Stage 3 throughput before and after backend changes.
-
-## Local repro
+Python and the supervised subprocess backend remain the default. The final controlled Windows comparison used the same 16 candidates (12 positive / 4 refused endpoints), four workers, three rounds, and exact outcome comparison. Subprocess median was 2.648 s, pool 2.879 s, TCP prefilter 4.676 s; mismatches were zero. These results support neither the former unmeasured 2–4x pool claim nor a native rewrite. Different hardware/networks may change the result; promote an alternative only after equivalent outcomes and repeated representative measurements.
 
 ```bash
-# Requires Xray on PATH or OPENRAY_V2RAY_CORE set
-export OPENRAY_DEBUG=1
-
-# Subprocess (legacy)
-export OPENRAY_STAGE3_BACKEND=subprocess
-python repro_concurrency.py
-
-# Worker pool (default)
-export OPENRAY_STAGE3_BACKEND=pool
-python repro_concurrency.py
-
-# API daemon backend
-export OPENRAY_STAGE3_BACKEND=api
-python repro_concurrency.py
+python tools/install_cores.py
+python -m openray.benchmarks --input output/all_valid_proxies.txt --core --core-count 16 --workers 4 --rounds 3
+python scripts/compare_stage3_backends.py -i output/all_valid_proxies.txt -n 16 -t 5 --backends subprocess,pool,api
+python tools/state_benchmark.py --database benchmark-results/migration-final.sqlite3
+python tools/endurance.py --seconds 86400 --workers 4
 ```
 
-Optional env vars:
+The comparison CLI preserves `-i`, `-n`, `-t` and `--backends`; input parsing is offline and the actual network comparisons use controlled fixtures. It no longer probes arbitrary public input endpoints. `repro_concurrency.py` also uses the controlled harness and retains iteration/timeout environment aliases. Benchmark core fixtures require a repository development checkout, not a standalone runtime wheel.
 
-- `OPENRAY_REPRO_N` — number of iterations (default 10)
-- `OPENRAY_REPRO_TIMEOUT` — per-check timeout seconds (default 15)
-- `OPENRAY_STAGE3_POOL_SIZE` — pool workers (default `STAGE3_WORKERS`)
-- `OPENRAY_STAGE3_BASE_PORT` — first fixed HTTP port (default 31000)
-
-## CI baseline (ubuntu-latest)
-
-Record on GitHub Actions with `STAGE3_WORKERS=16`:
-
-1. Wall time of the "Run proxies checker" step
-2. `proxies_per_min` from debug log line: `stage3 backend=...`
-3. Peak memory if available from runner metrics
-
-Typical expectation after pool rollout: **2–4x** proxies/min vs subprocess on the same runner.
-
-## Backend comparison
-
-```bash
-python scripts/compare_stage3_backends.py -i output/all_valid_proxies.txt -n 20
-```
-
-Compare mismatch rate between `subprocess`, `pool`, and `api` before promoting defaults.
-
-Stage 3 optional deps (`grpcio`, `protobuf`) are listed in `requirment.txt` at the repo root.
-
-## Why GitHub Actions may not feel faster
-
-The **pool** backend only reduces Xray startup/port overhead (roughly 1–3s per proxy). On `check-proxies.yml` most wall time is still:
-
-1. **Re-checking up to `STAGE3_MAX` (5000) existing proxies** — each waits on network (`OPENRAY_STAGE3_MIN_ATTEMPT_S`, timeouts).
-2. **Fetching sources + Stage 2** for new proxies.
-3. **Six converter runs** (`sub2clash_singbox.py`) after `src.main`.
-4. **Git merge/push**.
-
-So total workflow time can stay similar even when Stage 3 orchestration is faster.
-
-After the CI tuning fix, logs include:
-
-```
-Stage3 validate_many: backend=pool n=... timeout_s=12 pool_size=16
-stage3 backend=pool checked=... proxies_per_min=...
-```
-
-Compare `proxies_per_min` between runs, not only the job duration.
-
-To cut hourly job time further (trade-offs):
-
-- `OPENRAY_STAGE3_MAX=1500` — re-check fewer existing proxies per run.
-- Use split workflows: `check-new-proxies` + `check-previous-proxies` instead of full `check-proxies` every time.
+Reports include elapsed wall time, CPU, RSS, handles/FDs, child counts, success counts and latency percentiles. Do not compute throughput by summing overlapping candidate durations. Do not confuse a post-render RSS sample with peak RSS or a smoke soak with the 24-hour gate. See `implementation.md` and `evidence/` for measurements, qualification and the release acceptance status.

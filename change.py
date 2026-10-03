@@ -1,16 +1,6 @@
-from pyclash import Clash
+"""Legacy converter entry point; five positional arguments match the shared converter."""
 
-def main():
-
-    with open("test.txt") as f:
-        nodes = [line.strip() for line in f if line.strip()]
-
-    clash = Clash()
-    for node in nodes:
-        clash.add_node_from_url(node)
-
-    clash.write_yaml("clash.yaml")
-
+from openray.converter_cli import legacy
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(legacy())
