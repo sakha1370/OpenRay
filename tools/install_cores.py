@@ -3,17 +3,68 @@
 import argparse
 import gzip
 import hashlib
+import http.client
 import json
 import os
 import platform
+import ssl
 import sysconfig
 import tarfile
 import tempfile
+import time
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
 
 from openray.files import atomic_write
+
+MAX_DOWNLOAD = 512 * 1024 * 1024
+
+
+def download(asset: dict, archive, attempts: int = 4):
+    """Restart interrupted downloads; never retry an untrusted archive or certificate."""
+    for attempt in range(attempts):
+        archive.seek(0)
+        archive.truncate()
+        digest = hashlib.sha256()
+        try:
+            request = urllib.request.Request(asset["url"], headers={"User-Agent": "OpenRay-core-installer/2"})
+            with urllib.request.urlopen(request, timeout=60) as response:
+                expected = response.headers.get("Content-Length")
+                expected = int(expected) if expected is not None else None
+                if expected is not None and expected > MAX_DOWNLOAD:
+                    raise ValueError("core download exceeds limit")
+                total = 0
+                while chunk := response.read(1024 * 1024):
+                    total += len(chunk)
+                    if total > MAX_DOWNLOAD:
+                        raise ValueError("core download exceeds limit")
+                    digest.update(chunk)
+                    archive.write(chunk)
+                if expected is not None and total != expected:
+                    raise http.client.IncompleteRead(b"", max(0, expected - total))
+            if digest.hexdigest() != asset["sha256"]:
+                raise ValueError("core archive checksum mismatch")
+            archive.seek(0)
+            return
+        except (urllib.error.URLError, OSError, http.client.IncompleteRead) as exc:
+            certificate_error = isinstance(
+                exc.reason if isinstance(exc, urllib.error.URLError) else exc,
+                ssl.SSLCertVerificationError,
+            )
+            permanent_status = (
+                isinstance(exc, urllib.error.HTTPError) and exc.code not in {408, 429} and exc.code < 500
+            )
+            if certificate_error or permanent_status or attempt + 1 == attempts:
+                raise
+            delay = min(2**attempt, 8)
+            print(
+                f"Transient core download error ({type(exc).__name__}); "
+                f"retry {attempt + 2}/{attempts} in {delay}s",
+                flush=True,
+            )
+            time.sleep(delay)
 
 
 def install(destination: Path, names: list[str]):
@@ -28,19 +79,8 @@ def install(destination: Path, names: list[str]):
         asset_name, asset = next((n, v) for n, v in manifest[kind]["assets"].items() if system in n)
         if len(asset["sha256"]) != 64:
             raise ValueError("asset lacks a pinned checksum")
-        digest = hashlib.sha256()
         with tempfile.TemporaryFile() as archive:
-            with urllib.request.urlopen(asset["url"], timeout=60) as response:
-                total = 0
-                while chunk := response.read(1024 * 1024):
-                    total += len(chunk)
-                    if total > 512 * 1024 * 1024:
-                        raise ValueError("core download exceeds limit")
-                    digest.update(chunk)
-                    archive.write(chunk)
-            if digest.hexdigest() != asset["sha256"]:
-                raise ValueError("core archive checksum mismatch")
-            archive.seek(0)
+            download(asset, archive)
             binary_name = {"xray": "xray", "singbox": "sing-box", "mihomo": "mihomo"}[kind] + (
                 ".exe" if os.name == "nt" else ""
             )

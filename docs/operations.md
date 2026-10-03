@@ -17,6 +17,8 @@ ruff format --check .
 
 Runtime and transitive package versions are pinned in `requirements.lock`; `requirment.txt` remains a compatibility alias. Core archives have SHA-256 pins in `openray/assets/cores.lock.json`. Rule assets use commit pins in `rules.lock.json`. Python distribution hashes are not yet in the dependency lock. Review and regenerate pins deliberately, run protocol integrations and both actual client checks, then canary a core or rule update. Never download floating latest releases during a collector run.
 
+Core installation retries transient connection/DNS errors, interrupted responses and HTTP 408/429/5xx up to four attempts, waiting 1, 2 and 4 seconds. Each attempt starts a fresh archive and checksum. Certificate errors, permanent HTTP errors, oversized bodies and checksum mismatches fail closed; an unsuccessful download cannot replace an installed binary. The publishing job downloads only sing-box and mihomo for its independent client gates.
+
 The package can be installed as a wheel. Root selection is explicit `--root`, `OPENRAY_ROOT`, then the working directory; installation never directs mutable state into site-packages. Source templates fall back to packaged assets when absent. A wheel does not bundle the MaxMind database: provide the existing repository database with confirmed provenance/redistribution terms, or use the deterministic `XX` fallback for unknown locations. This checkout has no project LICENSE file; release ownership must resolve that separately.
 
 ## Migration and first run
