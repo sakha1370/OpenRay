@@ -19,7 +19,16 @@
     "ruff_version": "0.16.10"
   },
   "database_schema": 4,
-  "fresh_dependency_install_note": "Primary PyPI API/index requests timed out. Wheel verification used a separate virtual environment sharing already installed exact dependency versions.",
+  "evidence_scope_note": "Corpus, migration, wheel and client snapshot evidence describe the original baseline rehearsal; GitHub CI records the later source-root regression fix.",
+  "fresh_dependency_install_note": "Verified on Linux and Windows GitHub Actions; local PyPI requests had previously timed out. Distribution hashes are still not locked.",
+  "github_ci": {
+    "commit": "a801a8c9f8624f6494fe5fb8c176c71b1981ae0b",
+    "fresh_dependency_install": true,
+    "linux": true,
+    "tests_per_platform": 45,
+    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37090843559",
+    "windows": true
+  },
   "identity_version": 2,
   "implementation_baseline": "f26d036cc717ff954fd840da6578cbbb46dee1b9",
   "language_decision": "Keep Python; measured pool and TCP prefilter are slower than the default subprocess validator; no profiling evidence justifies a native rewrite.",
@@ -30,10 +39,10 @@
     "source_hashes_unchanged": true
   },
   "not_yet_accepted": {
+    "dependency_distribution_hash_lock": true,
     "distribution_license_provenance": true,
     "forced_parent_death_cleanup_outside_supervisor": true,
-    "fresh_dependency_install_and_distribution_hash_lock": true,
-    "linux_runner_execution": true,
+    "linux_runner_execution": false,
     "offsite_checkpoint_restore_on_deployment_host": true,
     "one_week_global_and_all_required_iranian_operator_canaries": true,
     "ssr_actual_server_interoperability": true,
@@ -42,9 +51,10 @@
   "original_published_outputs_and_legacy_seed_inputs_unchanged": true,
   "package_version": "2.0.0",
   "platform": "Windows-11-10.0.26200-SP0",
-  "production_network_actions_performed": false,
+  "production_network_action_note": "Code pushed to main and the normal collector manually dispatched; validation in progress at recording, output publication pending.",
+  "production_network_actions_performed": true,
   "python": "3.13.15",
-  "recorded_at_utc": "2026-10-02T22:24:23.673102+00:00",
+  "recorded_at_utc": "2026-10-03T02:48:21.220467+00:00",
   "snapshot": {
     "actual_validation_source_manifest": "61fdf7a645ab695581c53fe411f0733b3d46e65b344d353fd87cfe552df145ff",
     "client_check_reuse": "Only after exact equality of every output hash/size and client profile; collector/publisher changes affect manifest producer metadata only.",
@@ -65,10 +75,10 @@
   "tests": {
     "command": "python -m unittest discover -v",
     "failed": 0,
-    "log_sha256": "96be38606bb9946728059e7b551ab8ac1d6b8495ad5b9e4e0c7d19ff39ab6a8b",
-    "passed": 44,
+    "log_sha256": "f93d0975a619b4aa979b3cc5d147cacfe28fd6f1405768c3098a8721555b1f8b",
+    "passed": 45,
     "skipped": 0,
-    "wall_seconds": 34.614
+    "wall_seconds": 41.896
   },
   "wheel": {
     "files": 140,
