@@ -1,0 +1,199 @@
+{
+  "dns": {
+    "final": "dns1",
+    "servers": [
+      {
+        "server": "1.1.1.1",
+        "tag": "dns1",
+        "type": "udp"
+      },
+      {
+        "server": "8.8.8.8",
+        "tag": "dns2",
+        "type": "udp"
+      }
+    ]
+  },
+  "endpoints": [],
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "listen_port": 7892,
+      "tag": "mixed-in",
+      "type": "mixed"
+    }
+  ],
+  "log": {
+    "level": "info"
+  },
+  "outbounds": [
+    {
+      "outbounds": [
+        "auto",
+        "direct",
+        "direct"
+      ],
+      "tag": "proxy",
+      "type": "selector"
+    },
+    {
+      "interval": "5m",
+      "outbounds": [
+        "direct"
+      ],
+      "tag": "auto",
+      "type": "urltest",
+      "url": "https://cp.cloudflare.com/generate_204"
+    },
+    {
+      "tag": "direct",
+      "type": "direct"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "default_domain_resolver": "dns1",
+    "final": "proxy",
+    "rule_set": [
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geoip-ir",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/7fe82a879ad2666526730c195b55a6d8d9147908/geoip-ir.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-google",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-google.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-youtube",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-youtube.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-facebook",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-facebook.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-instagram",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-instagram.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-twitter",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-twitter.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-netflix",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-netflix.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-category-ads-all",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-category-ads-all.srs"
+      },
+      {
+        "download_detour": "direct",
+        "format": "binary",
+        "tag": "geosite-geolocation-!cn",
+        "type": "remote",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/417ea33286a8c3a77fdce9b68ce25d58565dad43/geosite-geolocation-!cn.srs"
+      }
+    ],
+    "rules": [
+      {
+        "outbound": "direct",
+        "rule_set": "geoip-ir"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      },
+      {
+        "domain_suffix": [
+          "ir",
+          "aparat.com",
+          "digikala.com"
+        ],
+        "outbound": "direct"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-geolocation-!cn"
+      },
+      {
+        "outbound": "direct",
+        "process_name": [
+          "warp-plus",
+          "hiddify"
+        ]
+      },
+      {
+        "outbound": "proxy",
+        "port": [
+          53,
+          853
+        ]
+      },
+      {
+        "domain_suffix": [
+          "dns.google",
+          "cloudflare-dns.com",
+          "1.1.1.1"
+        ],
+        "outbound": "proxy"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-google"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-youtube"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-facebook"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-instagram"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-twitter"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-netflix"
+      },
+      {
+        "action": "reject",
+        "rule_set": "geosite-category-ads-all"
+      },
+      {
+        "outbound": "proxy",
+        "rule_set": "geosite-geolocation-!cn"
+      }
+    ]
+  }
+}

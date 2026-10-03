@@ -1,1116 +1,1376 @@
-# Recommended Clash Meta configuration for Iran - anti-DNS hijack, fake-ip, auto rule-providers, robust region rules
-
-mixed-port: 7892
-allow-lan: true
-bind-address: '*'
-mode: rule
-log-level: info
-ipv6: false
-
-external-controller: 0.0.0.0:9090
-external-ui: ui
-external-ui-url: 
-  https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
-secret: ''
-
-# Performance Settings
-unified-delay: false
-tcp-concurrent: true
-find-process-mode: strict
-
-# Profile Settings
-profile:
-  store-selected: true
-  store-fake-ip: true
-
-# TUN Configuration for Iran
-tun:
-  enable: true
-  stack: system
-  auto-route: true
-  auto-redirect: true
-  auto-detect-interface: true
-  dns-hijack:
-  - any:53
-  - tcp://any:53
-  device: utun0
-  mtu: 9000
-  strict-route: true
-  gso: true
-  gso-max-size: 65536
-
-dns:
-  enable: true
-  listen: 0.0.0.0:1053
-  ipv6: false
-  enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.1/16
-  fake-ip-filter-mode: blacklist
-  fake-ip-filter:
-  - '*.lan'
-  - '*.local'
-  - '*.ir'
-  - +.aparat.com
-  - +.rubika.ir
-  - +.digikala.com
-  - +.eitaa.com
-  - +.telewebion.ir
-  - +.snapp.ir
-  - +.shad.ir
-  - +.zarinpal.com
-  - +.parsian.com
-  - +.mellat.ir
-  - +.bmi.ir
-  - +.postbank.ir
-  - +.shetab.ir
-  - +.sep.ir
-  - +.irna.ir
-  - +.isna.ir
-  use-hosts: true
-  use-system-hosts: false
-  respect-rules: true
-  default-nameserver:
-  - tls://1.1.1.1:853
-  - tls://9.9.9.9:853
-  nameserver:
-  - https://cloudflare-dns.com/dns-query
-  - https://dns.google/dns-query
-  - https://9.9.9.9/dns-query
-  proxy-server-nameserver:
-  - https://cloudflare-dns.com/dns-query
-  - 1.1.1.1
-
-proxies:
-- name: OpenRay  KZ-11
-  type: vless
-  server: 178.236.16.98
-  port: 35728
-  uuid: a00d89f6-ab7e-4e30-a5e5-54c701d62c93
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: vhUFNoFcvtZAVMo8y5K5eU2V43m5q6yjmWIhp5RkFng
-    short-id: 69a2
-  client-fingerprint: chrome
-- name: OpenRay  KZ-9
-  type: vless
-  server: 83.222.23.81
-  port: 38065
-  uuid: 4b9063e0-3288-44e9-9aac-80fbfce323a0
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: dSSDPTK6AHfAdRAXD9i4rzqcNIY65RxlF25UyCKdiyo
-    short-id: fa
-  client-fingerprint: chrome
-- name: OpenRay  US-11241
-  type: vless
-  server: 137.184.218.169
-  port: 36925
-  uuid: c9fd0fb1-8251-4106-b09a-f4b426736f67
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.cloudflare.com
-  reality-opts:
-    public-key: lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0
-    short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  US-11414
-  type: vless
-  server: 159.89.87.21
-  port: 28190
-  uuid: 14c80e0e-f7ce-4991-94fc-99a1db4a9b1e
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: aws.amazon.com
-  reality-opts:
-    public-key: ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno
-    short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  AM-4
-  type: vless
-  server: 77.91.68.70
-  port: 55983
-  uuid: f667a096-5231-4cfb-8759-92bb32473139
-  network: tcp
-  tls: true
-  servername: yahoo.com
-  reality-opts:
-    public-key: nWQ7b9l9X6N3PrXLgIzOvMM8iSYrqjVHEb9ikWxqYSg
-    short-id: 0e
-  client-fingerprint: chrome
-- name: OpenRay  KZ-53
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 38.107.234.57
-- name: OpenRay  KZ-64
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 
-        wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  KZ-57
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: google.com
-- name: OpenRay  KZ-67
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 
-        wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
-- name: OpenRay  US-11399
-  type: vless
-  server: 15.204.97.216
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  US-9871
-  type: vless
-  server: 15.204.97.197
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  KZ-62
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  KZ-76
-  type: vmess
-  server: 38.107.234.57
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 38.107.234.57
-- name: OpenRay  KZ-58
-  type: vmess
-  server: 3h-kazakhstan1.09vpn.com
-  port: 80
-  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /vmess/
-    headers:
-      Host: 3h-kazakhstan1.09vpn.com
-- name: OpenRay  HK-301
-  type: vmess
-  server: 47.244.120.197
-  port: 36703
-  uuid: 45b83519-9c4f-4052-a11b-02e017b636d4
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.244.120.197
-- name: OpenRay  US-11398
-  type: vless
-  server: 15.204.97.219
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-775
-  type: vless
-  server: sc-thenetherlands1.09vpn.com
-  port: 80
-  uuid: 40cc9b52-25b8-4cd5-8b45-715ae26e6baf
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: sc-thenetherlands1.09vpn.com
-- name: OpenRay  CA-14192
-  type: vmess
-  server: 104.17.77.77
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: v2ray1.dozapp.xyz
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: v2ray1.dozapp.xyz
-- name: OpenRay  TW-2
-  type: vmess
-  server: 165.154.195.38
-  port: 35034
-  uuid: 959a8caf-4cea-43d0-a548-3628e7ddfafc
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: OpenRay  NL-114
-  type: vless
-  server: 51.158.206.103
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-421
-  type: vless
-  server: 51.158.206.93
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  DE-5320
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 7d74eae4-8a06-4306-a923-ad686f30bf26
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
-- name: OpenRay  DE-5378
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
-- name: OpenRay  CA-14153
-  type: vmess
-  server: 104.17.77.77
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: v2ray1.dozapp.xyz
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: v2ray1.dozapp.xyz
-- name: OpenRay  CA-14307
-  type: vmess
-  server: 104.17.77.77
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: v2ray1.dozapp.xyz
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: 104.17.77.77
-- name: OpenRay  SA-1
-  type: vless
-  server: 81.208.170.142
-  port: 1500
-  uuid: sGLzG6kUwBpZd73sW0nq
-  network: grpc
-  tls: true
-  servername: www.ebay.com
-  reality-opts:
-    public-key: VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE
-    short-id: 775eb6408888248e
-  client-fingerprint: chrome
-- name: OpenRay  SA-2
-  type: vless
-  server: 81.208.170.142
-  port: 1500
-  uuid: e332f028-d343-5b44-8016-b3130f39e133
-  network: grpc
-  tls: true
-  servername: www.ebay.com
-  reality-opts:
-    public-key: VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE
-    short-id: 775eb6408888248e
-  client-fingerprint: chrome
-- name: OpenRay  NL-23
-  type: vless
-  server: 51.158.206.80
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-13
-  type: vless
-  server: 51.158.206.98
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  FI-291
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: 2f6e2b17-4d5e-4a12-8979-f53fdd347580
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.mozilla.org
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 5c8a8e6c615b
-  client-fingerprint: chrome
-- name: OpenRay  US-9872
-  type: vless
-  server: 15.204.97.198
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  US-9824
-  type: vless
-  server: 15.204.97.214
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  US-9848
-  type: vless
-  server: 15.204.97.206
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  US-10580
-  type: vless
-  server: 15.204.97.195
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-9
-  type: vless
-  server: 51.158.206.87
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-419
-  type: vless
-  server: 51.158.206.34
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-11
-  type: vless
-  server: 51.158.206.12
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-4
-  type: vless
-  server: 51.158.206.96
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-6
-  type: vless
-  server: 51.158.206.8
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-113
-  type: vless
-  server: 51.158.206.20
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-7
-  type: vless
-  server: 51.158.206.97
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-102
-  type: vless
-  server: 51.158.206.25
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-115
-  type: vless
-  server: 51.158.206.86
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-418
-  type: vless
-  server: 51.158.206.26
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-15
-  type: vless
-  server: 51.158.206.29
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  NL-10
-  type: vless
-  server: 51.158.206.19
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  FR-450
-  type: vless
-  server: 62.210.91.2
-  port: 23576
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: fuck.rkn
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  client-fingerprint: chrome
-- name: OpenRay  FI-299
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: 2ba7f500-017b-4891-87a0-e4e62a4ad52d
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.microsoft.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 9409f73c2fd7
-  client-fingerprint: chrome
-- name: OpenRay  FI-307
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: 594d466e-8ac3-4fda-b1d1-eeb817853518
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.microsoft.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 5a018643df03
-  client-fingerprint: chrome
-- name: OpenRay  FI-301
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: ee39fb11-56a3-4ee7-9e7c-35a4235bd30e
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.tradingview.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: b27ba098687b
-  client-fingerprint: chrome
-- name: OpenRay  FI-300
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: de38389f-5651-4f2f-8276-5aabf3b861c9
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.hollywoodreporter.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 225e930cfd4d
-  client-fingerprint: chrome
-- name: OpenRay  FI-333
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: 317bc783-340f-453c-afb5-b6bf637c0b23
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.tradingview.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: fc994ae7eb10
-  client-fingerprint: chrome
-- name: OpenRay  FI-342
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: 455cfdc6-9abf-4e40-863f-5ff6cc63457c
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.microsoft.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 18e4d2d21241
-  client-fingerprint: chrome
-- name: OpenRay  FI-402
-  type: vless
-  server: staging.lastilhame.monster
-  port: 443
-  uuid: aded66f1-de12-4c3c-af9e-a21d6e7d9c96
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.foxsports.com
-  reality-opts:
-    public-key: FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg
-    short-id: 2a80364e93d9
-  client-fingerprint: chrome
-- name: OpenRay  US-11602
-  type: vless
-  server: 47.253.226.114
-  port: 443
-  uuid: 055a1ce8-2a16-4a0d-a2c2-22826c9b2413
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.cloudflare.com
-  reality-opts:
-    public-key: Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc
-    short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  DE-5929
-  type: vless
-  server: ov-germany1.09vpn.com
-  port: 80
-  uuid: 18535741-e8b3-4b43-9348-785b55936751
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: ov-germany1.09vpn.com
-- name: OpenRay  US-11417
-  type: vless
-  server: 47.251.25.74
-  port: 443
-  uuid: 18805ff3-b420-45de-af18-93be14024ae8
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.amazon.com
-  reality-opts:
-    public-key: H56cOJhw0xw76lDEpt7IuJJmVGemK6_CK34KtHwDMX8
-    short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  US-11400
-  type: vless
-  server: 147.182.212.232
-  port: 56565
-  uuid: 7b188eea-b08f-42c2-bac7-d3b0e74218b8
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.paypal.com
-  reality-opts:
-    public-key: Td03Ae-cuYLq4xg7MSps58c_yRUcbbwtZLXm0ywabjY
-    short-id: ''
-  client-fingerprint: chrome
-- name: OpenRay  FI-1077
-  type: vless
-  server: server.slavkiti.monster
-  port: 443
-  uuid: 4d017db2-7655-4276-9557-e2ec25b04ee7
-  network: tcp
-  flow: xtls-rprx-vision
-  tls: true
-  servername: www.tradingview.com
-  reality-opts:
-    public-key: J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk
-    short-id: ee1716767f9b
-  client-fingerprint: chrome
-- name: OpenRay  DE-9603
-  type: vless
-  server: 57.129.41.216
-  port: 80
-  uuid: 18535741-e8b3-4b43-9348-785b55936751
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 57.129.41.216
-- name: OpenRay  DE-9569
-  type: vless
-  server: 57.129.41.216
-  port: 80
-  uuid: 7d74eae4-8a06-4306-a923-ad686f30bf26
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 57.129.41.216
-- name: OpenRay  DE-9687
-  type: vless
-  server: 57.129.41.216
-  port: 80
-  uuid: 7d90f043-ed7f-40c9-ac2f-352987904958
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 57.129.41.216
-- name: OpenRay  US-14155
-  type: vmess
-  server: 216.106.185.141
-  port: 22324
-  uuid: 04621bae-ab36-11ec-b909-0242ac120002
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: OpenRay Dynamic-15760
-  type: vmess
-  server: chatgpt.com
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: v2ray1.dozapp.xyz
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: chatgpt.com
-- name: OpenRay  NL-3059
-  type: vless
-  server: 163.172.214.188
-  port: 80
-  uuid: 40cc9b52-25b8-4cd5-8b45-715ae26e6baf
-  network: ws
-  ws-opts:
-    path: /vless/
-    headers:
-      Host: 163.172.214.188
-- name: OpenRay  TW-57
-  type: vmess
-  server: 165.154.195.38
-  port: 35034
-  uuid: 959a8caf-4cea-43d0-a548-3628e7ddfafc
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: OpenRay  US-14763
-  type: vmess
-  server: 67.220.72.237
-  port: 22324
-  uuid: 04621bae-ab36-11ec-b909-0242ac120002
-  alterId: 1
-  cipher: auto
-  network: tcp
-- name: OpenRay  US-15121
-  type: vmess
-  server: 84.17.41.2
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: OpenRay  HK-612
-  type: vmess
-  server: 47.244.120.197
-  port: 36703
-  uuid: 45b83519-9c4f-4052-a11b-02e017b636d4
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /arki?ed=2048
-    headers:
-      Host: 47.244.120.197
-
-proxy-groups:
-- name: AUTO
-  type: url-test
-  url: https://www.gstatic.com/generate_204
-  interval: 300
-  tolerance: 50
-  proxies:
-  - OpenRay  KZ-11
-  - OpenRay  KZ-9
-  - OpenRay  US-11241
-  - OpenRay  US-11414
-  - OpenRay  AM-4
-  - OpenRay  KZ-53
-  - OpenRay  KZ-64
-  - OpenRay  KZ-57
-  - OpenRay  KZ-67
-  - OpenRay  US-11399
-  - OpenRay  US-9871
-  - OpenRay  KZ-62
-  - OpenRay  KZ-76
-  - OpenRay  KZ-58
-  - OpenRay  HK-301
-  - OpenRay  US-11398
-  - OpenRay  NL-775
-  - OpenRay  CA-14192
-  - OpenRay  TW-2
-  - OpenRay  NL-114
-  - OpenRay  NL-421
-  - OpenRay  DE-5320
-  - OpenRay  DE-5378
-  - OpenRay  CA-14153
-  - OpenRay  CA-14307
-  - OpenRay  SA-1
-  - OpenRay  SA-2
-  - OpenRay  NL-23
-  - OpenRay  NL-13
-  - OpenRay  FI-291
-  - OpenRay  US-9872
-  - OpenRay  US-9824
-  - OpenRay  US-9848
-  - OpenRay  US-10580
-  - OpenRay  NL-9
-  - OpenRay  NL-419
-  - OpenRay  NL-11
-  - OpenRay  NL-4
-  - OpenRay  NL-6
-  - OpenRay  NL-113
-  - OpenRay  NL-7
-  - OpenRay  NL-102
-  - OpenRay  NL-115
-  - OpenRay  NL-418
-  - OpenRay  NL-15
-  - OpenRay  NL-10
-  - OpenRay  FR-450
-  - OpenRay  FI-299
-  - OpenRay  FI-307
-  - OpenRay  FI-301
-  - OpenRay  FI-300
-  - OpenRay  FI-333
-  - OpenRay  FI-342
-  - OpenRay  FI-402
-  - OpenRay  US-11602
-  - OpenRay  DE-5929
-  - OpenRay  US-11417
-  - OpenRay  US-11400
-  - OpenRay  FI-1077
-  - OpenRay  DE-9603
-  - OpenRay  DE-9569
-  - OpenRay  DE-9687
-  - OpenRay  US-14155
-  - OpenRay Dynamic-15760
-  - OpenRay  NL-3059
-  - OpenRay  TW-57
-  - OpenRay  US-14763
-  - OpenRay  US-15121
-  - OpenRay  HK-612
-- name: PROXY
-  type: select
-  proxies:
-  - AUTO
-  - OpenRay  KZ-11
-  - OpenRay  KZ-9
-  - OpenRay  US-11241
-  - OpenRay  US-11414
-  - OpenRay  AM-4
-  - OpenRay  KZ-53
-  - OpenRay  KZ-64
-  - OpenRay  KZ-57
-  - OpenRay  KZ-67
-  - OpenRay  US-11399
-  - OpenRay  US-9871
-  - OpenRay  KZ-62
-  - OpenRay  KZ-76
-  - OpenRay  KZ-58
-  - OpenRay  HK-301
-  - OpenRay  US-11398
-  - OpenRay  NL-775
-  - OpenRay  CA-14192
-  - OpenRay  TW-2
-  - OpenRay  NL-114
-  - OpenRay  NL-421
-  - OpenRay  DE-5320
-  - OpenRay  DE-5378
-  - OpenRay  CA-14153
-  - OpenRay  CA-14307
-  - OpenRay  SA-1
-  - OpenRay  SA-2
-  - OpenRay  NL-23
-  - OpenRay  NL-13
-  - OpenRay  FI-291
-  - OpenRay  US-9872
-  - OpenRay  US-9824
-  - OpenRay  US-9848
-  - OpenRay  US-10580
-  - OpenRay  NL-9
-  - OpenRay  NL-419
-  - OpenRay  NL-11
-  - OpenRay  NL-4
-  - OpenRay  NL-6
-  - OpenRay  NL-113
-  - OpenRay  NL-7
-  - OpenRay  NL-102
-  - OpenRay  NL-115
-  - OpenRay  NL-418
-  - OpenRay  NL-15
-  - OpenRay  NL-10
-  - OpenRay  FR-450
-  - OpenRay  FI-299
-  - OpenRay  FI-307
-  - OpenRay  FI-301
-  - OpenRay  FI-300
-  - OpenRay  FI-333
-  - OpenRay  FI-342
-  - OpenRay  FI-402
-  - OpenRay  US-11602
-  - OpenRay  DE-5929
-  - OpenRay  US-11417
-  - OpenRay  US-11400
-  - OpenRay  FI-1077
-  - OpenRay  DE-9603
-  - OpenRay  DE-9569
-  - OpenRay  DE-9687
-  - OpenRay  US-14155
-  - OpenRay Dynamic-15760
-  - OpenRay  NL-3059
-  - OpenRay  TW-57
-  - OpenRay  US-14763
-  - OpenRay  US-15121
-  - OpenRay  HK-612
-rules:
-- DOMAIN-SUFFIX,ir,DIRECT
-- DOMAIN-SUFFIX,aparat.com,DIRECT
-- DOMAIN-SUFFIX,digikala.com,DIRECT
-- DOMAIN-SUFFIX,divar.ir,DIRECT
-- DOMAIN-SUFFIX,eitaa.com,DIRECT
-- DOMAIN-SUFFIX,rubika.ir,DIRECT
-- DOMAIN-SUFFIX,snapp.ir,DIRECT
-- DOMAIN-SUFFIX,zarinpal.com,DIRECT
-- DOMAIN-SUFFIX,parsian.com,DIRECT
-- DOMAIN-SUFFIX,mellat.ir,DIRECT
-- DOMAIN-SUFFIX,bmi.ir,DIRECT
-- DOMAIN-SUFFIX,postbank.ir,DIRECT
-- DOMAIN-SUFFIX,shetab.ir,DIRECT
-- DOMAIN-SUFFIX,sep.ir,DIRECT
-- DOMAIN-SUFFIX,irna.ir,DIRECT
-- DOMAIN-SUFFIX,isna.ir,DIRECT
-- GEOSITE,GOOGLE,PROXY
-- GEOSITE,YOUTUBE,PROXY
-- GEOSITE,FACEBOOK,PROXY
-- GEOSITE,INSTAGRAM,PROXY
-- GEOSITE,TWITTER,PROXY
-- GEOSITE,TELEGRAM,PROXY
-- GEOSITE,GITHUB,PROXY
-- GEOSITE,CLOUDFLARE,PROXY
-- GEOSITE,NETFLIX,PROXY
-- GEOSITE,SPOTIFY,PROXY
-- GEOSITE,CATEGORY-ADS-ALL,REJECT
-- GEOSITE,GEOLOCATION-!CN,PROXY
-- GEOIP,PRIVATE,DIRECT
-- MATCH,PROXY
-hosts:
-  dns.google: [8.8.8.8, 8.8.4.4]
-  cloudflare-dns.com: [1.1.1.1, 1.0.0.1]
-  1dot1dot1dot1.cloudflare-dns.com: [1.1.1.1, 1.0.0.1]
-  www.google.com: [142.250.191.36]
-  youtube.com: [142.250.191.14]
-  www.youtube.com: [142.250.191.14]
-  facebook.com: [157.240.11.35]
-  www.facebook.com: [157.240.11.35]
-  twitter.com: [104.244.42.193]
-  www.twitter.com: [104.244.42.193]
-  x.com: [104.244.42.193]
+"mixed-port": 7892
+"allow-lan": false
+"bind-address": "127.0.0.1"
+"mode": "rule"
+"log-level": "info"
+"ipv6": false
+"external-controller": "127.0.0.1:9090"
+"external-ui": "ui"
+"external-ui-url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+"secret": ""
+"unified-delay": false
+"tcp-concurrent": true
+"find-process-mode": "strict"
+"profile":
+  "store-selected": true
+  "store-fake-ip": true
+"tun":
+  "enable": false
+  "stack": "system"
+  "auto-route": true
+  "auto-redirect": true
+  "auto-detect-interface": true
+  "dns-hijack":
+  - "any:53"
+  - "tcp://any:53"
+  "device": "utun0"
+  "mtu": 9000
+  "strict-route": true
+  "gso": true
+  "gso-max-size": 65536
+"dns":
+  "enable": true
+  "listen": "127.0.0.1:1053"
+  "ipv6": false
+  "enhanced-mode": "fake-ip"
+  "fake-ip-range": "198.18.0.1/16"
+  "fake-ip-filter-mode": "blacklist"
+  "fake-ip-filter":
+  - "*.lan"
+  - "*.local"
+  - "*.ir"
+  - "+.aparat.com"
+  - "+.rubika.ir"
+  - "+.digikala.com"
+  - "+.eitaa.com"
+  - "+.telewebion.ir"
+  - "+.snapp.ir"
+  - "+.shad.ir"
+  - "+.zarinpal.com"
+  - "+.parsian.com"
+  - "+.mellat.ir"
+  - "+.bmi.ir"
+  - "+.postbank.ir"
+  - "+.shetab.ir"
+  - "+.sep.ir"
+  - "+.irna.ir"
+  - "+.isna.ir"
+  "use-hosts": true
+  "use-system-hosts": false
+  "respect-rules": true
+  "default-nameserver":
+  - "tls://1.1.1.1:853"
+  - "tls://9.9.9.9:853"
+  "nameserver":
+  - "https://cloudflare-dns.com/dns-query"
+  - "https://dns.google/dns-query"
+  - "https://9.9.9.9/dns-query"
+  "proxy-server-nameserver":
+  - "https://cloudflare-dns.com/dns-query"
+  - "1.1.1.1"
+"proxies":
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-7-0646f03da273"
+  "type": "vless"
+  "server": "51.158.206.19"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-8-07470dcfae93"
+  "type": "vless"
+  "server": "sc-thenetherlands1.09vpn.com"
+  "port": 80
+  "uuid": "40cc9b52-25b8-4cd5-8b45-715ae26e6baf"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F310XX-28-0967007cd4e2"
+  "type": "trojan"
+  "server": "www.calmlunch.com"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers":
+      "Host": "www.calmlunch.com"
+- "name": "[OpenRay] \U0001F1E8\U0001F1E6CA-34-0a14db3b3862"
+  "type": "trojan"
+  "server": "188.114.98.0"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers":
+      "Host": "www.calmlunch.com"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-26-123b9b365b21"
+  "type": "vless"
+  "server": "51.158.206.34"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-2-14778c00b30c"
+  "type": "vless"
+  "server": "178.236.16.98"
+  "port": 35728
+  "uuid": "a00d89f6-ab7e-4e30-a5e5-54c701d62c93"
+  "tls": true
+  "servername": "yahoo.com"
+  "sni": "yahoo.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "vhUFNoFcvtZAVMo8y5K5eU2V43m5q6yjmWIhp5RkFng"
+    "short-id": "69a2"
+- "name": "[OpenRay] \U0001F1EB\U0001F1F7FR-11-19e2750c69c1"
+  "type": "vless"
+  "server": "62.210.91.2"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-37-1b7639859f40"
+  "type": "vless"
+  "server": "51.158.206.86"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-33-20925311ad9c"
+  "type": "ss"
+  "server": "8.209.74.72"
+  "port": 20001
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "PWpjPo3tqhPN4yRZ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-44-22aa0d6e0426"
+  "type": "ss"
+  "server": "82.38.31.205"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-7-27ad84bbe5c9"
+  "type": "vmess"
+  "server": "3h-kazakhstan1.09vpn.com"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers":
+      "Host": "wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-51-28fcd81449fe"
+  "type": "vless"
+  "server": "51.158.206.29"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-52-290828c38a9c"
+  "type": "ss"
+  "server": "82.38.31.199"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-57-2eca6e5f2349"
+  "type": "ss"
+  "server": "193.29.139.204"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "oZIoA69Q8yhcQV8ka3Pa3A"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-60-300a3db2286d"
+  "type": "vless"
+  "server": "51.158.206.25"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-8-376f38cdc434"
+  "type": "vless"
+  "server": "83.222.23.81"
+  "port": 38065
+  "uuid": "4b9063e0-3288-44e9-9aac-80fbfce323a0"
+  "tls": true
+  "servername": "yahoo.com"
+  "sni": "yahoo.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "dSSDPTK6AHfAdRAXD9i4rzqcNIY65RxlF25UyCKdiyo"
+    "short-id": "fa"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-76-3aaee21a78d3"
+  "type": "ss"
+  "server": "82.38.31.189"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1EC\U0001F1E7GB-17-3b91dd3c98ee"
+  "type": "ss"
+  "server": "94.156.250.148"
+  "port": 7001
+  "cipher": "aes-256-gcm"
+  "password": "RexnBgU7EV5ADxG"
+- "name": "[OpenRay] \U0001F310XX-166-3d949941068d"
+  "type": "trojan"
+  "server": "www.calmlunch.com"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers":
+      "Host": "www.calmlunch.com"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-20-3e8d2970e520"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "317bc783-340f-453c-afb5-b6bf637c0b23"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.tradingview.com"
+  "sni": "www.tradingview.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "fc994ae7eb10"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-88-46d7bebdc2e7"
+  "type": "ss"
+  "server": "82.38.31.202"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-185-481b5646bd01"
+  "type": "vless"
+  "server": "47.253.226.114"
+  "port": 443
+  "uuid": "055a1ce8-2a16-4a0d-a2c2-22826c9b2413"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.cloudflare.com"
+  "sni": "www.cloudflare.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "Svl81isn16RPAFnjtmYw7A6TPnsEPLHuYYaJht65Rzc"
+    "short-id": ""
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-188-486ba3c602d3"
+  "type": "vless"
+  "server": "15.204.97.195"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-10-4a3c5d76f839"
+  "type": "vmess"
+  "server": "38.107.234.57"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers":
+      "Host": "38.107.234.57"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-95-4c74168bb4f5"
+  "type": "ss"
+  "server": "82.38.31.187"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-80-4deb51374cd0"
+  "type": "ss"
+  "server": "213.202.208.199"
+  "port": 7001
+  "cipher": "aes-256-gcm"
+  "password": "RexnBgU7EV5ADxG"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-101-507952a0066d"
+  "type": "ss"
+  "server": "82.38.31.210"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F8\U0001F1E6SA-6-5082d945e345"
+  "type": "vless"
+  "server": "81.208.170.142"
+  "port": 1500
+  "uuid": "e332f028-d343-5b44-8016-b3130f39e133"
+  "tls": true
+  "servername": "www.ebay.com"
+  "sni": "www.ebay.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "VQxVgczORkbSNdDrkNOYs6zMBINpViztTKDuWCeQsVE"
+    "short-id": "775eb6408888248e"
+  "network": "grpc"
+  "grpc-opts":
+    "grpc-service-name": ""
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-86-5181d0946a0d"
+  "type": "vless"
+  "server": "ov-germany1.09vpn.com"
+  "port": 80
+  "uuid": "7d90f043-ed7f-40c9-ac2f-352987904958"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-213-51f57e1ec6e3"
+  "type": "vless"
+  "server": "159.89.87.21"
+  "port": 28190
+  "uuid": "14c80e0e-f7ce-4991-94fc-99a1db4a9b1e"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "aws.amazon.com"
+  "sni": "aws.amazon.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno"
+    "short-id": ""
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-26-54b57af7d43d"
+  "type": "vless"
+  "server": "server.slavkiti.monster"
+  "port": 443
+  "uuid": "4d017db2-7655-4276-9557-e2ec25b04ee7"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.tradingview.com"
+  "sni": "www.tradingview.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk"
+    "short-id": "ee1716767f9b"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-12-5b29728577ca"
+  "type": "vmess"
+  "server": "3h-kazakhstan1.09vpn.com"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers":
+      "Host": "3h-kazakhstan1.09vpn.com"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-114-5caf780b8bd6"
+  "type": "ss"
+  "server": "82.38.31.184"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-29-5d21ce4df5b1"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "455cfdc6-9abf-4e40-863f-5ff6cc63457c"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.microsoft.com"
+  "sni": "www.microsoft.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "18e4d2d21241"
+- "name": "[OpenRay] \U0001F1E8\U0001F1E6CA-357-5ee58ff8eb0f"
+  "type": "trojan"
+  "server": "188.114.96.3"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers":
+      "Host": "www.calmlunch.com"
+- "name": "[OpenRay] \U0001F1E8\U0001F1E6CA-377-64e5de073b15"
+  "type": "vmess"
+  "server": "104.17.77.77"
+  "port": 8443
+  "uuid": "60441548-b68e-43b2-8191-e3b884be4b3c"
+  "alterId": 0
+  "cipher": "auto"
+  "tls": true
+  "servername": "v2ray1.dozapp.xyz"
+  "sni": "v2ray1.dozapp.xyz"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/lMnsZUN4/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F310XX-280-6befa9b481f1"
+  "type": "vmess"
+  "server": "chatgpt.com"
+  "port": 8443
+  "uuid": "60441548-b68e-43b2-8191-e3b884be4b3c"
+  "alterId": 0
+  "cipher": "auto"
+  "tls": true
+  "servername": "v2ray1.dozapp.xyz"
+  "sni": "v2ray1.dozapp.xyz"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/lMnsZUN4/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F310XX-284-6d512e001322"
+  "type": "trojan"
+  "server": "www.ignitelimit.com"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.ignitelimit.com"
+  "sni": "www.ignitelimit.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-133-6ec3cfc68c55"
+  "type": "ss"
+  "server": "82.38.31.179"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-136-718bda965004"
+  "type": "vless"
+  "server": "51.158.206.26"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-296-758618bb3c96"
+  "type": "vless"
+  "server": "15.204.97.206"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-145-763e0bd2d8db"
+  "type": "vless"
+  "server": "51.158.206.96"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-127-799a65d66a1a"
+  "type": "vless"
+  "server": "57.129.41.216"
+  "port": 80
+  "uuid": "18535741-e8b3-4b43-9348-785b55936751"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F310XX-316-79b67604c483"
+  "type": "trojan"
+  "server": "chat.openai.com"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "alpn":
+  - "h2"
+  - "http/1.1"
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers":
+      "Host": "www.calmlunch.com"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-149-7a74c927dacb"
+  "type": "vless"
+  "server": "51.158.206.8"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-307-7adc2b6b6d3e"
+  "type": "vless"
+  "server": "137.184.218.169"
+  "port": 36925
+  "uuid": "c9fd0fb1-8251-4106-b09a-f4b426736f67"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.cloudflare.com"
+  "sni": "www.cloudflare.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "lJ9INPpO4rdnm2Tek_yg0PGFyUrBB6MoKyvqt_Mfqm0"
+    "short-id": ""
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-155-7d967e31a68f"
+  "type": "vless"
+  "server": "51.158.206.93"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-161-864812372522"
+  "type": "vless"
+  "server": "51.158.206.97"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-18-86c877ed5264"
+  "type": "vmess"
+  "server": "3h-kazakhstan1.09vpn.com"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-337-87bee3a83d56"
+  "type": "vless"
+  "server": "15.204.97.219"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-19-8908a058c405"
+  "type": "vmess"
+  "server": "38.107.234.57"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1ED\U0001F1F0HK-54-8d20a92e6aeb"
+  "type": "vmess"
+  "server": "47.244.120.197"
+  "port": 36703
+  "uuid": "45b83519-9c4f-4052-a11b-02e017b636d4"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/arki?ed=2048"
+    "headers":
+      "Host": "47.244.120.197"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-366-8ee9fc696e0b"
+  "type": "vless"
+  "server": "15.204.97.214"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-154-9194fc663dd3"
+  "type": "ss"
+  "server": "209.46.102.22"
+  "port": 8388
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "1hhrqrokj3ag"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-169-92f94165e54d"
+  "type": "vless"
+  "server": "51.158.206.20"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1E8\U0001F1E6CA-557-97764eae06a7"
+  "type": "vmess"
+  "server": "104.17.77.77"
+  "port": 8443
+  "uuid": "60441548-b68e-43b2-8191-e3b884be4b3c"
+  "alterId": 0
+  "cipher": "none"
+  "tls": true
+  "servername": "v2ray1.dozapp.xyz"
+  "sni": "v2ray1.dozapp.xyz"
+  "skip-cert-verify": true
+  "network": "ws"
+  "ws-opts":
+    "path": "/lMnsZUN4/"
+    "headers":
+      "Host": "v2ray1.dozapp.xyz"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-388-998e1565a385"
+  "type": "vless"
+  "server": "147.182.212.232"
+  "port": 56565
+  "uuid": "7b188eea-b08f-42c2-bac7-d3b0e74218b8"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.paypal.com"
+  "sni": "www.paypal.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "Td03Ae-cuYLq4xg7MSps58c_yRUcbbwtZLXm0ywabjY"
+    "short-id": ""
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-171-a1a77d9c5c4c"
+  "type": "vless"
+  "server": "ov-germany1.09vpn.com"
+  "port": 80
+  "uuid": "18535741-e8b3-4b43-9348-785b55936751"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-49-a1e49862dd52"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "de38389f-5651-4f2f-8276-5aabf3b861c9"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.hollywoodreporter.com"
+  "sni": "www.hollywoodreporter.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "225e930cfd4d"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-185-a3f1723db1d7"
+  "type": "vless"
+  "server": "51.158.206.87"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-187-a49df36c77ca"
+  "type": "ss"
+  "server": "193.29.139.151"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "oZIoA69Q8yhcQV8ka3Pa3A"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-190-a7c95008b2fe"
+  "type": "ss"
+  "server": "82.38.31.186"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-22-aa0017b4798b"
+  "type": "vmess"
+  "server": "38.107.234.57"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers":
+      "Host": "wrmelmwxlf.gktevlrqznwqqozy.fabpfs66gizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-51-aba1a729afe7"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "2ba7f500-017b-4891-87a0-e4e62a4ad52d"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.microsoft.com"
+  "sni": "www.microsoft.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "9409f73c2fd7"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-198-ad948b0661e3"
+  "type": "ss"
+  "server": "82.38.31.218"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-53-b1ac93f0d6b6"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "2f6e2b17-4d5e-4a12-8979-f53fdd347580"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.mozilla.org"
+  "sni": "www.mozilla.org"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "5c8a8e6c615b"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-191-b2e12da8c896"
+  "type": "vless"
+  "server": "ov-germany1.09vpn.com"
+  "port": 80
+  "uuid": "7d74eae4-8a06-4306-a923-ad686f30bf26"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-207-b410465fb5de"
+  "type": "ss"
+  "server": "82.38.31.176"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-209-b42f44e7cfd2"
+  "type": "ss"
+  "server": "82.38.31.217"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-214-bcc4f0cf5f9c"
+  "type": "vless"
+  "server": "163.172.214.188"
+  "port": 80
+  "uuid": "40cc9b52-25b8-4cd5-8b45-715ae26e6baf"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-216-be6130f60428"
+  "type": "vless"
+  "server": "51.158.206.80"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F9\U0001F1FCTW-142-c1bf7f346686"
+  "type": "vmess"
+  "server": "165.154.195.38"
+  "port": 35034
+  "uuid": "959a8caf-4cea-43d0-a548-3628e7ddfafc"
+  "alterId": 0
+  "cipher": "auto"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-63-c947e8d5f38e"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "aded66f1-de12-4c3c-af9e-a21d6e7d9c96"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.foxsports.com"
+  "sni": "www.foxsports.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "2a80364e93d9"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-231-ccb382818b23"
+  "type": "vless"
+  "server": "51.158.206.98"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-235-d011c99380c5"
+  "type": "ss"
+  "server": "82.38.31.208"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-234-d66365bde966"
+  "type": "vless"
+  "server": "57.129.41.216"
+  "port": 80
+  "uuid": "7d90f043-ed7f-40c9-ac2f-352987904958"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-244-dab06a24e110"
+  "type": "vless"
+  "server": "51.158.206.12"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-249-dbed2f2c3927"
+  "type": "vless"
+  "server": "51.158.206.103"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-582-debd2f0704c4"
+  "type": "ss"
+  "server": "108.181.0.177"
+  "port": 8388
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "G5p6ww4o67HB"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-596-e2e24066f8ff"
+  "type": "vless"
+  "server": "15.204.97.198"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1E8\U0001F1E6CA-835-e48eb82138b5"
+  "type": "vmess"
+  "server": "104.17.77.77"
+  "port": 8443
+  "uuid": "60441548-b68e-43b2-8191-e3b884be4b3c"
+  "alterId": 0
+  "cipher": "auto"
+  "tls": true
+  "servername": ""
+  "sni": ""
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/lMnsZUN4/"
+    "headers":
+      "Host": "v2ray1.dozapp.xyz"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-262-e6a632d5a48f"
+  "type": "ss"
+  "server": "82.38.31.194"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-263-e812247fe723"
+  "type": "ss"
+  "server": "193.29.139.235"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "oZIoA69Q8yhcQV8ka3Pa3A"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-609-e8863a707213"
+  "type": "vless"
+  "server": "15.204.97.197"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1F0\U0001F1FFKZ-26-e9a0623e4106"
+  "type": "vmess"
+  "server": "38.107.234.57"
+  "port": 80
+  "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
+  "alterId": 0
+  "cipher": "auto"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vmess/"
+    "headers":
+      "Host": "google.com"
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-619-ec73a34c1aad"
+  "type": "vless"
+  "server": "15.204.97.216"
+  "port": 23576
+  "uuid": "48ff2b70-e180-582f-8866-d9a2edeed5f5"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "fuck.rkn"
+  "sni": "fuck.rkn"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s"
+    "short-id": "01"
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-74-eeb3492ec3b3"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "ee39fb11-56a3-4ee7-9e7c-35a4235bd30e"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.tradingview.com"
+  "sni": "www.tradingview.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "b27ba098687b"
+- "name": "[OpenRay] \U0001F1F3\U0001F1F1NL-281-f32dbf328b65"
+  "type": "ss"
+  "server": "82.38.31.190"
+  "port": 8080
+  "cipher": "chacha20-ietf-poly1305"
+  "password": "k1dBOmOB4oqi7Ump37a1bQ"
+- "name": "[OpenRay] \U0001F1E9\U0001F1EADE-263-f4deff043aa2"
+  "type": "vless"
+  "server": "57.129.41.216"
+  "port": 80
+  "uuid": "7d74eae4-8a06-4306-a923-ad686f30bf26"
+  "network": "ws"
+  "ws-opts":
+    "path": "/vless/"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1EB\U0001F1EEFI-78-f549cefad691"
+  "type": "vless"
+  "server": "staging.lastilhame.monster"
+  "port": 443
+  "uuid": "594d466e-8ac3-4fda-b1d1-eeb817853518"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.microsoft.com"
+  "sni": "www.microsoft.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "FjcEZNQ8t5E4R04_11T6ghsOutdqwKKrelkuadakoQg"
+    "short-id": "5a018643df03"
+- "name": "[OpenRay] \U0001F310XX-648-faafea5076c6"
+  "type": "trojan"
+  "server": "www.calmlunch.com"
+  "port": 443
+  "password": "humanity"
+  "tls": true
+  "servername": "www.calmlunch.com"
+  "sni": "www.calmlunch.com"
+  "skip-cert-verify": false
+  "network": "ws"
+  "ws-opts":
+    "path": "/assignment"
+    "headers": {}
+- "name": "[OpenRay] \U0001F1FA\U0001F1F8US-684-ff733f39d9db"
+  "type": "vless"
+  "server": "47.251.25.74"
+  "port": 443
+  "uuid": "18805ff3-b420-45de-af18-93be14024ae8"
+  "flow": "xtls-rprx-vision"
+  "tls": true
+  "servername": "www.amazon.com"
+  "sni": "www.amazon.com"
+  "skip-cert-verify": false
+  "client-fingerprint": "chrome"
+  "reality-opts":
+    "public-key": "H56cOJhw0xw76lDEpt7IuJJmVGemK6_CK34KtHwDMX8"
+    "short-id": ""
+"proxy-groups":
+- "name": "AUTO"
+  "type": "url-test"
+  "url": "https://cp.cloudflare.com/generate_204"
+  "interval": 300
+  "proxies":
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-7-0646f03da273"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-8-07470dcfae93"
+  - "[OpenRay] \U0001F310XX-28-0967007cd4e2"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-34-0a14db3b3862"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-26-123b9b365b21"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-2-14778c00b30c"
+  - "[OpenRay] \U0001F1EB\U0001F1F7FR-11-19e2750c69c1"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-37-1b7639859f40"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-33-20925311ad9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-44-22aa0d6e0426"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-7-27ad84bbe5c9"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-51-28fcd81449fe"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-52-290828c38a9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-57-2eca6e5f2349"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-60-300a3db2286d"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-8-376f38cdc434"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-76-3aaee21a78d3"
+  - "[OpenRay] \U0001F1EC\U0001F1E7GB-17-3b91dd3c98ee"
+  - "[OpenRay] \U0001F310XX-166-3d949941068d"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-20-3e8d2970e520"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-88-46d7bebdc2e7"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-185-481b5646bd01"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-188-486ba3c602d3"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-10-4a3c5d76f839"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-95-4c74168bb4f5"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-80-4deb51374cd0"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-101-507952a0066d"
+  - "[OpenRay] \U0001F1F8\U0001F1E6SA-6-5082d945e345"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-86-5181d0946a0d"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-213-51f57e1ec6e3"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-26-54b57af7d43d"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-12-5b29728577ca"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-114-5caf780b8bd6"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-29-5d21ce4df5b1"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-357-5ee58ff8eb0f"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-377-64e5de073b15"
+  - "[OpenRay] \U0001F310XX-280-6befa9b481f1"
+  - "[OpenRay] \U0001F310XX-284-6d512e001322"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-133-6ec3cfc68c55"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-136-718bda965004"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-296-758618bb3c96"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-145-763e0bd2d8db"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-127-799a65d66a1a"
+  - "[OpenRay] \U0001F310XX-316-79b67604c483"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-149-7a74c927dacb"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-307-7adc2b6b6d3e"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-155-7d967e31a68f"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-161-864812372522"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-18-86c877ed5264"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-337-87bee3a83d56"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-19-8908a058c405"
+  - "[OpenRay] \U0001F1ED\U0001F1F0HK-54-8d20a92e6aeb"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-366-8ee9fc696e0b"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-154-9194fc663dd3"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-169-92f94165e54d"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-557-97764eae06a7"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-388-998e1565a385"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-171-a1a77d9c5c4c"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-49-a1e49862dd52"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-185-a3f1723db1d7"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-187-a49df36c77ca"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-190-a7c95008b2fe"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-22-aa0017b4798b"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-51-aba1a729afe7"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-198-ad948b0661e3"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-53-b1ac93f0d6b6"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-191-b2e12da8c896"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-207-b410465fb5de"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-209-b42f44e7cfd2"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-214-bcc4f0cf5f9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-216-be6130f60428"
+  - "[OpenRay] \U0001F1F9\U0001F1FCTW-142-c1bf7f346686"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-63-c947e8d5f38e"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-231-ccb382818b23"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-235-d011c99380c5"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-234-d66365bde966"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-244-dab06a24e110"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-249-dbed2f2c3927"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-582-debd2f0704c4"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-596-e2e24066f8ff"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-835-e48eb82138b5"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-262-e6a632d5a48f"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-263-e812247fe723"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-609-e8863a707213"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-26-e9a0623e4106"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-619-ec73a34c1aad"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-74-eeb3492ec3b3"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-281-f32dbf328b65"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-263-f4deff043aa2"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-78-f549cefad691"
+  - "[OpenRay] \U0001F310XX-648-faafea5076c6"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-684-ff733f39d9db"
+- "name": "PROXY"
+  "type": "select"
+  "proxies":
+  - "AUTO"
+  - "DIRECT"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-7-0646f03da273"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-8-07470dcfae93"
+  - "[OpenRay] \U0001F310XX-28-0967007cd4e2"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-34-0a14db3b3862"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-26-123b9b365b21"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-2-14778c00b30c"
+  - "[OpenRay] \U0001F1EB\U0001F1F7FR-11-19e2750c69c1"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-37-1b7639859f40"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-33-20925311ad9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-44-22aa0d6e0426"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-7-27ad84bbe5c9"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-51-28fcd81449fe"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-52-290828c38a9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-57-2eca6e5f2349"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-60-300a3db2286d"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-8-376f38cdc434"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-76-3aaee21a78d3"
+  - "[OpenRay] \U0001F1EC\U0001F1E7GB-17-3b91dd3c98ee"
+  - "[OpenRay] \U0001F310XX-166-3d949941068d"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-20-3e8d2970e520"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-88-46d7bebdc2e7"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-185-481b5646bd01"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-188-486ba3c602d3"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-10-4a3c5d76f839"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-95-4c74168bb4f5"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-80-4deb51374cd0"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-101-507952a0066d"
+  - "[OpenRay] \U0001F1F8\U0001F1E6SA-6-5082d945e345"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-86-5181d0946a0d"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-213-51f57e1ec6e3"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-26-54b57af7d43d"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-12-5b29728577ca"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-114-5caf780b8bd6"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-29-5d21ce4df5b1"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-357-5ee58ff8eb0f"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-377-64e5de073b15"
+  - "[OpenRay] \U0001F310XX-280-6befa9b481f1"
+  - "[OpenRay] \U0001F310XX-284-6d512e001322"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-133-6ec3cfc68c55"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-136-718bda965004"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-296-758618bb3c96"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-145-763e0bd2d8db"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-127-799a65d66a1a"
+  - "[OpenRay] \U0001F310XX-316-79b67604c483"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-149-7a74c927dacb"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-307-7adc2b6b6d3e"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-155-7d967e31a68f"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-161-864812372522"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-18-86c877ed5264"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-337-87bee3a83d56"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-19-8908a058c405"
+  - "[OpenRay] \U0001F1ED\U0001F1F0HK-54-8d20a92e6aeb"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-366-8ee9fc696e0b"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-154-9194fc663dd3"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-169-92f94165e54d"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-557-97764eae06a7"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-388-998e1565a385"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-171-a1a77d9c5c4c"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-49-a1e49862dd52"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-185-a3f1723db1d7"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-187-a49df36c77ca"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-190-a7c95008b2fe"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-22-aa0017b4798b"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-51-aba1a729afe7"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-198-ad948b0661e3"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-53-b1ac93f0d6b6"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-191-b2e12da8c896"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-207-b410465fb5de"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-209-b42f44e7cfd2"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-214-bcc4f0cf5f9c"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-216-be6130f60428"
+  - "[OpenRay] \U0001F1F9\U0001F1FCTW-142-c1bf7f346686"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-63-c947e8d5f38e"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-231-ccb382818b23"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-235-d011c99380c5"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-234-d66365bde966"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-244-dab06a24e110"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-249-dbed2f2c3927"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-582-debd2f0704c4"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-596-e2e24066f8ff"
+  - "[OpenRay] \U0001F1E8\U0001F1E6CA-835-e48eb82138b5"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-262-e6a632d5a48f"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-263-e812247fe723"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-609-e8863a707213"
+  - "[OpenRay] \U0001F1F0\U0001F1FFKZ-26-e9a0623e4106"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-619-ec73a34c1aad"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-74-eeb3492ec3b3"
+  - "[OpenRay] \U0001F1F3\U0001F1F1NL-281-f32dbf328b65"
+  - "[OpenRay] \U0001F1E9\U0001F1EADE-263-f4deff043aa2"
+  - "[OpenRay] \U0001F1EB\U0001F1EEFI-78-f549cefad691"
+  - "[OpenRay] \U0001F310XX-648-faafea5076c6"
+  - "[OpenRay] \U0001F1FA\U0001F1F8US-684-ff733f39d9db"
+"rules":
+- "DOMAIN-SUFFIX,ir,DIRECT"
+- "DOMAIN-SUFFIX,aparat.com,DIRECT"
+- "DOMAIN-SUFFIX,digikala.com,DIRECT"
+- "DOMAIN-SUFFIX,divar.ir,DIRECT"
+- "DOMAIN-SUFFIX,eitaa.com,DIRECT"
+- "DOMAIN-SUFFIX,rubika.ir,DIRECT"
+- "DOMAIN-SUFFIX,snapp.ir,DIRECT"
+- "DOMAIN-SUFFIX,zarinpal.com,DIRECT"
+- "DOMAIN-SUFFIX,parsian.com,DIRECT"
+- "DOMAIN-SUFFIX,mellat.ir,DIRECT"
+- "DOMAIN-SUFFIX,bmi.ir,DIRECT"
+- "DOMAIN-SUFFIX,postbank.ir,DIRECT"
+- "DOMAIN-SUFFIX,shetab.ir,DIRECT"
+- "DOMAIN-SUFFIX,sep.ir,DIRECT"
+- "DOMAIN-SUFFIX,irna.ir,DIRECT"
+- "DOMAIN-SUFFIX,isna.ir,DIRECT"
+- "GEOSITE,GOOGLE,PROXY"
+- "GEOSITE,YOUTUBE,PROXY"
+- "GEOSITE,FACEBOOK,PROXY"
+- "GEOSITE,INSTAGRAM,PROXY"
+- "GEOSITE,TWITTER,PROXY"
+- "GEOSITE,TELEGRAM,PROXY"
+- "GEOSITE,GITHUB,PROXY"
+- "GEOSITE,CLOUDFLARE,PROXY"
+- "GEOSITE,NETFLIX,PROXY"
+- "GEOSITE,SPOTIFY,PROXY"
+- "GEOSITE,CATEGORY-ADS-ALL,REJECT"
+- "GEOSITE,GEOLOCATION-!CN,PROXY"
+- "GEOIP, PRIVATE, DIRECT"
+- "MATCH,PROXY"
+"hosts":
+  "dns.google":
+  - "8.8.8.8"
+  - "8.8.4.4"
+  "cloudflare-dns.com":
+  - "1.1.1.1"
+  - "1.0.0.1"
+  "1dot1dot1dot1.cloudflare-dns.com":
+  - "1.1.1.1"
+  - "1.0.0.1"
+  "www.google.com":
+  - "142.250.191.36"
+  "youtube.com":
+  - "142.250.191.14"
+  "www.youtube.com":
+  - "142.250.191.14"
+  "facebook.com":
+  - "157.240.11.35"
+  "www.facebook.com":
+  - "157.240.11.35"
+  "twitter.com":
+  - "104.244.42.193"
+  "www.twitter.com":
+  - "104.244.42.193"
+  "x.com":
+  - "104.244.42.193"
+"geodata-url":
+  "geoip": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/c98b7dfd30a369df1d093d8394e68f0a2d970ca3/geoip.dat"
+  "geosite": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/c98b7dfd30a369df1d093d8394e68f0a2d970ca3/geosite.dat"
+  "mmdb": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/c98b7dfd30a369df1d093d8394e68f0a2d970ca3/country.mmdb"
+  "asn": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/c98b7dfd30a369df1d093d8394e68f0a2d970ca3/GeoLite2-ASN.mmdb"
