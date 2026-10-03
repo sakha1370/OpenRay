@@ -1,0 +1,55 @@
+{
+  "ci": {
+    "platforms": {
+      "tests (ubuntu-latest)": "success",
+      "tests (windows-latest)": "success"
+    },
+    "tests_per_platform": 49,
+    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37135631561"
+  },
+  "earlier_collection": {
+    "checks": 4751,
+    "core_errors": 4,
+    "note": "The sanitized run report does not establish those four startup failures causes. The subsequent collection has zero core errors and published successfully.",
+    "publication_held_as_designed": true,
+    "run_id": 37107070906
+  },
+  "failed_run": {
+    "attempt_1_error": "urllib.error.URLError: ConnectionResetError errno 104 during sing-box release download in publisher; collection and all 14 client gates succeeded.",
+    "id": 37124963455,
+    "number": 5319,
+    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37124963455"
+  },
+  "fix": {
+    "backoff_seconds": [
+      1,
+      2,
+      4
+    ],
+    "commit": "693cab9f625ca83c08e4ed8d76b7ef7f76f95ea2",
+    "download_attempts": 4,
+    "partial_archive_reset": true,
+    "publisher_installs": [
+      "singbox",
+      "mihomo"
+    ],
+    "sha256_and_tls_validation_preserved": true
+  },
+  "published_snapshot": {
+    "client_checks": 14,
+    "connections": 7454,
+    "files": 141,
+    "hashes_verified_again_locally": true,
+    "id": "5c0467ce3c5383ae2468efaa81986b62ad3cf8824a3e4503fb628dd54f1bfe5e"
+  },
+  "recorded_at_utc": "2026-10-03T16:16:56.667112+00:00",
+  "recovery": {
+    "attempt": 2,
+    "conclusion": "success",
+    "jobs": {
+      "collector / collect": "success",
+      "collector / publish": "success"
+    },
+    "note": "Reran only the failed publishing job, reusing the original immutable collection artifact. Reruns use the original workflow revision; the new retry implementation is verified separately by CI and applies to future runs."
+  }
+}

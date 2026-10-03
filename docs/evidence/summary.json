@@ -19,15 +19,23 @@
     "ruff_version": "0.16.10"
   },
   "database_schema": 4,
-  "evidence_scope_note": "Corpus, migration, wheel and client snapshot evidence describe the original baseline rehearsal; GitHub CI records the later source-root regression fix.",
+  "evidence_scope_note": "Corpus, migration, wheel and original client snapshot evidence describe the baseline rehearsal. Later GitHub CI and publication recovery records verify the deployed fixes and live snapshot.",
   "fresh_dependency_install_note": "Verified on Linux and Windows GitHub Actions; local PyPI requests had previously timed out. Distribution hashes are still not locked.",
   "github_ci": {
-    "commit": "a801a8c9f8624f6494fe5fb8c176c71b1981ae0b",
+    "commit": "693cab9f625ca83c08e4ed8d76b7ef7f76f95ea2",
     "fresh_dependency_install": true,
     "linux": true,
-    "tests_per_platform": 45,
-    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37090843559",
+    "tests_per_platform": 49,
+    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37135631561",
     "windows": true
+  },
+  "github_publication_recovery": {
+    "attempt": 2,
+    "connections": 7454,
+    "files": 141,
+    "snapshot_id": "5c0467ce3c5383ae2468efaa81986b62ad3cf8824a3e4503fb628dd54f1bfe5e",
+    "success": true,
+    "url": "https://github.com/sakha1370/OpenRay/actions/runs/37124963455"
   },
   "identity_version": 2,
   "implementation_baseline": "f26d036cc717ff954fd840da6578cbbb46dee1b9",
@@ -51,10 +59,10 @@
   "original_published_outputs_and_legacy_seed_inputs_unchanged": true,
   "package_version": "2.0.0",
   "platform": "Windows-11-10.0.26200-SP0",
-  "production_network_action_note": "Code pushed to main and the normal collector manually dispatched; validation in progress at recording, output publication pending.",
+  "production_network_action_note": "Code pushed to main; normal collector and actual publication have succeeded. Later publishing download reset recovered using saved immutable artifacts.",
   "production_network_actions_performed": true,
   "python": "3.13.15",
-  "recorded_at_utc": "2026-10-03T02:48:21.220467+00:00",
+  "recorded_at_utc": "2026-10-03T16:16:56.667112+00:00",
   "snapshot": {
     "actual_validation_source_manifest": "61fdf7a645ab695581c53fe411f0733b3d46e65b344d353fd87cfe552df145ff",
     "client_check_reuse": "Only after exact equality of every output hash/size and client profile; collector/publisher changes affect manifest producer metadata only.",
@@ -75,10 +83,10 @@
   "tests": {
     "command": "python -m unittest discover -v",
     "failed": 0,
-    "log_sha256": "f93d0975a619b4aa979b3cc5d147cacfe28fd6f1405768c3098a8721555b1f8b",
-    "passed": 45,
+    "log_sha256": "81cd10be1fbee0f7820ee6edbcaa7e284258bfc13500ab4bf1a6da7dde2783b0",
+    "passed": 49,
     "skipped": 0,
-    "wall_seconds": 41.896
+    "wall_seconds": 124.105
   },
   "wheel": {
     "files": 140,
