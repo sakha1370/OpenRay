@@ -1,5 +1,7 @@
 import asyncio
 import gzip
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +13,31 @@ from tests.test_domain import VLESS
 
 
 class FetchTests(unittest.IsolatedAsyncioTestCase):
+    async def test_local_source_resolves_root_alias_and_rejects_escape(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            parent = Path(tmp)
+            real = parent / "real"
+            real.mkdir()
+            (real / "subscription.txt").write_text(VLESS + "\n")
+            (parent / "outside.txt").write_text(VLESS + "\n")
+            alias = parent / "alias"
+            if os.name == "nt":
+                subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(alias), str(real)],
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            else:
+                alias.symlink_to(real, target_is_directory=True)
+            settings = Settings(alias, parent / "state.sqlite3", alias / "sources.txt")
+            with Store(settings.database) as store:
+                async with Fetcher(settings, store) as fetcher:
+                    self.assertEqual(await fetcher.fetch(Source("subscription.txt")), [VLESS])
+                    self.assertEqual(await fetcher.fetch(Source(str(real / "subscription.txt"))), [VLESS])
+                    with self.assertRaisesRegex(ValueError, "outside configured root"):
+                        await fetcher._request(Source("../outside.txt"))
+
     async def test_cache_gzip_size_and_status(self):
         seen = []
 

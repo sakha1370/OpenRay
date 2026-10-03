@@ -141,7 +141,10 @@ class Fetcher:
             if not local.is_absolute():
                 local = self.settings.root / local
             local = local.resolve()
-            if not local.is_relative_to(self.settings.root) and not self.settings.allow_private_sources:
+            if (
+                not local.is_relative_to(self.settings.root.resolve())
+                and not self.settings.allow_private_sources
+            ):
                 raise ValueError("local source outside configured root")
             if not local.is_file():
                 raise ValueError("local source must be a regular file")
