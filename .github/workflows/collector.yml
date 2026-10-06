@@ -38,6 +38,7 @@ jobs:
           OPENRAY_STAGE3_WORKERS: '64'
           OPENRAY_MEMORY_MB: '12288'
           OPENRAY_RUN_BUDGET_S: '1200'
+          OPENRAY_STAGE3_MAX: '20000'
           RUN_MODE: ${{ inputs.mode }}
         run: python -m openray run --mode "$RUN_MODE" --report artifacts/run.json
       - run: python tools/stage_artifact.py

@@ -125,22 +125,24 @@ async def run(
                     carry = max(0.0, allowance - stats["discovery_s"])
                 async with validator_factory(settings) as validator:
                     for target in targets:
+                        # (accepted, retests): retests get their own share so due failures can
+                        # reach retirement while never-checked candidates keep arriving.
                         categories = (
-                            (True, False)
+                            ((True, False), (False, True), (False, False))
                             if mode == "combined" and target.id == "connectivity"
-                            else (mode != "discovery",)
+                            else ((mode != "discovery", False),)
                         )
-                        for accepted in categories:
+                        for index, (accepted, retests) in enumerate(categories):
                             remaining = max(0, validation_deadline - time.monotonic())
                             if len(targets) > 1:
                                 fraction = (
-                                    (0.35 if accepted else 0.20)
+                                    (0.30 if accepted else 0.15)
                                     if target.id == "connectivity"
-                                    else (0.30 if mode == "combined" else 1) / len(SITE_TARGETS)
+                                    else (0.25 if mode == "combined" else 1) / len(SITE_TARGETS)
                                 )
                                 allotted = min(remaining, settings.budget * fraction + carry)
                             else:
-                                allotted = remaining / (2 if mode == "combined" and accepted else 1)
+                                allotted = remaining / (len(categories) - index)
                             began = time.monotonic()
                             validator.settings = dataclasses.replace(
                                 settings, timeout=settings.existing_timeout if accepted else settings.timeout
@@ -157,6 +159,7 @@ async def run(
                                     accepted,
                                     results,
                                     time.monotonic() + allotted,
+                                    retests,
                                 )
                             except TimeoutError:
                                 stats["budget_exhausted"] = True
@@ -166,6 +169,7 @@ async def run(
                                 {
                                     "target": target.id,
                                     "accepted": accepted,
+                                    "retests": retests,
                                     "allotted_s": round(allotted, 1),
                                     "used_s": round(used, 1),
                                     "checks": len(results)

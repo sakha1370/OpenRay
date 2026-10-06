@@ -22,6 +22,7 @@ async def validate_batch(
     accepted: bool,
     results: list[dict],
     deadline: float,
+    retests: bool = False,
 ):
     queue = asyncio.Queue(settings.queue_size)
     # TCP handshakes wait without a core, so extra consumers keep every core busy meanwhile.
@@ -41,6 +42,7 @@ async def validate_batch(
                 version=target.version,
                 # Site results through a proxy that fails connectivity carry no information.
                 alive_only=accepted and target.id != "connectivity",
+                retests_only=retests,
             )
             if not batch:
                 break

@@ -116,3 +116,35 @@ class PipelineTests(unittest.IsolatedAsyncioTestCase):
                 snapshot = build_snapshot(store, root, root / "snapshots")
             listed = (snapshot / "output/site_access/aistudio.txt").read_text().splitlines()
             self.assertEqual([parse_uri(uri).server for uri in listed], ["alive.test"])
+
+    async def test_retests_progress_while_never_checked_candidates_wait(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            settings = Settings(
+                root, root / "state.sqlite3", root / "sources.txt", workers=2, batch_size=2, check_sites=False
+            )
+            (root / "sources.txt").write_text("")
+            retests = [parse_uri(VLESS.replace("example.com", f"bad{n}.test")) for n in range(2)]
+            with Store(settings.database) as store:
+                store.db.execute("INSERT OR REPLACE INTO meta VALUES('legacy_migrated','1')")
+                for n, proxy in enumerate(retests):
+                    store.add(proxy)
+                    store.observe(
+                        f"r{n}",
+                        "earlier",
+                        proxy,
+                        "global",
+                        "connectivity",
+                        Observation(Outcome.TIMEOUT),
+                        now=1,
+                    )
+                for n in range(4):
+                    store.add(parse_uri(VLESS.replace("example.com", f"good{n}.test")))
+                self.assertEqual(
+                    store.lease("global", "connectivity", "probe", 5, 1, retests_only=True), retests
+                )
+                store.release("probe")
+            code, report = await run(settings, "combined", validator_factory=FakeValidator)
+            stages = {(s["accepted"], s["retests"]): s["checks"] for s in report["stages"]}
+            self.assertEqual(stages[(False, True)], 2)
+            self.assertEqual(stages[(False, False)], 2)

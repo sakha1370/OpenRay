@@ -131,6 +131,7 @@ class Store:
         version: int = 1,
         source_only: bool = False,
         alive_only: bool = False,
+        retests_only: bool = False,
     ) -> list[Proxy]:
         """Every query streams an index or the small accepted set; leasing runs on the event loop."""
         now = time.time() if now is None else now
@@ -149,13 +150,16 @@ class Store:
             else:
                 candidates = "AND p.accepted=0" if source_only else ""
                 # Never-checked rows newest first: first-check success fell from 10% within
-                # six hours of discovery to 4% after two days. Retests follow by due time.
-                rows = db.execute(
-                    "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
-                    "WHERE h.context=? AND h.target=? AND h.next_due=0 AND h.lease_until IS NULL "
-                    f"AND h.version=? {candidates} AND {UNSEEN} ORDER BY h.rowid DESC LIMIT ?",
-                    (context, target, version, owner, limit),
-                ).fetchall()
+                # six hours of discovery to 4% after two days. Retests follow by due time,
+                # or alone when a run reserves them a share of its budget.
+                rows = []
+                if not retests_only:
+                    rows = db.execute(
+                        "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
+                        "WHERE h.context=? AND h.target=? AND h.next_due=0 AND h.lease_until IS NULL "
+                        f"AND h.version=? {candidates} AND {UNSEEN} ORDER BY h.rowid DESC LIMIT ?",
+                        (context, target, version, owner, limit),
+                    ).fetchall()
                 if len(rows) < limit:
                     rows += db.execute(
                         "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
