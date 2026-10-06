@@ -63,7 +63,8 @@ async def run(
     started = time.monotonic()
     run_id = uuid.uuid4().hex
     deadline = started + settings.budget
-    validation_deadline = deadline - min(60, settings.budget * 0.05)
+    # Exports and 14 client gates took 17-29 s in production; short budgets keep the full reserve.
+    validation_deadline = deadline - min(60, settings.budget * 0.25)
     stats = {
         "run": run_id,
         "mode": mode,
@@ -159,7 +160,18 @@ async def run(
                                 )
                             except TimeoutError:
                                 stats["budget_exhausted"] = True
-                            carry = max(0.0, allotted - (time.monotonic() - began))
+                            used = time.monotonic() - began
+                            carry = max(0.0, allotted - used)
+                            stats.setdefault("stages", []).append(
+                                {
+                                    "target": target.id,
+                                    "accepted": accepted,
+                                    "allotted_s": round(allotted, 1),
+                                    "used_s": round(used, 1),
+                                    "checks": len(results)
+                                    - sum(s["checks"] for s in stats.get("stages", [])),
+                                }
+                            )
         except TimeoutError:
             stats["budget_exhausted"] = True
         except BaseException:
