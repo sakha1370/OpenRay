@@ -159,11 +159,33 @@ def _bool(value: str) -> bool:
     return value.lower() in {"1", "true", "yes", "on"}
 
 
+def vmess_security(p: Proxy) -> str:
+    # JSON null was stored as the string "None"; unset means auto. Every pinned core accepts only these.
+    fields = p.metadata_fields
+    value = p.get("cipher", "auto").lower()
+    if fields.get("scy", fields.get("cipher", "")) is None or value in {"", "null"}:
+        value = "auto"
+    if value not in {"auto", "none", "zero", "aes-128-gcm", "chacha20-poly1305"}:
+        raise Unsupported("VMess security unsupported")
+    return value
+
+
 def ss_method(p: Proxy, supported: set[str]) -> str:
     method = p.username.lower()
     method = SS_ALIASES.get(method, method)
     if method not in supported:
         raise Unsupported("Shadowsocks cipher unsupported by this core")
+    if method.startswith("2022-blake3-"):
+        from .domain import b64decode
+
+        size = 16 if "aes-128" in method else 32
+        # Every client refuses a 2022 key of the wrong size; "server:user" keys are checked separately.
+        try:
+            valid = all(len(b64decode(key)) == size for key in p.password.split(":"))
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ValueError("invalid Shadowsocks 2022 key")
     return method
 
 
@@ -226,10 +248,7 @@ def singbox_outbound(p: Proxy) -> dict:
     elif p.scheme == "vmess":
         if p.get("packetEncoding"):
             raise Unsupported("VMess packet encoding requires the Xray profile")
-        cipher = p.get("cipher", "auto").lower()
-        if cipher not in {"auto", "none", "zero", "aes-128-gcm", "chacha20-poly1305"}:
-            raise Unsupported("sing-box VMess cipher unsupported")
-        ob.update(security=cipher, alter_id=int(p.get("aid", "0")))
+        ob.update(security=vmess_security(p), alter_id=int(p.get("aid", "0")))
     elif p.scheme == "trojan":
         ob["password"] = p.username + ((":" + p.password) if p.password else "")
     elif p.scheme == "ss":
@@ -349,7 +368,7 @@ def xray_outbound(p: Proxy) -> dict:
                     raise Unsupported("Xray VLESS flow unsupported")
                 user["flow"] = p.get("flow")
         else:
-            user.update(alterId=int(p.get("aid", "0")), security=p.get("cipher", "auto").lower())
+            user.update(alterId=int(p.get("aid", "0")), security=vmess_security(p))
         ob["settings"] = {"vnext": [{"address": p.server, "port": p.port, "users": [user]}]}
         if p.get("packetEncoding"):
             ob["settings"]["packetEncoding"] = p.get("packetEncoding")
@@ -479,7 +498,7 @@ def clash_proxy(p: Proxy) -> dict:
     if p.scheme == "vmess":
         if p.get("packetEncoding"):
             raise Unsupported("VMess packet encoding requires the Xray profile")
-        ob.update(alterId=int(p.get("aid", "0")), cipher=p.get("cipher", "auto").lower())
+        ob.update(alterId=int(p.get("aid", "0")), cipher=vmess_security(p))
     elif p.scheme == "vless":
         if p.get("encryption", "none") != "none":
             raise Unsupported("mihomo VLESS encryption unsupported")

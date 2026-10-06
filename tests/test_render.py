@@ -65,6 +65,17 @@ class RenderTests(unittest.TestCase):
         self.assertEqual((p.get("fp"), p.get("alpn")), ("", ""))
         self.assertNotIn("utls", singbox_outbound(p)["tls"])
         self.assertNotIn("alpn", xray_outbound(p)["streamSettings"]["tlsSettings"])
+        # mihomo rejected the whole client file over one "scy": "null"; unset security is auto.
+        for scy in (None, "null", ""):
+            fields.update(scy=scy)
+            p = parse_uri("vmess://" + base64.b64encode(json.dumps(fields).encode()).decode())
+            self.assertEqual(clash_proxy(p)["cipher"], "auto")
+            self.assertEqual(xray_outbound(p)["settings"]["vnext"][0]["users"][0]["security"], "auto")
+        fields.update(scy="tls")
+        self.assertEqual(
+            len(convert([parse_uri("vmess://" + base64.b64encode(json.dumps(fields).encode()).decode())])[2]),
+            2,
+        )
 
     def test_each_core_receives_only_ciphers_it_accepts(self):
         legacy = ss("aes-256-cfb")
@@ -75,6 +86,10 @@ class RenderTests(unittest.TestCase):
         alias = ss("CHACHA20-POLY1305")
         self.assertEqual(xray_outbound(alias)["settings"]["servers"][0]["method"], "chacha20-ietf-poly1305")
         self.assertEqual(singbox_outbound(alias)["method"], "chacha20-ietf-poly1305")
+        # Clients refuse a Shadowsocks 2022 key of the wrong size.
+        self.assertEqual(len(convert([ss("2022-blake3-aes-256-gcm")])[2]), 2)
+        with self.assertRaises(ValueError):
+            xray_outbound(ss("2022-blake3-aes-256-gcm"))
         # Sources sometimes put a channel name where the cipher belongs.
         self.assertEqual(len(convert([ss("TelegramChannel")])[2]), 2)
         with self.assertRaises(Unsupported):
