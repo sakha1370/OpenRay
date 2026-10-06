@@ -93,3 +93,26 @@ class PipelineTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len((path / "output/all_valid_proxies.txt").read_text().splitlines()), 5)
             with Store(settings.database) as store:
                 self.assertTrue(all("global" not in contexts for contexts in store.view()[1].values()))
+
+    async def test_site_exports_require_current_connectivity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            alive, dead = (parse_uri(VLESS.replace("example.com", f"{n}.test")) for n in ("alive", "dead"))
+            with Store(root / "state.sqlite3") as store:
+                for proxy, outcome in ((alive, Outcome.SUCCESS), (dead, Outcome.PROXY_FAILURE)):
+                    store.add(proxy, accepted=True)
+                    store.observe(
+                        proxy.server + "c", "r", proxy, "global", "connectivity", Observation(outcome), now=1
+                    )
+                    store.observe(
+                        proxy.server + "s",
+                        "r",
+                        proxy,
+                        "global",
+                        "aistudio",
+                        Observation(Outcome.SUCCESS),
+                        now=1,
+                    )
+                snapshot = build_snapshot(store, root, root / "snapshots")
+            listed = (snapshot / "output/site_access/aistudio.txt").read_text().splitlines()
+            self.assertEqual([parse_uri(uri).server for uri in listed], ["alive.test"])

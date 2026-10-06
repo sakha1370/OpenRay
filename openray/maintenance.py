@@ -17,6 +17,13 @@ def maintain(store: Store, retention_days: int = 90, apply: bool = False) -> dic
     cutoff = now - retention_days * 86400
     expired = store.db.execute("SELECT count(*) FROM legacy_tested WHERE time<?", (cutoff,)).fetchone()[0]
     observations = store.db.execute("SELECT count(*) FROM observation WHERE time<?", (cutoff,)).fetchone()[0]
+    # Site rows are only leased for accepted proxies; never-observed rows for the rest are
+    # empty placeholders, and leasing re-creates one when its proxy is accepted.
+    placeholder = (
+        "FROM health WHERE target!='connectivity' AND observed_at=0 AND lease_owner IS NULL "
+        "AND proxy_id IN (SELECT id FROM proxy WHERE accepted=0)"
+    )
+    placeholders = store.db.execute("SELECT count(*) " + placeholder).fetchone()[0]
     stale = store.db.execute(
         "SELECT id FROM snapshot WHERE created<? AND published=1 ORDER BY created DESC", (cutoff,)
     ).fetchall()[2:]
@@ -36,6 +43,7 @@ def maintain(store: Store, retention_days: int = 90, apply: bool = False) -> dic
         "dry_run": not apply,
         "legacy_hashes_to_prune": expired,
         "observations_to_archive": observations,
+        "placeholders_to_drop": placeholders,
         "snapshots_to_prune": len(snapshots),
         "run_files_to_prune": len(runs),
         "integrity": store.db.execute("PRAGMA integrity_check").fetchone()[0],
@@ -45,8 +53,10 @@ def maintain(store: Store, retention_days: int = 90, apply: bool = False) -> dic
             raise ValueError("maintenance rejected a corrupt database")
         if store.db.execute("SELECT 1 FROM health WHERE lease_until>? LIMIT 1", (now,)).fetchone():
             raise ValueError("maintenance requires idle validation workers")
-        store.backup(parent / "backups" / ("maintenance-" + str(time.time_ns()) + ".sqlite3"))
+        if expired or observations or placeholders or snapshots or runs:
+            store.backup(parent / "backups" / ("maintenance-" + str(time.time_ns()) + ".sqlite3"))
         with store.transaction() as db:
+            db.execute("DELETE " + placeholder)
             db.execute("DELETE FROM legacy_tested WHERE time<?", (cutoff,))
             db.execute(
                 "INSERT OR IGNORE INTO event_identity SELECT event_id,run,proxy_id,context,target,version "
@@ -74,7 +84,11 @@ def maintain(store: Store, retention_days: int = 90, apply: bool = False) -> dic
                 _safe(path, parent / "backups")
                 path.unlink()
         store.db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-        if expired or observations:
+        free, pages = (
+            store.db.execute(f"PRAGMA {name}").fetchone()[0] for name in ("freelist_count", "page_count")
+        )
+        # A few daily expiries used to rewrite the whole file on every run.
+        if free > pages // 10:
             store.db.execute("VACUUM")
         store.db.execute("PRAGMA optimize")
     return report

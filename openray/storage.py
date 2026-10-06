@@ -18,6 +18,14 @@ from .domain import IDENTITY_VERSION, Observation, Outcome, ParseError, Proxy, p
 from .files import fsync_directory
 
 SCHEMA_VERSION = 4
+# Unaccepted candidates stop being scheduled after this many consecutive failures
+# spanning at least two cooldowns; production history showed 0.5% recovering afterwards.
+RETIRE_AFTER_FAILURES = 3
+RETIRED = 1e18  # next_due sentinel; a target version bump still resets it.
+UNSEEN = "NOT EXISTS (SELECT 1 FROM observation o WHERE o.proxy_id=h.proxy_id AND o.context=h.context "
+UNSEEN += "AND o.target=h.target AND o.version=h.version AND o.run=?)"
+ALIVE = "EXISTS (SELECT 1 FROM health c WHERE c.proxy_id=h.proxy_id AND c.context=h.context "
+ALIVE += "AND c.target='connectivity' AND c.outcome='success')"
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS proxy(id TEXT PRIMARY KEY,identity_version INTEGER NOT NULL,
@@ -32,6 +40,7 @@ CREATE TABLE IF NOT EXISTS health(proxy_id TEXT NOT NULL REFERENCES proxy(id),co
  failures INTEGER NOT NULL DEFAULT 0,next_due REAL NOT NULL DEFAULT 0,lease_owner TEXT,lease_until REAL,
  outcome TEXT,observed_at REAL NOT NULL DEFAULT 0,PRIMARY KEY(proxy_id,context,target));
 CREATE INDEX IF NOT EXISTS health_due ON health(context,target,next_due,lease_until);
+CREATE INDEX IF NOT EXISTS proxy_accepted ON proxy(created,id) WHERE accepted=1;
 CREATE TABLE IF NOT EXISTS observation(event_id TEXT PRIMARY KEY,run TEXT NOT NULL,
  proxy_id TEXT NOT NULL REFERENCES proxy(id),context TEXT NOT NULL,target TEXT NOT NULL,
  version INTEGER NOT NULL,outcome TEXT NOT NULL,time REAL NOT NULL,elapsed_ms REAL NOT NULL,
@@ -52,6 +61,7 @@ class Store:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+        self.prepared: dict[tuple[str, str, int], int] = {}
         self.db = sqlite3.connect(self.path, timeout=30, isolation_level=None, check_same_thread=False)
         if os.name != "nt" and self.path.is_file():
             self.path.chmod(0o600)
@@ -120,34 +130,98 @@ class Store:
         accepted_only: bool = False,
         version: int = 1,
         source_only: bool = False,
+        alive_only: bool = False,
     ) -> list[Proxy]:
+        """Every query streams an index or the small accepted set; leasing runs on the event loop."""
         now = time.time() if now is None else now
         with self.transaction() as db:
-            db.execute(
-                "INSERT OR IGNORE INTO health(proxy_id,context,target,version) SELECT id,?,?,? FROM proxy",
-                (context, target, version),
-            )
-            db.execute(
-                "UPDATE health SET version=?,next_due=0,last_success=NULL,first_failure=NULL,failures=0,outcome=NULL,"
-                "observed_at=0,lease_owner=NULL,lease_until=NULL WHERE context=? AND target=? AND version<?",
-                (version, context, target, version),
-            )
-            rows = db.execute(
-                "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
-                "WHERE h.context=? AND h.target=? AND h.next_due<=? "
-                "AND (h.lease_until IS NULL OR h.lease_until<=?) "
-                "AND (?=0 OR p.accepted=1) AND (?=0 OR p.accepted=0) "
-                "AND h.version=? "
-                "AND NOT EXISTS (SELECT 1 FROM observation o WHERE o.proxy_id=h.proxy_id "
-                "AND o.context=h.context AND o.target=h.target AND o.version=h.version AND o.run=?) "
-                "ORDER BY h.next_due,p.created,p.id LIMIT ?",
-                (context, target, now, now, int(accepted_only), int(source_only), version, owner, limit),
-            ).fetchall()
+            self._prepare(db, context, target, version, now, accepted_only)
+            if accepted_only:
+                rows = db.execute(
+                    # CROSS JOIN keeps the planner on the small accepted set instead of the due index.
+                    "SELECT p.id,p.uri FROM proxy p INDEXED BY proxy_accepted CROSS JOIN health h "
+                    "ON h.proxy_id=p.id AND h.context=? AND h.target=? WHERE p.accepted=1 AND h.next_due<=? "
+                    "AND (h.lease_until IS NULL OR h.lease_until<=?) AND h.version=? "
+                    f"AND {UNSEEN} {'AND ' + ALIVE if alive_only else ''} "
+                    "ORDER BY h.next_due,p.created,p.id LIMIT ?",
+                    (context, target, now, now, version, owner, limit),
+                ).fetchall()
+            else:
+                candidates = "AND p.accepted=0" if source_only else ""
+                # Never-checked rows newest first: first-check success fell from 10% within
+                # six hours of discovery to 4% after two days. Retests follow by due time.
+                rows = db.execute(
+                    "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
+                    "WHERE h.context=? AND h.target=? AND h.next_due=0 AND h.lease_until IS NULL "
+                    f"AND h.version=? {candidates} AND {UNSEEN} ORDER BY h.rowid DESC LIMIT ?",
+                    (context, target, version, owner, limit),
+                ).fetchall()
+                if len(rows) < limit:
+                    rows += db.execute(
+                        "SELECT p.id,p.uri FROM health h JOIN proxy p ON p.id=h.proxy_id "
+                        "WHERE h.context=? AND h.target=? AND h.next_due>0 AND h.next_due<=? "
+                        "AND (h.lease_until IS NULL OR h.lease_until<=?) "
+                        f"AND h.version=? {candidates} AND {UNSEEN} ORDER BY h.next_due LIMIT ?",
+                        (context, target, now, now, version, owner, limit - len(rows)),
+                    ).fetchall()
             db.executemany(
                 "UPDATE health SET lease_owner=?,lease_until=? WHERE proxy_id=? AND context=? AND target=?",
                 [(owner, now + duration, r["id"], context, target) for r in rows],
             )
             return [parse_uri(r["uri"]) for r in rows]
+
+    def _prepare(self, db, context: str, target: str, version: int, now: float, accepted_only: bool):
+        key = (context, target, version)
+        if key not in self.prepared:
+            db.execute(
+                "UPDATE health SET version=?,next_due=0,last_success=NULL,first_failure=NULL,failures=0,outcome=NULL,"
+                "observed_at=0,lease_owner=NULL,lease_until=NULL WHERE context=? AND target=? AND version<?",
+                (version, context, target, version),
+            )
+            self.prepared[key] = 0
+        # Expired leases rejoin the never-checked stream; the index range skips unleased rows.
+        db.execute(
+            "UPDATE health SET lease_owner=NULL,lease_until=NULL "
+            "WHERE context=? AND target=? AND next_due=0 AND lease_until<=?",
+            (context, target, now),
+        )
+        if accepted_only:
+            db.execute(
+                "INSERT OR IGNORE INTO health(proxy_id,context,target,version) "
+                "SELECT id,?,?,? FROM proxy WHERE accepted=1",
+                (context, target, version),
+            )
+            return
+        newest = db.execute("SELECT COALESCE(max(rowid),0) FROM proxy").fetchone()[0]
+        if newest > self.prepared[key]:
+            db.execute(
+                "INSERT OR IGNORE INTO health(proxy_id,context,target,version) "
+                "SELECT id,?,?,? FROM proxy WHERE rowid>? ORDER BY rowid",
+                (context, target, version, self.prepared[key]),
+            )
+            self.prepared[key] = newest
+
+    def due(self, context: str, now: float | None = None) -> dict[str, int]:
+        """Work a run can lease: candidates for connectivity, accepted proxies for every target."""
+        now = time.time() if now is None else now
+        q = "SELECT count(*) FROM health h JOIN proxy p ON p.id=h.proxy_id WHERE h.context=? AND "
+        return {
+            "never_checked": self.db.execute(
+                q + "h.target='connectivity' AND p.accepted=0 AND h.next_due=0", (context,)
+            ).fetchone()[0],
+            "retests": self.db.execute(
+                q + "h.target='connectivity' AND p.accepted=0 AND h.next_due>0 AND h.next_due<=?",
+                (context, now),
+            ).fetchone()[0],
+            "accepted": self.db.execute(
+                "SELECT count(*) FROM proxy p INDEXED BY proxy_accepted CROSS JOIN health h ON h.proxy_id=p.id "
+                f"WHERE p.accepted=1 AND h.context=? AND h.next_due<=? AND (h.target='connectivity' OR {ALIVE})",
+                (context, now),
+            ).fetchone()[0],
+            "retired": self.db.execute(
+                q + "h.target='connectivity' AND p.accepted=0 AND h.next_due>=?", (context, RETIRED)
+            ).fetchone()[0],
+        }
 
     def release(self, owner: str):
         with self.transaction() as db:
@@ -301,13 +375,14 @@ class Store:
             first_failure = now if first_failure is None else first_failure
             failures += 1
             next_due = now + cooldown
-            if (
-                context == "global"
-                and target == "connectivity"
-                and failures >= 2
-                and now - first_failure >= death_after
-            ):
-                db.execute("UPDATE proxy SET accepted=0 WHERE id=?", (proxy.identity,))
+            if context == "global" and target == "connectivity":
+                if failures >= 2 and now - first_failure >= death_after:
+                    db.execute("UPDATE proxy SET accepted=0 WHERE id=?", (proxy.identity,))
+                accepted = db.execute("SELECT accepted FROM proxy WHERE id=?", (proxy.identity,)).fetchone()[
+                    0
+                ]
+                if not accepted and failures >= RETIRE_AFTER_FAILURES and now - first_failure >= 2 * cooldown:
+                    next_due = RETIRED
         else:
             # Scheduling advances without contaminating connection health.
             next_due = now + (3600 if result.outcome in {Outcome.UNSUPPORTED, Outcome.INVALID_CONFIG} else 60)

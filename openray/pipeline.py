@@ -110,14 +110,18 @@ async def run(
             targets += SITE_TARGETS
         try:
             async with asyncio.timeout_at(validation_deadline):
+                # Time a stage leaves unused flows to later stages instead of idling.
+                carry = 0.0
                 if mode in {"combined", "discovery"}:
+                    allowance = min(validation_deadline - time.monotonic(), settings.budget * 0.15)
+                    began = time.monotonic()
                     try:
-                        async with asyncio.timeout(
-                            min(validation_deadline - time.monotonic(), settings.budget * 0.15)
-                        ):
+                        async with asyncio.timeout(allowance):
                             stats["discovery"] = await discover(settings, store)
                     except TimeoutError:
                         stats["discovery"] = {"budget_exhausted": True}
+                    stats["discovery_s"] = time.monotonic() - began
+                    carry = max(0.0, allowance - stats["discovery_s"])
                 async with validator_factory(settings) as validator:
                     for target in targets:
                         categories = (
@@ -133,9 +137,10 @@ async def run(
                                     if target.id == "connectivity"
                                     else (0.30 if mode == "combined" else 1) / len(SITE_TARGETS)
                                 )
-                                allotted = min(remaining, settings.budget * fraction)
+                                allotted = min(remaining, settings.budget * fraction + carry)
                             else:
                                 allotted = remaining / (2 if mode == "combined" and accepted else 1)
+                            began = time.monotonic()
                             validator.settings = dataclasses.replace(
                                 settings, timeout=settings.existing_timeout if accepted else settings.timeout
                             )
@@ -154,6 +159,7 @@ async def run(
                                 )
                             except TimeoutError:
                                 stats["budget_exhausted"] = True
+                            carry = max(0.0, allotted - (time.monotonic() - began))
         except TimeoutError:
             stats["budget_exhausted"] = True
         except BaseException:
@@ -200,9 +206,8 @@ async def run(
         stats["p50_ms"] = _percentile(results, 0.5)
         stats["p95_ms"] = _percentile(results, 0.95)
         stats["p99_ms"] = _percentile(results, 0.99)
-        stats["pending_due"] = store.db.execute(
-            "SELECT count(*) FROM health WHERE context=? AND next_due<=?", (context, time.time())
-        ).fetchone()[0]
+        stats["due"] = store.due(context)
+        stats["pending_due"] = sum(v for k, v in stats["due"].items() if k != "retired")
         if context != "global":
             bundle = {"schema": 1, "id": run_id, "context": context, "observations": results}
             bundle_path = settings.database.parent / "runs" / (run_id + ".bundle.json")

@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 from .config import Settings
-from .domain import ParseError, extract_uris
+from .domain import IDENTITY_VERSION, ParseError, extract_uris
 from .http_body import bounded_body
 from .source_transport import PinnedBackend
 from .storage import Store
@@ -204,9 +204,13 @@ class Fetcher:
     async def fetch(self, source: Source) -> list[str]:
         import httpx
 
-        row = self.store.db.execute("SELECT next_due FROM source WHERE url=?", (source.url,)).fetchone()
+        row = self.store.db.execute(
+            "SELECT next_due,failures FROM source WHERE url=?", (source.url,)
+        ).fetchone()
         if row and row[0] > time.time():
             return []
+        # Persistently failing sources back off from five minutes to six hours.
+        retry_after = min(21600, 300 * 2 ** min(row[1] if row else 0, 7))
         for attempt in range(3):
             try:
                 content, etag, modified = await self._request(source, attempt)
@@ -247,7 +251,7 @@ class Fetcher:
                 "INSERT INTO source(url,fetched,outcome,failures,next_due) VALUES(?,?,'source_failure',1,?) "
                 "ON CONFLICT(url) DO UPDATE SET fetched=excluded.fetched,outcome='source_failure',"
                 "failures=failures+1,next_due=excluded.next_due",
-                (source.url, time.time(), time.time() + 300),
+                (source.url, time.time(), time.time() + retry_after),
             )
         return []
 
@@ -276,6 +280,14 @@ async def discover(settings: Settings, store: Store) -> dict:
                 stats["sources"] += 1
                 with store.transaction() as db:
                     for uri in sorted(set(uris)):
+                        # A known string already maps to its current identity; parsing it again
+                        # cost about 150 s per run and can only re-derive the same proxy.
+                        if db.execute(
+                            "SELECT 1 FROM alias a JOIN proxy p ON p.id=a.proxy_id "
+                            "WHERE a.uri=? AND p.identity_version=?",
+                            (uri, IDENTITY_VERSION),
+                        ).fetchone():
+                            continue
                         try:
                             stats["new"] += store.add(parse_uri(uri), source.url, db=db)
                         except (ParseError, UnicodeError):

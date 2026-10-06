@@ -40,6 +40,7 @@ class Settings:
     test_status: int = 204
     body_sha256: str = ""
     tcp_prefilter: bool = False
+    prefilter_slots: int = 128
     check_sites: bool = True
     existing_timeout: float = 12
     source_cache_mb: int = 128
@@ -84,6 +85,8 @@ class Settings:
             test_status=env_int("OPENRAY_TEST_STATUS", 204, 100, 599),
             body_sha256=os.environ.get("OPENRAY_TEST_BODY_SHA256", ""),
             check_sites=os.environ.get("OPENRAY_CHECK_SITES", "1") != "0",
+            tcp_prefilter=os.environ.get("OPENRAY_TCP_PREFILTER", "0") == "1",
+            prefilter_slots=env_int("OPENRAY_TCP_PREFILTER_SLOTS", 128, 1, 4096),
             source_cache_mb=env_int("OPENRAY_SOURCE_CACHE_MB", 128, 1, 4096),
             existing_timeout=env_int("OPENRAY_STAGE3_EXISTING_TIMEOUT_S", 12, 1, 120),
         )

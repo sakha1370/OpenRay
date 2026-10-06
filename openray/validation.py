@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import ipaddress
 import os
@@ -454,41 +455,50 @@ class Validator:
             allowed=(self.settings.test_status,),
             body_sha256=self.settings.body_sha256,
         )
-        deadline = time.monotonic() + self.settings.timeout
-        started = time.monotonic()
-        try:
-            ipaddress.ip_address(proxy.server)
-            literal = True
-        except ValueError:
-            literal = False
-        if (
-            self.settings.tcp_prefilter
-            and literal
-            and proxy.scheme in {"vless", "vmess", "trojan", "ss", "http", "https", "socks"}
-            and proxy.transport not in {"kcp", "quic"}
-        ):
-            try:
-                async with asyncio.timeout_at(min(deadline, time.monotonic() + 2)):
-                    reader, writer = await asyncio.open_connection(proxy.server, proxy.port)
-                    writer.close()
-                    await writer.wait_closed()
-            except ConnectionRefusedError:
-                return Observation(
-                    Outcome.PROXY_FAILURE,
-                    (time.monotonic() - started) * 1000,
-                    "TCP endpoint refused connection",
-                )
-            except (TimeoutError, OSError):
-                # An inconclusive prefilter must still reach the protocol core.
-                pass
-        try:
-            async with asyncio.timeout_at(deadline):
-                worker = await self.available.get()
-        except TimeoutError:
-            return Observation(Outcome.CORE_FAILURE, detail="worker lease deadline")
+        if self.settings.tcp_prefilter and tcp_only(proxy):
+            rejected = await tcp_handshake(proxy, self.settings.timeout)
+            if rejected:
+                return rejected
+        # Waiting for a free core is not the candidate's time: its full timeout starts with the core.
+        worker = await self.available.get()
         try:
             # The worker owns its deadline and bounded teardown. An outer timeout here
             # would overwrite a completed probe timeout while its child is being reaped.
-            return await worker.check(proxy, target, deadline)
+            return await worker.check(proxy, target, time.monotonic() + self.settings.timeout)
         finally:
             self.available.put_nowait(worker)
+
+
+def tcp_only(proxy: Proxy) -> bool:
+    # Domains may resolve differently inside a core; UDP transports have no TCP handshake.
+    try:
+        ipaddress.ip_address(proxy.server)
+    except ValueError:
+        return False
+    return (
+        proxy.scheme in {"vless", "vmess", "trojan", "ss", "http", "https", "socks"}
+        and proxy.transport not in {"kcp", "quic"}
+        and "h3" not in proxy.get("alpn").lower().split(",")
+        and not proxy.get("plugin")
+    )
+
+
+async def tcp_handshake(proxy: Proxy, timeout: float) -> Observation | None:
+    """Negative evidence only. An endpoint that refuses, or does not complete a TCP handshake
+    within the full validation timeout, cannot pass the core check over the same network."""
+    started = time.monotonic()
+    try:
+        async with asyncio.timeout(timeout):
+            _, writer = await asyncio.open_connection(proxy.server, proxy.port)
+    except ConnectionRefusedError:
+        return Observation(
+            Outcome.PROXY_FAILURE, (time.monotonic() - started) * 1000, "TCP endpoint refused connection"
+        )
+    except TimeoutError:
+        return Observation(Outcome.TIMEOUT, (time.monotonic() - started) * 1000, "TCP handshake deadline")
+    except OSError:
+        return None  # Inconclusive: the protocol core decides.
+    writer.close()
+    with contextlib.suppress(OSError):
+        await writer.wait_closed()
+    return None

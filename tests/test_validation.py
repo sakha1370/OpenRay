@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 import psutil
@@ -25,6 +26,8 @@ from openray.validation import (
     config_check,
     http_probe,
     reserve_port,
+    tcp_handshake,
+    tcp_only,
     terminate,
 )
 from tests.test_domain import UUID
@@ -235,3 +238,31 @@ class CoreIntegrationTests(unittest.IsolatedAsyncioTestCase):
             result = await validator.check(self.proxy, Target("slow", (url + "/slow",)))
             self.assertEqual(result.outcome, Outcome.TIMEOUT)
             self.assertTrue(all(w.process is None for w in validator.workers))
+
+
+class TcpHandshakeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_handshake_is_negative_evidence_only(self):
+        listener = await asyncio.start_server(lambda _, writer: writer.close(), "127.0.0.1", 0)
+        proxy = parse_uri(f"vless://{UUID}@127.0.0.1:{listener.sockets[0].getsockname()[1]}")
+        try:
+            self.assertIsNone(await tcp_handshake(proxy, 5))
+        finally:
+            listener.close()
+            await listener.wait_closed()
+        self.assertEqual((await tcp_handshake(proxy, 5)).outcome, Outcome.PROXY_FAILURE)
+
+        async def silent(*_):
+            await asyncio.sleep(60)
+
+        with unittest.mock.patch("asyncio.open_connection", silent):
+            self.assertEqual((await tcp_handshake(proxy, 0.2)).outcome, Outcome.TIMEOUT)
+        with unittest.mock.patch("asyncio.open_connection", side_effect=OSError("unreachable")):
+            self.assertIsNone(await tcp_handshake(proxy, 5))
+        self.assertTrue(tcp_only(proxy))
+        for uri in (
+            f"vless://{UUID}@example.com:443",
+            "hy2://secret@127.0.0.1:443",
+            f"vless://{UUID}@127.0.0.1:443?type=xhttp&alpn=h3",
+            f"vless://{UUID}@127.0.0.1:443?type=kcp",
+        ):
+            self.assertFalse(tcp_only(parse_uri(uri)), uri)

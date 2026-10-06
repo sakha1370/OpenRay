@@ -7,7 +7,8 @@ import unittest
 from pathlib import Path
 
 from openray.domain import Observation, Outcome, parse_uri
-from openray.storage import Store, migrate
+from openray.maintenance import maintain
+from openray.storage import RETIRED, Store, migrate
 from tests.test_domain import VLESS
 
 
@@ -50,6 +51,93 @@ class StorageTests(unittest.TestCase):
         self.store.backup(self.root / "backup.sqlite3")
         with Store(self.root / "backup.sqlite3") as backup:
             self.assertEqual(backup.status(), self.store.status())
+
+    def test_never_checked_newest_first_then_due_retests(self):
+        old, mid, new = (parse_uri(VLESS.replace("example.com", f"{n}.test")) for n in ("old", "mid", "new"))
+        self.store.add(old)
+        failure = Observation(Outcome.PROXY_FAILURE)
+        self.store.observe("e", "earlier", old, "global", "connectivity", failure, now=0, cooldown=10)
+        self.store.add(mid)
+        self.assertEqual(
+            self.store.lease("global", "connectivity", "a", 1, 5, now=1, source_only=True), [mid]
+        )
+        self.store.release("a")
+        self.store.add(new)
+        leased = self.store.lease("global", "connectivity", "b", 5, 5, now=20, source_only=True)
+        self.assertEqual(leased, [new, mid, old])
+
+    def test_unaccepted_candidates_retire_after_repeated_failures(self):
+        accepted = parse_uri(VLESS.replace("example.com", "accepted.test"))
+        self.store.add(accepted, accepted=True)
+        brief = parse_uri(VLESS.replace("example.com", "brief.test"))
+        for n, now in enumerate((0, 10, 20)):
+            for proxy in (self.proxy, accepted):
+                timeout = Observation(Outcome.TIMEOUT)
+                self.store.observe(
+                    f"{proxy.server}{n}",
+                    f"r{n}",
+                    proxy,
+                    "global",
+                    "connectivity",
+                    timeout,
+                    now=now,
+                    cooldown=10,
+                )
+            # Three failures within two cooldowns are not enough evidence.
+            self.store.observe(
+                f"b{n}",
+                f"r{n}",
+                brief,
+                "global",
+                "connectivity",
+                Observation(Outcome.TIMEOUT),
+                now=n,
+                cooldown=10,
+            )
+        due = {h["proxy_id"]: h["next_due"] for h in self.store.view()[2]}
+        self.assertEqual(due[self.proxy.identity], RETIRED)
+        self.assertEqual((due[accepted.identity], due[brief.identity]), (30, 12))
+        self.assertEqual(self.store.due("global", now=100)["retired"], 1)
+        self.assertEqual(
+            self.store.lease("global", "connectivity", "late", 5, 5, now=10**9, source_only=True), [brief]
+        )
+
+    def test_site_leases_need_current_connectivity_and_mid_run_candidates_are_leased(self):
+        alive, dead = (parse_uri(VLESS.replace("example.com", f"{n}.test")) for n in ("alive", "dead"))
+        for proxy, outcome in ((alive, Outcome.SUCCESS), (dead, Outcome.PROXY_FAILURE)):
+            self.store.add(proxy, accepted=True)
+            self.store.observe(
+                proxy.server, "r", proxy, "global", "connectivity", Observation(outcome), now=0
+            )
+        site = self.store.lease("global", "aistudio", "s", 5, 5, now=1, accepted_only=True, alive_only=True)
+        self.assertEqual(site, [alive])
+        self.assertEqual(self.store.lease("global", "connectivity", "c", 5, 5, now=1, source_only=True), [])
+        self.store.add(self.proxy)
+        self.assertEqual(
+            self.store.lease("global", "connectivity", "c", 5, 5, now=1, source_only=True), [self.proxy]
+        )
+
+    def test_maintenance_drops_only_empty_unleasable_placeholders(self):
+        member, candidate = (
+            parse_uri(VLESS.replace("example.com", f"{n}.test")) for n in ("member", "candidate")
+        )
+        self.store.add(member, accepted=True)
+        self.store.add(candidate)
+        for target in ("connectivity", "aistudio"):
+            self.store.lease("global", target, "r", 5, 5, now=0)
+            self.store.release("r")
+        self.store.observe("seen", "r", candidate, "global", "cursor", Observation(Outcome.BLOCKED), now=1)
+        self.assertEqual(maintain(self.store, apply=False)["placeholders_to_drop"], 1)
+        self.assertEqual(maintain(self.store, apply=True)["placeholders_to_drop"], 1)
+        rows = {(h["proxy_id"], h["target"]) for h in self.store.view()[2]}
+        self.assertNotIn((candidate.identity, "aistudio"), rows)
+        for kept in (
+            (candidate.identity, "connectivity"),
+            (candidate.identity, "cursor"),
+            (member.identity, "aistudio"),
+        ):
+            self.assertIn(kept, rows)
+        self.assertEqual(maintain(self.store)["placeholders_to_drop"], 0)
 
     def test_repeatable_migration_and_alias_counts(self):
         (self.root / "output").mkdir()

@@ -24,6 +24,8 @@ async def validate_batch(
     deadline: float,
 ):
     queue = asyncio.Queue(settings.queue_size)
+    # TCP handshakes wait without a core, so extra consumers keep every core busy meanwhile.
+    consumers = settings.workers + (settings.prefilter_slots if settings.tcp_prefilter else 0)
 
     async def producer():
         leased = 0
@@ -32,18 +34,20 @@ async def validate_batch(
                 context,
                 target.id,
                 run_id,
-                min(settings.queue_size, settings.batch_size - leased),
+                min(max(settings.queue_size, 256), settings.batch_size - leased),
                 settings.budget + settings.timeout + 5,
                 accepted_only=accepted,
                 source_only=not accepted,
                 version=target.version,
+                # Site results through a proxy that fails connectivity carry no information.
+                alive_only=accepted and target.id != "connectivity",
             )
             if not batch:
                 break
             leased += len(batch)
             for proxy in batch:
                 await queue.put(proxy)
-        for _ in range(settings.workers):
+        for _ in range(consumers):
             await queue.put(None)
 
     async def consumer():
@@ -85,5 +89,5 @@ async def validate_batch(
     async with asyncio.timeout_at(deadline):
         async with asyncio.TaskGroup() as group:
             group.create_task(producer())
-            for _ in range(settings.workers):
+            for _ in range(consumers):
                 group.create_task(consumer())

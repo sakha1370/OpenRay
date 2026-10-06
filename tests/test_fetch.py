@@ -5,9 +5,11 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from openray.config import Settings
-from openray.fetch import Fetcher, Source
+from openray.domain import parse_uri
+from openray.fetch import Fetcher, Source, discover
 from openray.storage import Store
 from tests.test_domain import VLESS
 
@@ -86,3 +88,24 @@ class FetchTests(unittest.IsolatedAsyncioTestCase):
         finally:
             server.close()
             await server.wait_closed()
+
+    async def test_known_uris_skip_parsing_and_failing_sources_back_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "sources.txt").write_text("subscription.txt\nmissing.txt\n")
+            (root / "subscription.txt").write_text(VLESS + "\nvless://@broken\n")
+            settings = Settings(root, root / "state.sqlite3", root / "sources.txt")
+            with Store(settings.database) as store:
+                self.assertEqual((await discover(settings, store))["new"], 1)
+                with patch("openray.domain.parse_uri", side_effect=parse_uri) as parse:
+                    stats = await discover(settings, store)
+                self.assertEqual((stats["new"], stats["invalid"], parse.call_count), (0, 1, 1))
+                delays = []
+                for _ in range(3):
+                    store.db.execute("UPDATE source SET next_due=0 WHERE url='missing.txt'")
+                    await discover(settings, store)
+                    row = store.db.execute(
+                        "SELECT next_due-fetched FROM source WHERE url='missing.txt'"
+                    ).fetchone()
+                    delays.append(round(row[0]))
+                self.assertEqual(delays, [600, 1200, 2400])

@@ -90,6 +90,12 @@ def build_snapshot(
             write("output_iran/iran_top100.txt", lines_text(p.uri for p in ranked))
         conversions.append((f"output_iran/converted/{context}_top100", ranked))
     site_ids = ("aistudio", "jetbrain", "cursor")
+    # Sites are only re-checked through proxies that pass connectivity, so require it here too.
+    alive = {
+        h["proxy_id"]
+        for h in health
+        if h["context"] == "global" and h["target"] == "connectivity" and h["outcome"] == "success"
+    }
     sets = {}
     for site in site_ids:
         eligible = {
@@ -99,6 +105,7 @@ def build_snapshot(
             and h["target"] == site
             and h["outcome"] == "success"
             and h["last_success"] is not None
+            and h["proxy_id"] in alive
         }
         sets[site] = eligible
         write(f"output/site_access/{site}.txt", lines_text(p.uri for p in proxies if p.identity in eligible))
