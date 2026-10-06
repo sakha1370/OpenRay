@@ -13,6 +13,41 @@ class Unsupported(ValueError):
 
 
 FINGERPRINTS = {"chrome", "firefox", "safari", "ios", "android", "edge", "360", "qq", "random", "randomized"}
+# Equivalent Shadowsocks cipher spellings. Each pinned core accepts only the method
+# sets below (verified with its own config checker); others make the core exit at startup.
+SS_ALIASES = {
+    "chacha20-poly1305": "chacha20-ietf-poly1305",
+    "xchacha20-poly1305": "xchacha20-ietf-poly1305",
+    "aead_aes_128_gcm": "aes-128-gcm",
+    "aead_aes_256_gcm": "aes-256-gcm",
+    "aead_chacha20_poly1305": "chacha20-ietf-poly1305",
+    "aead_xchacha20_poly1305": "xchacha20-ietf-poly1305",
+}
+XRAY_SS_METHODS = {
+    "aes-128-gcm",
+    "aes-256-gcm",
+    "chacha20-ietf-poly1305",
+    "xchacha20-ietf-poly1305",
+    "2022-blake3-aes-128-gcm",
+    "2022-blake3-aes-256-gcm",
+    "2022-blake3-chacha20-poly1305",
+}
+SINGBOX_SS_METHODS = XRAY_SS_METHODS | {
+    "none",
+    "aes-192-gcm",
+    "aes-128-ctr",
+    "aes-192-ctr",
+    "aes-256-ctr",
+    "aes-128-cfb",
+    "aes-192-cfb",
+    "aes-256-cfb",
+    "rc4-md5",
+    "chacha20-ietf",
+    "xchacha20",
+}
+MIHOMO_SS_METHODS = SINGBOX_SS_METHODS | {"chacha20"}
+# Xray rejects REALITY over other transports; sing-box can still represent them.
+XRAY_REALITY_NETWORKS = {"raw", "xhttp", "grpc"}
 COMMON_PARAMS = {
     "type",
     "path",
@@ -124,6 +159,14 @@ def _bool(value: str) -> bool:
     return value.lower() in {"1", "true", "yes", "on"}
 
 
+def ss_method(p: Proxy, supported: set[str]) -> str:
+    method = p.username.lower()
+    method = SS_ALIASES.get(method, method)
+    if method not in supported:
+        raise Unsupported("Shadowsocks cipher unsupported by this core")
+    return method
+
+
 def tls_options(p: Proxy) -> dict | None:
     security = p.get(
         "security",
@@ -190,7 +233,7 @@ def singbox_outbound(p: Proxy) -> dict:
     elif p.scheme == "trojan":
         ob["password"] = p.username + ((":" + p.password) if p.password else "")
     elif p.scheme == "ss":
-        ob.update(method=p.username, password=p.password)
+        ob.update(method=ss_method(p, SINGBOX_SS_METHODS), password=p.password)
         if p.get("plugin"):
             plugin, _, options = p.get("plugin").partition(";")
             ob.update(plugin=plugin, plugin_opts=options)
@@ -308,7 +351,7 @@ def xray_outbound(p: Proxy) -> dict:
         if p.scheme == "trojan":
             server["password"] = p.username + ((":" + p.password) if p.password else "")
         elif p.scheme == "ss":
-            server.update(method=p.username, password=p.password)
+            server.update(method=ss_method(p, XRAY_SS_METHODS), password=p.password)
         elif p.username:
             server["users"] = [{"user": p.username, "pass": p.password}]
         ob["settings"] = {"servers": [server]}
@@ -360,6 +403,8 @@ def xray_outbound(p: Proxy) -> dict:
         if tls.get("insecure"):
             raise Unsupported("pinned Xray removed allowInsecure; use sing-box for this connection")
         reality = tls.get("reality")
+        if reality and stream["network"] not in XRAY_REALITY_NETWORKS:
+            raise Unsupported("Xray REALITY transport unsupported")
         stream["security"] = "reality" if reality else "tls"
         settings = {
             "serverName": tls["server_name"],
@@ -406,13 +451,18 @@ def clash_proxy(p: Proxy) -> dict:
         if p.get("encryption", "none") != "none":
             raise Unsupported("mihomo VLESS encryption unsupported")
         if p.get("flow"):
+            if p.get("flow").startswith(("xtls-rprx-direct", "xtls-rprx-origin", "xtls-rprx-splice")):
+                raise Unsupported("mihomo removed legacy XTLS flows")
             ob["flow"] = p.get("flow")
         if p.get("packetEncoding"):
             ob["packet-encoding"] = p.get("packetEncoding")
     elif p.scheme in {"trojan", "hysteria2"}:
         ob["password"] = p.username + ((":" + p.password) if p.password else "")
     elif p.scheme in {"ss", "ssr"}:
-        ob.update(cipher=p.username if p.scheme == "ss" else p.get("method"), password=p.password)
+        ob.update(
+            cipher=ss_method(p, MIHOMO_SS_METHODS) if p.scheme == "ss" else p.get("method"),
+            password=p.password,
+        )
         if p.scheme == "ssr":
             ob.update(protocol=p.get("protocol"), obfs=p.get("obfs"))
             for key in ("protoparam", "obfsparam"):

@@ -1,9 +1,12 @@
 import asyncio
+import base64
 import dataclasses
 import gzip
 import json
 import os
 import socket
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,11 +15,54 @@ import psutil
 
 from openray.config import Settings
 from openray.domain import Outcome, parse_uri
-from openray.validation import CoreWorker, Target, Validator, http_probe, reserve_port, terminate
+from openray.render import MIHOMO_SS_METHODS, SINGBOX_SS_METHODS, XRAY_SS_METHODS
+from openray.validation import (
+    REFERENCE,
+    CoreWorker,
+    Target,
+    Validator,
+    candidate_config,
+    config_check,
+    http_probe,
+    reserve_port,
+    terminate,
+)
 from tests.test_domain import UUID
 
 ROOT = Path(__file__).resolve().parents[1]
 XRAY = os.environ.get("OPENRAY_XRAY", str(ROOT / ".tools" / ("xray.exe" if os.name == "nt" else "xray")))
+CORES = {
+    "xray": XRAY,
+    "singbox": str(ROOT / ".tools" / ("sing-box.exe" if os.name == "nt" else "sing-box")),
+    "mihomo": str(ROOT / ".tools" / ("mihomo.exe" if os.name == "nt" else "mihomo")),
+}
+
+
+@unittest.skipUnless(all(Path(p).is_file() for p in CORES.values()), "pinned cores required")
+class CoreCheckerTests(unittest.TestCase):
+    def test_render_tables_match_pinned_core_checkers(self):
+        # A core upgrade that drops a cipher would otherwise reappear as startup rejections.
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            config = directory / "config.json"
+            for kind, methods in (
+                ("xray", XRAY_SS_METHODS),
+                ("singbox", SINGBOX_SS_METHODS),
+                ("mihomo", MIHOMO_SS_METHODS),
+            ):
+                for method in sorted(methods) + ["reference"]:
+                    if method == "reference":
+                        proxy = REFERENCE
+                    else:
+                        key = base64.b64encode(bytes(16 if "128" in method else 32)).decode()
+                        auth = base64.urlsafe_b64encode(f"{method}:{key}".encode()).decode()
+                        proxy = parse_uri(f"ss://{auth.rstrip('=')}@127.0.0.1:9")
+                    config.write_text(json.dumps(candidate_config(proxy, kind, 18080, 18081, "token")))
+                    check = subprocess.run(
+                        config_check(kind, CORES[kind], directory, config), capture_output=True, timeout=30
+                    )
+                    with self.subTest(kind=kind, method=method):
+                        self.assertEqual(check.returncode, 0)
 
 
 @unittest.skipUnless(Path(XRAY).is_file(), "pinned Xray required: python tools/install_cores.py xray")
@@ -136,6 +182,15 @@ class CoreIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_unknown_core_never_passes(self):
         async with Validator(dataclasses.replace(self.settings, xray="absent-xray")) as validator:
+            self.assertEqual((await validator.check(self.proxy)).outcome, Outcome.CORE_FAILURE)
+
+    async def test_core_rejection_is_invalid_config_not_infrastructure(self):
+        async with Validator(self.settings) as validator:
+            result = await validator.check(parse_uri(self.proxy.uri + "?encryption=garbage"))
+            self.assertEqual((result.outcome, result.core), (Outcome.INVALID_CONFIG, "xray"))
+            self.assertEqual((await validator.check(self.proxy)).outcome, Outcome.SUCCESS)
+        # A "core" that exits for every configuration, known-good included, is infrastructure.
+        async with Validator(dataclasses.replace(self.settings, xray=sys.executable)) as validator:
             self.assertEqual((await validator.check(self.proxy)).outcome, Outcome.CORE_FAILURE)
 
     async def test_mihomo_http_frontend_no_udp_or_direct_bypass(self):

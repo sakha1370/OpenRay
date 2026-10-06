@@ -20,6 +20,21 @@ from .files import atomic_write, json_text
 from .http_body import bounded_body
 from .render import Unsupported, clash_proxy, singbox_outbound, wireguard_endpoint, xray_outbound
 
+# Known-good outbound for every core; never probed, only checked offline.
+REFERENCE = Proxy("socks://127.0.0.1:9", "socks", "127.0.0.1", 9)
+
+
+class ConfigRejected(Exception):
+    pass
+
+
+def config_check(kind: str, path: str, directory: Path, config: Path) -> list[str]:
+    return {
+        "xray": [path, "run", "-test", "-c", str(config)],
+        "singbox": [path, "check", "-c", str(config)],
+        "mihomo": [path, "-t", "-d", str(directory), "-f", str(config)],
+    }[kind]
+
 
 @dataclass(frozen=True)
 class Target:
@@ -225,6 +240,7 @@ class CoreWorker:
         self.jobs = 0
         self.stderr = None
         self.stop_lock = asyncio.Lock()
+        self.checkers: set[str] = set()
 
     def select(self, proxy: Proxy) -> tuple[str, str]:
         candidates = [
@@ -275,6 +291,22 @@ class CoreWorker:
         finally:
             await terminate(process)
 
+    async def rejected(self, kind: str, path: str, config_path: Path, deadline: float) -> bool:
+        # An early exit is blamed on the configuration only when the core's own checker
+        # refuses it yet accepts a known-good one. Anything inconclusive stays a core failure.
+        if await self._command(config_check(kind, path, self.directory, config_path), deadline):
+            return False
+        if time.monotonic() >= deadline:
+            return False
+        if kind not in self.checkers:
+            reference = self.directory / "reference.json"
+            config = candidate_config(REFERENCE, kind, self.port, self.api_port, self.token)
+            atomic_write(reference, json_text(config))
+            if not await self._command(config_check(kind, path, self.directory, reference), deadline):
+                return False
+            self.checkers.add(kind)
+        return True
+
     async def start(self, proxy: Proxy, kind: str, path: str, deadline: float, reuse: bool):
         await self.stop()
         http, api = reserve_port(), reserve_port()
@@ -302,7 +334,9 @@ class CoreWorker:
             self.kind = kind
             while time.monotonic() < deadline:
                 if self.process.returncode is not None:
-                    raise RuntimeError("core rejected configuration or exited")
+                    if await self.rejected(kind, path, config_path, deadline):
+                        raise ConfigRejected("core rejected configuration")
+                    raise RuntimeError("core exited during startup")
                 if await asyncio.to_thread(owned_listener, self.process.pid, self.port):
                     if not reuse or await asyncio.to_thread(owned_listener, self.process.pid, self.api_port):
                         return
@@ -347,6 +381,13 @@ class CoreWorker:
                 )
         except Unsupported:
             return Observation(Outcome.UNSUPPORTED, detail="no faithful core adapter")
+        except ConfigRejected:
+            return Observation(
+                Outcome.INVALID_CONFIG,
+                (time.monotonic() - start) * 1000,
+                "core rejected configuration",
+                core=kind,
+            )
         except FileNotFoundError:
             return Observation(Outcome.CORE_FAILURE, detail="required core unavailable")
         except (ValueError, KeyError):

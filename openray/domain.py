@@ -129,6 +129,8 @@ class Proxy:
                 return value
         if self.scheme == "vmess":
             for key, value in self.metadata_fields.items():
+                if value is None:
+                    continue  # JSON null means unset, never the string "None".
                 mapped = (
                     "headertype" if key.lower() == "type" else QUERY_ALIASES.get(key.lower(), key.lower())
                 )

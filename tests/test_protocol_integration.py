@@ -48,6 +48,7 @@ class ProtocolIntegrationTests(fixtures.CoreIntegrationTests):
     test_deadline_and_cancel_cleanup = None
     test_reference_and_pool_equivalence_no_orphans = None
     test_unknown_core_never_passes = None
+    test_core_rejection_is_invalid_config_not_infrastructure = None
     test_probe_policy_and_timeout_classification = None
     test_mihomo_http_frontend_no_udp_or_direct_bypass = None
 

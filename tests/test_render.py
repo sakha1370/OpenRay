@@ -3,8 +3,13 @@ import json
 import unittest
 
 from openray.domain import parse_uri
-from openray.render import convert, singbox_outbound, xray_outbound
+from openray.render import Unsupported, clash_proxy, convert, singbox_outbound, xray_outbound
 from tests.test_domain import UUID, VLESS
+
+
+def ss(method: str):
+    auth = base64.urlsafe_b64encode(f"{method}:secret".encode()).decode().rstrip("=")
+    return parse_uri(f"ss://{auth}@example.com:80")
 
 
 class RenderTests(unittest.TestCase):
@@ -53,3 +58,38 @@ class RenderTests(unittest.TestCase):
         fields["future_security"] = "required"
         uri = "vmess://" + base64.b64encode(json.dumps(fields).encode()).decode()
         self.assertEqual(len(convert([parse_uri(uri)])[2]), 2)
+
+    def test_vmess_json_null_is_unset(self):
+        fields = {"add": "example.test", "port": 443, "id": UUID, "tls": "tls", "fp": None, "alpn": None}
+        p = parse_uri("vmess://" + base64.b64encode(json.dumps(fields).encode()).decode())
+        self.assertEqual((p.get("fp"), p.get("alpn")), ("", ""))
+        self.assertNotIn("utls", singbox_outbound(p)["tls"])
+        self.assertNotIn("alpn", xray_outbound(p)["streamSettings"]["tlsSettings"])
+
+    def test_each_core_receives_only_ciphers_it_accepts(self):
+        legacy = ss("aes-256-cfb")
+        with self.assertRaises(Unsupported):
+            xray_outbound(legacy)
+        self.assertEqual(singbox_outbound(legacy)["method"], "aes-256-cfb")
+        self.assertEqual(clash_proxy(legacy)["cipher"], "aes-256-cfb")
+        alias = ss("CHACHA20-POLY1305")
+        self.assertEqual(xray_outbound(alias)["settings"]["servers"][0]["method"], "chacha20-ietf-poly1305")
+        self.assertEqual(singbox_outbound(alias)["method"], "chacha20-ietf-poly1305")
+        # Sources sometimes put a channel name where the cipher belongs.
+        self.assertEqual(len(convert([ss("TelegramChannel")])[2]), 2)
+        with self.assertRaises(Unsupported):
+            xray_outbound(ss("TelegramChannel"))
+
+    def test_core_specific_transport_and_flow_limits(self):
+        reality = f"?security=reality&pbk={base64.urlsafe_b64encode(bytes(32)).decode().rstrip('=')}&sid=ab"
+        ws = parse_uri(VLESS + reality + "&type=ws")
+        with self.assertRaises(Unsupported):
+            xray_outbound(ws)
+        self.assertTrue(singbox_outbound(ws)["tls"]["reality"]["enabled"])
+        grpc = parse_uri(VLESS + reality + "&type=grpc&serviceName=s")
+        self.assertEqual(xray_outbound(grpc)["streamSettings"]["security"], "reality")
+        with self.assertRaises(Unsupported):
+            clash_proxy(parse_uri(VLESS + "?security=tls&flow=xtls-rprx-direct"))
+        self.assertEqual(
+            clash_proxy(parse_uri(VLESS + "?security=tls&flow=xtls-rprx-vision"))["flow"], "xtls-rprx-vision"
+        )
