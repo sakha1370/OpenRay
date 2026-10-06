@@ -85,3 +85,16 @@ Run #5319 later collected successfully and passed all 14 client gates, but publi
 ## Core startup rejections
 
 Seven of fifteen scheduled collections from October 3 to 6 held publication because of 1–127 `core_failure` outcomes each. All 157 were per-proxy configurations that the pinned cores refuse at startup, each exiting in about 23 ms; none was an infrastructure fault. Replaying them through Xray 26.7.28, sing-box 1.14.1 and mihomo 1.19.16 config checkers showed four causes: legacy Shadowsocks stream ciphers Xray removed (`aes-*-cfb`, `chacha20-ietf`, `rc4-md5`; 144), REALITY over WebSocket (6), VMess JSON `null` fingerprints read as `"None"` (4), and legacy XTLS flows mihomo removed (3). Renderers now send each core only what it accepts, so these proxies fall through to sing-box, and JSON `null` reads as unset without changing identities. A core that exits early for any other configuration reason is recorded as `invalid_config` once its own checker confirms the rejection. A random 2,000-candidate sample of the backlog went from 29 startup rejections to 3, all now classified as `invalid_config`. A new test pins the cipher tables to the installed core checkers.
+
+## Backlog and run-time measurements
+
+Measured October 6 on `ubuntu-latest` (4 vCPU, 16 GB) against copies of the production checkpoint and live sources; experiment code never uploaded state.
+
+- Leasing sorted every due row on the event loop: 3-7 s per 32-proxy lease on the production database, roughly 800 s of frozen event loop per run, during which in-flight deadlines kept running. Leases now take 5-200 ms per call.
+- No candidate discovered after the initial import had been checked; first-check success was 10% within six hours of discovery and 4% after two days, so never-checked candidates are leased newest first.
+- Paired passes over the same 800 proxies (three each): 8 workers 236 mean successes at 1.97 checks/s; 32 workers 237 at 7.45/s; 64 workers 239 at 14.1/s with 13% mean and 26% p95 CPU. Within-pass flakiness was 73 proxies, so higher concurrency showed no measurable loss.
+- The TCP handshake gate saved 57% of core time on 1,800 candidates but lowered successes by about 2.5% on flaky endpoints (an extra independent attempt), so it stays off.
+- Fetched directly from the runner without a proxy, `jetbrain` returns 403 and `cursor` fails with a protocol error; neither target measures the proxy.
+- With 64 workers and a 1,200 s budget a full run took 19.5 minutes for 18,545 checks (16.2/s; production previously needed 45 minutes for 4,000-7,700), exited 0 with no core failures and every client gate valid. The checkpoint save step fell from about 65 s to 28 s and the first maintenance after upgrade takes about 55 s.
+- Every proxy that could be accepted was rendered to both client formats and checked by the pinned clients (324,219 clash-eligible, 302,062 sing-box-eligible); after the export fixes one wrong-size Shadowsocks 2022 key remained, now rejected as an invalid configuration.
+- Scheduled runs started 4-6 times per day for two weeks with an hourly cron. At that rate, demand is about 94,000 checks per day (17,000 new candidates plus up to two retests each, accepted rechecks every eight hours and three site targets). A 1,200 s budget delivers about 89,000; dropping the two non-measuring site targets lowers demand to about 75,000.
