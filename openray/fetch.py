@@ -278,20 +278,26 @@ async def discover(settings: Settings, store: Store) -> dict:
             while (source := await queue.get()) is not None:
                 uris = await fetcher.fetch(source)
                 stats["sources"] += 1
-                with store.transaction() as db:
-                    for uri in sorted(set(uris)):
-                        # A known string already maps to its current identity; parsing it again
-                        # cost about 150 s per run and can only re-derive the same proxy.
-                        if db.execute(
-                            "SELECT 1 FROM alias a JOIN proxy p ON p.id=a.proxy_id "
-                            "WHERE a.uri=? AND p.identity_version=?",
-                            (uri, IDENTITY_VERSION),
-                        ).fetchone():
-                            continue
-                        try:
-                            stats["new"] += store.add(parse_uri(uri), source.url, db=db)
-                        except (ParseError, UnicodeError):
-                            stats["invalid"] += 1
+                ordered = sorted(set(uris))
+                # Short transactions let the discovery deadline interrupt a large new source.
+                for start in range(0, len(ordered), 2000):
+                    with store.transaction() as db:
+                        for uri in ordered[start : start + 2000]:
+                            # Remarks never enter an identity, so a known alias with the same text
+                            # before '#' is the same proxy. Re-parsing these cost ~150 s per run,
+                            # and 45% of aliases differed from another only by remark.
+                            base = uri.split("#", 1)[0]
+                            if db.execute(
+                                "SELECT 1 FROM alias a JOIN proxy p ON p.id=a.proxy_id "
+                                "WHERE (a.uri=? OR (a.uri>=? AND a.uri<?)) AND p.identity_version=? LIMIT 1",
+                                (base, base + "#", base + "$", IDENTITY_VERSION),
+                            ).fetchone():
+                                continue
+                            try:
+                                stats["new"] += store.add(parse_uri(uri), source.url, db=db)
+                            except (ParseError, UnicodeError):
+                                stats["invalid"] += 1
+                    await asyncio.sleep(0)
 
         async with asyncio.TaskGroup() as group:
             group.create_task(producer())

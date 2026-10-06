@@ -11,12 +11,13 @@ import tempfile
 import unittest
 import unittest.mock
 from pathlib import Path
+from urllib.parse import quote
 
 import psutil
 
 from openray.config import Settings
 from openray.domain import Outcome, parse_uri
-from openray.render import MIHOMO_SS_METHODS, SINGBOX_SS_METHODS, XRAY_SS_METHODS
+from openray.render import MIHOMO_SS_METHODS, SINGBOX_SS_METHODS, XRAY_SS_METHODS, convert
 from openray.validation import (
     REFERENCE,
     CoreWorker,
@@ -30,6 +31,7 @@ from openray.validation import (
     tcp_only,
     terminate,
 )
+from openray.yamlio import dump_yaml
 from tests.test_domain import UUID
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +68,46 @@ class CoreCheckerTests(unittest.TestCase):
                     )
                     with self.subTest(kind=kind, method=method):
                         self.assertEqual(check.returncode, 0)
+
+    def test_plugin_and_path_exports_pass_client_checkers(self):
+        # One unloadable entry fails the whole client gate and holds publication.
+        auth = base64.urlsafe_b64encode(b"aes-256-gcm:secret").decode().rstrip("=")
+        plugins = (
+            "obfs-local;obfs=http;obfs-host=example.com",
+            "simple-obfs;obfs=tls",
+            "v2ray-plugin;tls;mux=1;host=example.com;path=/ws",
+            "v2ray-plugin;host=example.com",
+        )
+        proxies = [
+            parse_uri(f"ss://{auth}@127.0.0.1:{9 + n}/?plugin={quote(v)}") for n, v in enumerate(plugins)
+        ]
+        proxies.append(parse_uri("hy2://secret@127.0.0.1:443?obfs=salamander&obfs-password=x"))
+        rejected = [
+            parse_uri(f"ss://{auth}@127.0.0.1:20/?plugin={quote('obfs-local;obfs=')}"),
+            parse_uri(f"ss://{auth}@127.0.0.1:21/?plugin={quote('v2ray-plugin;mode=quic')}"),
+            parse_uri("hy2://secret@127.0.0.1:444?obfs=salamander"),
+        ]
+        # Xray accepts a stray '%' in a WebSocket path; sing-box rejects the file.
+        escape = parse_uri(f"vless://{UUID}@127.0.0.1:445?type=ws&path=%2Fa%25Ex")
+        clash, _, report = convert(proxies + rejected + [escape])
+        self.assertEqual(len(clash["proxies"]), len(proxies) + 1)
+        self.assertEqual({r["id"] for r in report if r["format"] == "clash"}, {p.identity for p in rejected})
+        # Those clash rejections are refused by sing-box at startup too, so they are never exported.
+        _, sing, report = convert(proxies + [escape])
+        self.assertEqual({r["id"] for r in report}, {escape.identity})
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "clash.yaml"
+            config.write_text(dump_yaml(clash), encoding="utf-8")
+            check = subprocess.run(
+                config_check("mihomo", CORES["mihomo"], Path(tmp), config), capture_output=True
+            )
+            self.assertEqual(check.returncode, 0, check.stdout[-500:])
+            config = Path(tmp) / "singbox.json"
+            config.write_text(json.dumps(sing), encoding="utf-8")
+            check = subprocess.run(
+                config_check("singbox", CORES["singbox"], Path(tmp), config), capture_output=True
+            )
+            self.assertEqual(check.returncode, 0, check.stdout[-500:] + check.stderr[-500:])
 
 
 @unittest.skipUnless(Path(XRAY).is_file(), "pinned Xray required: python tools/install_cores.py xray")
@@ -194,7 +236,9 @@ class CoreIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((await validator.check(self.proxy)).outcome, Outcome.SUCCESS)
         # A "core" that exits for every configuration, known-good included, is infrastructure.
         async with Validator(dataclasses.replace(self.settings, xray=sys.executable)) as validator:
-            self.assertEqual((await validator.check(self.proxy)).outcome, Outcome.CORE_FAILURE)
+            result = await validator.check(self.proxy)
+            self.assertEqual(result.outcome, Outcome.CORE_FAILURE)
+            self.assertTrue(result.detail.endswith(": core exited during startup"), result.detail)
 
     async def test_mihomo_http_frontend_no_udp_or_direct_bypass(self):
         mihomo = ROOT / ".tools" / ("mihomo.exe" if os.name == "nt" else "mihomo")

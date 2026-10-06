@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import errno
 import hashlib
 import ipaddress
 import os
@@ -27,6 +28,10 @@ REFERENCE = Proxy("socks://127.0.0.1:9", "socks", "127.0.0.1", 9)
 
 class ConfigRejected(Exception):
     pass
+
+
+class CoreExited(RuntimeError):
+    """A core exit with a package-controlled reason, safe to record in observation details."""
 
 
 def config_check(kind: str, path: str, directory: Path, config: Path) -> list[str]:
@@ -309,6 +314,14 @@ class CoreWorker:
         return True
 
     async def start(self, proxy: Proxy, kind: str, path: str, deadline: float, reuse: bool):
+        try:
+            await self._start(proxy, kind, path, deadline, reuse)
+        except CoreExited:
+            # Its own checker accepted this configuration, so the exit belongs to the host,
+            # such as a port taken between reservation and bind. Retry once on fresh ports.
+            await self._start(proxy, kind, path, deadline, reuse)
+
+    async def _start(self, proxy: Proxy, kind: str, path: str, deadline: float, reuse: bool):
         await self.stop()
         http, api = reserve_port(), reserve_port()
         self.port, self.api_port = http.getsockname()[1], api.getsockname()[1]
@@ -337,7 +350,10 @@ class CoreWorker:
                 if self.process.returncode is not None:
                     if await self.rejected(kind, path, config_path, deadline):
                         raise ConfigRejected("core rejected configuration")
-                    raise RuntimeError("core exited during startup")
+                    log = (self.directory / "stderr.log").read_bytes()[-4096:]
+                    if b"address already in use" in log:
+                        raise CoreExited("core exited during startup: port collision")
+                    raise CoreExited("core exited during startup")
                 if await asyncio.to_thread(owned_listener, self.process.pid, self.port):
                     if not reuse or await asyncio.to_thread(owned_listener, self.process.pid, self.api_port):
                         return
@@ -374,7 +390,7 @@ class CoreWorker:
                 probing = True
                 result = await http_probe(self.port, self.token, target, deadline)
                 if self.process.returncode is not None:
-                    raise RuntimeError("core exited during probe")
+                    raise CoreExited("core exited during probe")
                 self.jobs += 1
                 keep = reuse and result.outcome not in {Outcome.CORE_FAILURE, Outcome.CANCELLED}
                 return Observation(
@@ -399,9 +415,17 @@ class CoreWorker:
                 (time.monotonic() - start) * 1000,
                 "validation deadline",
             )
-        except (OSError, RuntimeError):
+        except (OSError, RuntimeError) as exc:
+            if isinstance(exc, CoreExited):
+                reason = str(exc)
+            elif isinstance(exc, OSError) and exc.errno in errno.errorcode:
+                reason = errno.errorcode[exc.errno]
+            else:
+                reason = type(exc).__name__
             return Observation(
-                Outcome.CORE_FAILURE, (time.monotonic() - start) * 1000, "core startup/swap/lifecycle failed"
+                Outcome.CORE_FAILURE,
+                (time.monotonic() - start) * 1000,
+                "core startup/swap/lifecycle failed: " + reason,
             )
         finally:
             if not keep:

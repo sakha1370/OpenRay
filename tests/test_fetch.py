@@ -97,6 +97,8 @@ class FetchTests(unittest.IsolatedAsyncioTestCase):
             settings = Settings(root, root / "state.sqlite3", root / "sources.txt")
             with Store(settings.database) as store:
                 self.assertEqual((await discover(settings, store))["new"], 1)
+                # A renamed remark is the same proxy and must not be parsed again.
+                (root / "subscription.txt").write_text(VLESS + "#renamed\nvless://@broken\n")
                 with patch("openray.domain.parse_uri", side_effect=parse_uri) as parse:
                     stats = await discover(settings, store)
                 self.assertEqual((stats["new"], stats["invalid"], parse.call_count), (0, 1, 1))

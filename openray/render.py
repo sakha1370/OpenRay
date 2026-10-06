@@ -236,7 +236,9 @@ def singbox_outbound(p: Proxy) -> dict:
         ob.update(method=ss_method(p, SINGBOX_SS_METHODS), password=p.password)
         if p.get("plugin"):
             plugin, _, options = p.get("plugin").partition(";")
-            ob.update(plugin=plugin, plugin_opts=options)
+            # sing-box knows obfs only as obfs-local and rejects empty option items.
+            plugin = {"simple-obfs": "obfs-local", "obfs": "obfs-local"}.get(plugin, plugin)
+            ob.update(plugin=plugin, plugin_opts=";".join(item for item in options.split(";") if item))
     elif p.scheme in {"socks", "http", "https"}:
         if p.username:
             ob.update(username=p.username, password=p.password)
@@ -245,6 +247,8 @@ def singbox_outbound(p: Proxy) -> dict:
     elif p.scheme == "hysteria2":
         ob["password"] = p.username + ((":" + p.password) if p.password else "")
         if p.get("obfs"):
+            if not p.get("obfs-password", p.get("obfsPassword")):
+                raise Unsupported("Hysteria2 obfs requires a password")
             ob["obfs"] = {"type": p.get("obfs"), "password": p.get("obfs-password", p.get("obfsPassword"))}
     elif p.scheme == "hysteria":
         ob.update(
@@ -271,6 +275,9 @@ def singbox_outbound(p: Proxy) -> dict:
         ob["tls"] = tls
     if p.scheme in {"vless", "vmess", "trojan"}:
         network = p.transport
+        # Xray accepts a path with a stray '%', sing-box rejects the whole configuration file.
+        if network in {"ws", "wss", "httpupgrade"} and re.search(r"%(?![0-9A-Fa-f]{2})", p.get("path")):
+            raise Unsupported("sing-box rejects malformed path escapes")
         if network in {"ws", "wss"}:
             ob["transport"] = {"type": "ws", "path": p.get("path", "/") or "/"}
             if p.get("host"):
@@ -422,6 +429,32 @@ def xray_outbound(p: Proxy) -> dict:
     return ob
 
 
+def clash_plugin(value: str) -> dict:
+    # SIP003 option names differ from mihomo's typed plugin-opts; mihomo rejects the whole file otherwise.
+    plugin, _, options = value.partition(";")
+    opts = dict(item.split("=", 1) if "=" in item else (item, "true") for item in options.split(";") if item)
+    if plugin in {"obfs-local", "simple-obfs", "obfs"}:
+        mode = opts.get("obfs", opts.get("mode"))
+        if mode not in {"http", "tls"}:
+            raise Unsupported("obfs plugin mode missing")
+        host = opts.get("obfs-host", opts.get("host"))
+        return {"plugin": "obfs", "plugin-opts": {"mode": mode, **({"host": host} if host else {})}}
+    if plugin == "v2ray-plugin":
+        if opts.get("mode", "websocket") != "websocket":
+            raise Unsupported("mihomo v2ray-plugin supports WebSocket only")
+        if opts.get("sni", opts.get("host")) != opts.get("host"):
+            raise Unsupported("v2ray-plugin SNI differs from host")
+        result = {"mode": "websocket"}
+        for key in ("host", "path"):
+            if opts.get(key):
+                result[key] = opts[key]
+        for key in ("tls", "mux", "skip-cert-verify"):
+            if key in opts:
+                result[key] = opts[key].lower() not in {"0", "false", "no", "off"}
+        return {"plugin": "v2ray-plugin", "plugin-opts": result}
+    raise Unsupported("Shadowsocks plugin unsupported by mihomo profile")
+
+
 def clash_proxy(p: Proxy) -> dict:
     supported_params(p)
     if (
@@ -473,11 +506,7 @@ def clash_proxy(p: Proxy) -> dict:
                         p.get(key)
                     ).decode()
         if p.get("plugin"):
-            plugin, _, options = p.get("plugin").partition(";")
-            ob["plugin"] = {"obfs-local": "obfs"}.get(plugin, plugin)
-            ob["plugin-opts"] = dict(
-                item.split("=", 1) if "=" in item else (item, True) for item in options.split(";") if item
-            )
+            ob.update(clash_plugin(p.get("plugin")))
     elif p.scheme in {"socks", "http", "https"}:
         if p.username:
             ob.update(username=p.username, password=p.password)
@@ -561,6 +590,8 @@ def clash_proxy(p: Proxy) -> dict:
         else:
             raise Unsupported("mihomo transport unsupported")
     if p.scheme == "hysteria2" and p.get("obfs"):
+        if not p.get("obfs-password", p.get("obfsPassword")):
+            raise Unsupported("mihomo requires the Hysteria2 obfs password")
         ob.update(obfs=p.get("obfs"), **{"obfs-password": p.get("obfs-password", p.get("obfsPassword"))})
     return ob
 
