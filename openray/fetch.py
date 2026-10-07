@@ -282,21 +282,27 @@ async def discover(settings: Settings, store: Store) -> dict:
                 # Short transactions let the discovery deadline interrupt a large new source.
                 for start in range(0, len(ordered), 2000):
                     with store.transaction() as db:
+                        listed = set()
                         for uri in ordered[start : start + 2000]:
                             # Remarks never enter an identity, so a known alias with the same text
                             # before '#' is the same proxy. Re-parsing these cost ~150 s per run,
                             # and 45% of aliases differed from another only by remark.
                             base = uri.split("#", 1)[0]
-                            if db.execute(
-                                "SELECT 1 FROM alias a JOIN proxy p ON p.id=a.proxy_id "
+                            known = db.execute(
+                                "SELECT a.proxy_id FROM alias a JOIN proxy p ON p.id=a.proxy_id "
                                 "WHERE (a.uri=? OR (a.uri>=? AND a.uri<?)) AND p.identity_version=? LIMIT 1",
                                 (base, base + "#", base + "$", IDENTITY_VERSION),
-                            ).fetchone():
+                            ).fetchone()
+                            if known:
+                                listed.add(known[0])
                                 continue
                             try:
                                 stats["new"] += store.add(parse_uri(uri), source.url, db=db)
                             except (ParseError, UnicodeError):
                                 stats["invalid"] += 1
+                        # Maintenance purges candidates that no source has listed for days.
+                        stamp = time.time()
+                        db.executemany("UPDATE proxy SET seen=? WHERE id=?", [(stamp, i) for i in listed])
                     await asyncio.sleep(0)
 
         async with asyncio.TaskGroup() as group:

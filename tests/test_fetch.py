@@ -99,9 +99,12 @@ class FetchTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((await discover(settings, store))["new"], 1)
                 # A renamed remark is the same proxy and must not be parsed again.
                 (root / "subscription.txt").write_text(VLESS + "#renamed\nvless://@broken\n")
+                store.db.execute("UPDATE proxy SET seen=0")
                 with patch("openray.domain.parse_uri", side_effect=parse_uri) as parse:
                     stats = await discover(settings, store)
                 self.assertEqual((stats["new"], stats["invalid"], parse.call_count), (0, 1, 1))
+                # Skipped strings still count as listed, or maintenance would purge them.
+                self.assertGreater(store.db.execute("SELECT seen FROM proxy").fetchone()[0], 0)
                 delays = []
                 for _ in range(3):
                     store.db.execute("UPDATE source SET next_due=0 WHERE url='missing.txt'")

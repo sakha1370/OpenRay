@@ -57,6 +57,8 @@ def parser() -> argparse.ArgumentParser:
         if command == "maintenance":
             q.add_argument("--apply", action="store_true")
             q.add_argument("--retention-days", type=int, default=90)
+            q.add_argument("--observation-days", type=int, default=3)
+            q.add_argument("--unlisted-days", type=int, default=3)
     return p
 
 
@@ -186,7 +188,14 @@ def main(argv: list[str] | None = None) -> int:
             elif args.command == "maintenance":
                 from .maintenance import maintain
 
-                print(json_text(maintain(store, args.retention_days, args.apply)), end="")
+                report = maintain(
+                    store,
+                    args.retention_days,
+                    args.apply,
+                    observation_days=args.observation_days,
+                    unlisted_days=args.unlisted_days,
+                )
+                print(json_text(report), end="")
         return 0
     except (KeyboardInterrupt, asyncio.CancelledError):
         print("OpenRay: cancelled; completed observations retained", file=sys.stderr)

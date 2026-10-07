@@ -37,7 +37,9 @@ def verify(root: Path, database: Path, deep_history=False):
             if file_sha256(Path(row[0])) != row[1]:
                 raise AssertionError("legacy migration input was modified")
         checked = 0
-        if deep_history:
+        released = store.db.execute("SELECT 1 FROM meta WHERE key='legacy_history_released'").fetchone()
+        # Maintenance releases the database copy; the legacy history itself stays in git.
+        if deep_history and not released:
             for path in sorted((root / ".state").glob("tested*.txt.bin")):
                 with path.open("rb") as history:
                     while chunk := history.read(28 * 500):
@@ -61,6 +63,7 @@ def verify(root: Path, database: Path, deep_history=False):
             "source_hashes_match": True,
             "invalid_score_aliases": invalid,
             "history_records_verified": checked,
+            "legacy_history_released_from_database": bool(released),
             "status": store.status(),
             "score_totals": {
                 c: sum(v for (p, ctx), v in actual.items() if ctx == c)

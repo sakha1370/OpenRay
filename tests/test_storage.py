@@ -127,17 +127,17 @@ class StorageTests(unittest.TestCase):
             self.store.lease("global", target, "r", 5, 5, now=0)
             self.store.release("r")
         self.store.observe("seen", "r", candidate, "global", "cursor", Observation(Outcome.BLOCKED), now=1)
-        self.assertEqual(maintain(self.store, apply=False)["placeholders_to_drop"], 1)
+        report = maintain(self.store, apply=False)
+        self.assertEqual((report["placeholders_to_drop"], report["dropped_target_rows"]), (1, 2))
         self.assertEqual(maintain(self.store, apply=True)["placeholders_to_drop"], 1)
         rows = {(h["proxy_id"], h["target"]) for h in self.store.view()[2]}
+        # A placeholder and every row of a target no longer checked are gone.
         self.assertNotIn((candidate.identity, "aistudio"), rows)
-        for kept in (
-            (candidate.identity, "connectivity"),
-            (candidate.identity, "cursor"),
-            (member.identity, "aistudio"),
-        ):
+        self.assertNotIn((candidate.identity, "cursor"), rows)
+        for kept in ((candidate.identity, "connectivity"), (member.identity, "aistudio")):
             self.assertIn(kept, rows)
-        self.assertEqual(maintain(self.store)["placeholders_to_drop"], 0)
+        report = maintain(self.store)
+        self.assertEqual((report["placeholders_to_drop"], report["dropped_target_rows"]), (0, 0))
 
     def test_repeatable_migration_and_alias_counts(self):
         (self.root / "output").mkdir()
@@ -314,24 +314,80 @@ class StorageTests(unittest.TestCase):
     def test_retention_preserves_counter_and_exactly_once_identity(self):
         from openray.maintenance import maintain
 
+        # Regional bundle events keep a tombstone, so an old bundle can never count twice.
         self.store.observe(
-            "expired", "r", self.proxy, "global", "connectivity", Observation(Outcome.SUCCESS), now=100
+            "expired", "r", self.proxy, "mci", "connectivity", Observation(Outcome.SUCCESS), now=100
         )
         with self.store.transaction() as db:
-            db.execute("INSERT INTO legacy_tested VALUES(?,?)", (b"x" * 20, 100))
+            db.execute("INSERT INTO legacy_tested VALUES(?,?)", (b"x" * 20, time.time()))
         report = maintain(self.store, 90)
         self.assertTrue(report["dry_run"])
-        self.assertEqual(self.store.status()["observation"], 1)
+        self.assertEqual((report["legacy_hashes_to_drop"], self.store.status()["observation"]), (1, 1))
         maintain(self.store, 90, True)
         self.assertEqual(self.store.status()["observation"], 0)
         self.assertEqual(self.store.status()["event_identity"], 1)
+        self.assertEqual(self.store.status()["legacy_tested"], 0)
         self.assertFalse(
             self.store.observe(
-                "expired", "r", self.proxy, "global", "connectivity", Observation(Outcome.SUCCESS), now=100
+                "expired", "r", self.proxy, "mci", "connectivity", Observation(Outcome.SUCCESS), now=100
             )
         )
-        self.assertEqual(self.store.view()[1][self.proxy.identity]["global"], 1)
+        self.assertEqual(self.store.view()[1][self.proxy.identity]["mci"], 1)
         self.assertTrue(list((self.root / "backups").glob("maintenance-*.sqlite3")))
+
+    def test_global_observations_expire_without_tombstones(self):
+        from openray.maintenance import maintain
+
+        now = time.time()
+        for event, age in (("old", 4 * 86400), ("recent", 3600)):
+            self.store.observe(
+                event, "r", self.proxy, "global", "connectivity", Observation(Outcome.SUCCESS), now=now - age
+            )
+        self.assertEqual(maintain(self.store, 90, True)["global_observations_to_drop"], 1)
+        events = {r[0] for r in self.store.db.execute("SELECT event_id FROM observation")}
+        self.assertEqual((events, self.store.status()["event_identity"]), ({"recent"}, 0))
+        # Counters and health survive; only the per-check history expires.
+        self.assertEqual(self.store.view()[1][self.proxy.identity]["global"], 2)
+
+    def test_unlisted_candidates_and_remark_aliases_are_purged(self):
+        from openray.maintenance import maintain
+
+        stale, listed = (parse_uri(VLESS.replace("example.com", f"{n}.test")) for n in ("stale", "listed"))
+        member = parse_uri(VLESS.replace("example.com", "member.test"))
+        for proxy in (stale, listed):
+            self.store.add(proxy)
+        self.store.add(member, accepted=True)
+        self.store.add(parse_uri(listed.uri + "#renamed"))
+        self.store.observe(
+            "s", "r", stale, "global", "connectivity", Observation(Outcome.TIMEOUT), now=time.time()
+        )
+        with self.store.transaction() as db:
+            db.execute(
+                "UPDATE proxy SET seen=? WHERE id IN (?,?)",
+                (time.time() - 4 * 86400, stale.identity, member.identity),
+            )
+        report = maintain(self.store, 90, True)
+        self.assertEqual((report["unlisted_candidates_to_purge"], report["remark_aliases_to_drop"]), (1, 1))
+        remaining = {r[0] for r in self.store.db.execute("SELECT id FROM proxy")}
+        # Accepted proxies are never purged by listing; demotion handles them first.
+        self.assertEqual(remaining, {listed.identity, member.identity})
+        self.assertEqual(self.store.db.execute("SELECT count(*) FROM observation").fetchone()[0], 0)
+        aliases = [
+            r[0] for r in self.store.db.execute("SELECT uri FROM alias WHERE proxy_id=?", (listed.identity,))
+        ]
+        self.assertEqual(aliases, [listed.uri])
+
+    def test_schema_upgrade_starts_the_unlisted_grace(self):
+        self.store.add(self.proxy)
+        with self.store.transaction() as db:
+            db.execute("ALTER TABLE proxy DROP COLUMN seen")
+            db.execute("PRAGMA user_version=4")
+        self.store.close()
+        before = time.time()
+        self.store = Store(self.root / "state.sqlite3")
+        seen = self.store.db.execute("SELECT seen FROM proxy").fetchone()[0]
+        self.assertGreaterEqual(seen, before)
+        self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], 5)
 
     def test_out_of_order_observations_preserve_health_counters_and_lease(self):
         self.store.observe(

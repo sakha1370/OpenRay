@@ -17,7 +17,7 @@ from pathlib import Path
 from .domain import IDENTITY_VERSION, Observation, Outcome, ParseError, Proxy, parse_uri
 from .files import fsync_directory
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 # Unaccepted candidates stop being scheduled after this many consecutive failures
 # spanning at least two cooldowns; production history showed 0.5% recovering afterwards.
 RETIRE_AFTER_FAILURES = 3
@@ -29,7 +29,8 @@ ALIVE += "AND c.target='connectivity' AND c.outcome='success')"
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS proxy(id TEXT PRIMARY KEY,identity_version INTEGER NOT NULL,
- uri TEXT NOT NULL,scheme TEXT NOT NULL,created REAL NOT NULL,accepted INTEGER NOT NULL DEFAULT 0);
+ uri TEXT NOT NULL,scheme TEXT NOT NULL,created REAL NOT NULL,accepted INTEGER NOT NULL DEFAULT 0,
+ seen REAL NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS alias(uri TEXT PRIMARY KEY,proxy_id TEXT NOT NULL REFERENCES proxy(id),source TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS source(url TEXT PRIMARY KEY,etag TEXT,modified TEXT,body BLOB,
  fetched REAL,outcome TEXT,failures INTEGER NOT NULL DEFAULT 0,next_due REAL NOT NULL DEFAULT 0);
@@ -83,6 +84,10 @@ class Store:
                     "COALESCE((SELECT max(time) FROM observation o WHERE o.proxy_id=health.proxy_id "
                     "AND o.context=health.context AND o.target=health.target AND o.version=health.version),0))"
                 )
+            if "seen" not in {r["name"] for r in db.execute("PRAGMA table_info(proxy)")}:
+                # Last time a source listed the proxy; the unlisted grace starts at the upgrade.
+                db.execute("ALTER TABLE proxy ADD COLUMN seen REAL NOT NULL DEFAULT 0")
+                db.execute("UPDATE proxy SET seen=?", (time.time(),))
             db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
 
     @contextlib.contextmanager
@@ -109,10 +114,14 @@ class Store:
         if db is None:
             with self.transaction() as tx:
                 return self.add(proxy, source, accepted, tx)
+        now = time.time()
         cursor = db.execute(
-            "INSERT OR IGNORE INTO proxy VALUES(?,?,?,?,?,?)",
-            (proxy.identity, IDENTITY_VERSION, proxy.uri, proxy.scheme, time.time(), int(accepted)),
+            "INSERT OR IGNORE INTO proxy(id,identity_version,uri,scheme,created,accepted,seen) "
+            "VALUES(?,?,?,?,?,?,?)",
+            (proxy.identity, IDENTITY_VERSION, proxy.uri, proxy.scheme, now, int(accepted), now),
         )
+        if not cursor.rowcount:
+            db.execute("UPDATE proxy SET seen=? WHERE id=?", (now, proxy.identity))
         db.execute("INSERT OR IGNORE INTO alias VALUES(?,?,?)", (proxy.uri, proxy.identity, source))
         if accepted:
             db.execute("UPDATE proxy SET accepted=1 WHERE id=?", (proxy.identity,))
