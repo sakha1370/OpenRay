@@ -52,6 +52,8 @@ class Target:
     body_sha256: str = ""
 
 
+# jetbrain and cursor were removed: fetched without any proxy, their endpoints answered 403 and a
+# protocol error, so their results described the endpoint rather than the proxy.
 SITE_TARGETS = (
     Target(
         "aistudio",
@@ -59,13 +61,6 @@ SITE_TARGETS = (
         allowed=tuple(c for c in range(200, 600) if c != 403),
         blocked=(403,),
     ),
-    Target(
-        "jetbrain",
-        ("https://analytics.services.jetbrains.com/",),
-        allowed=tuple(c for c in range(200, 600) if c != 403),
-        blocked=(403,),
-    ),
-    Target("cursor", ("https://agentn.global.api5.cursor.sh",), version=2, allowed=(200,), blocked=(403,)),
 )
 
 

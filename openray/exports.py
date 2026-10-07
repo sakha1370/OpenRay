@@ -14,6 +14,7 @@ from .files import atomic_write, json_text, lines_text
 from .geo import Geo
 from .render import convert
 from .storage import SCHEMA_VERSION, Store, file_sha256
+from .validation import SITE_TARGETS
 from .yamlio import dump_yaml
 
 
@@ -89,7 +90,7 @@ def build_snapshot(
         if context == "iran":
             write("output_iran/iran_top100.txt", lines_text(p.uri for p in ranked))
         conversions.append((f"output_iran/converted/{context}_top100", ranked))
-    site_ids = ("aistudio", "jetbrain", "cursor")
+    site_ids = tuple(target.id for target in SITE_TARGETS)
     # Sites are only re-checked through proxies that pass connectivity, so require it here too.
     alive = {
         h["proxy_id"]
