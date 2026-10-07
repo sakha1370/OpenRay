@@ -376,6 +376,7 @@ class StorageTests(unittest.TestCase):
             r[0] for r in self.store.db.execute("SELECT uri FROM alias WHERE proxy_id=?", (listed.identity,))
         ]
         self.assertEqual(aliases, [listed.uri])
+        self.assertEqual(self.store.db.execute("PRAGMA foreign_keys").fetchone()[0], 1)
 
     def test_schema_upgrade_starts_the_unlisted_grace(self):
         self.store.add(self.proxy)

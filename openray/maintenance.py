@@ -85,26 +85,35 @@ def maintain(
             raise ValueError("maintenance requires idle validation workers")
         if any(v for k, v in report.items() if k not in {"dry_run", "integrity"}):
             store.backup(parent / "backups" / ("maintenance-" + str(time.time_ns()) + ".sqlite3"))
-        with store.transaction() as db:
-            db.execute("DELETE " + placeholder)
-            for sql in dropped_targets:
-                db.execute("DELETE " + sql, checked)
-            db.execute("CREATE TEMP TABLE gone AS SELECT id " + unlisted[0], (unlisted[1],))
-            for table in ("observation", "alias", "health", "score"):
-                db.execute(f"DELETE FROM {table} WHERE proxy_id IN (SELECT id FROM gone)")
-            db.execute("DELETE FROM proxy WHERE id IN (SELECT id FROM gone)")
-            db.execute("DROP TABLE gone")
-            db.execute("DELETE " + remarks)
-            db.execute("DELETE FROM legacy_tested")
-            db.execute("INSERT OR IGNORE INTO meta VALUES('legacy_history_released',?)", (str(now),))
-            db.execute(
-                "INSERT OR IGNORE INTO event_identity SELECT event_id,run,proxy_id,context,target,version "
-                + regional_events[0],
-                (regional_events[1],),
-            )
-            db.execute("DELETE " + regional_events[0], (regional_events[1],))
-            db.execute("DELETE " + global_events[0], (global_events[1],))
-            db.execute("DELETE FROM source WHERE fetched<? AND body IS NULL", (cutoff,))
+        # Children are deleted before their proxies. Per-row foreign key enforcement would scan the
+        # unindexed alias.proxy_id once per purged proxy (over an hour for 130,000); one full check
+        # before commit keeps the same guarantee.
+        store.db.execute("PRAGMA foreign_keys=OFF")
+        try:
+            with store.transaction() as db:
+                db.execute("DELETE " + placeholder)
+                for sql in dropped_targets:
+                    db.execute("DELETE " + sql, checked)
+                db.execute("CREATE TEMP TABLE gone AS SELECT id " + unlisted[0], (unlisted[1],))
+                for table in ("observation", "alias", "health", "score"):
+                    db.execute(f"DELETE FROM {table} WHERE proxy_id IN (SELECT id FROM gone)")
+                db.execute("DELETE FROM proxy WHERE id IN (SELECT id FROM gone)")
+                db.execute("DROP TABLE gone")
+                db.execute("DELETE " + remarks)
+                db.execute("DELETE FROM legacy_tested")
+                db.execute("INSERT OR IGNORE INTO meta VALUES('legacy_history_released',?)", (str(now),))
+                db.execute(
+                    "INSERT OR IGNORE INTO event_identity SELECT event_id,run,proxy_id,context,target,version "
+                    + regional_events[0],
+                    (regional_events[1],),
+                )
+                db.execute("DELETE " + regional_events[0], (regional_events[1],))
+                db.execute("DELETE " + global_events[0], (global_events[1],))
+                db.execute("DELETE FROM source WHERE fetched<? AND body IS NULL", (cutoff,))
+                if db.execute("PRAGMA foreign_key_check").fetchone():
+                    raise ValueError("maintenance would orphan rows")
+        finally:
+            store.db.execute("PRAGMA foreign_keys=ON")
         # Only acknowledged immutable snapshots are eligible, and two old ones remain.
         for path in snapshots:
             _safe(path, parent / "snapshots")
