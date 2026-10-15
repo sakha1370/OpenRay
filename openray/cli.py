@@ -33,6 +33,7 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--workers", type=int)
     run.add_argument("--budget", type=float)
     run.add_argument("--report", type=Path)
+    run.add_argument("--no-progress", action="store_true", help="suppress progress on stderr")
     for command in (
         "status",
         "migrate",
@@ -60,6 +61,14 @@ def parser() -> argparse.ArgumentParser:
             q.add_argument("--observation-days", type=int, default=3)
             q.add_argument("--unlisted-days", type=int, default=3)
     return p
+
+
+def _progress(line: str) -> None:
+    # stderr keeps the JSON report on stdout machine-readable.
+    if sys.stderr.isatty():
+        print("\r" + line.ljust(100), end="", file=sys.stderr, flush=True)
+    else:
+        print(line, file=sys.stderr, flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -103,11 +112,22 @@ def main(argv: list[str] | None = None) -> int:
                 previous = signal.getsignal(signal.SIGTERM)
                 signal.signal(signal.SIGTERM, lambda *_: loop.call_soon_threadsafe(task.cancel))
                 try:
-                    return await run(settings, args.mode, context, install=args.install)
+                    return await run(
+                        settings,
+                        args.mode,
+                        context,
+                        install=args.install,
+                        progress=None if args.no_progress else _progress,
+                        progress_interval=1.0 if sys.stderr.isatty() else 30.0,
+                    )
                 finally:
                     signal.signal(signal.SIGTERM, previous)
 
-            code, report = asyncio.run(execute())
+            try:
+                code, report = asyncio.run(execute())
+            finally:
+                if not args.no_progress and sys.stderr.isatty():
+                    print(file=sys.stderr)
             if args.report:
                 atomic_write(args.report, json_text(report))
             print(json_text(report), end="")

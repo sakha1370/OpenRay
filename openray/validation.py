@@ -4,7 +4,6 @@ import asyncio
 import contextlib
 import errno
 import hashlib
-import ipaddress
 import os
 import secrets
 import shutil
@@ -475,7 +474,9 @@ class Validator:
             body_sha256=self.settings.body_sha256,
         )
         if self.settings.tcp_prefilter and tcp_only(proxy):
-            rejected = await tcp_handshake(proxy, self.settings.timeout)
+            rejected = await tcp_handshake(
+                proxy, min(self.settings.timeout, self.settings.prefilter_timeout)
+            )
             if rejected:
                 return rejected
         # Waiting for a free core is not the candidate's time: its full timeout starts with the core.
@@ -489,11 +490,8 @@ class Validator:
 
 
 def tcp_only(proxy: Proxy) -> bool:
-    # Domains may resolve differently inside a core; UDP transports have no TCP handshake.
-    try:
-        ipaddress.ip_address(proxy.server)
-    except ValueError:
-        return False
+    # UDP transports have no TCP handshake. Domains are resolved by the handshake itself;
+    # a resolution failure is inconclusive and left to the core.
     return (
         proxy.scheme in {"vless", "vmess", "trojan", "ss", "http", "https", "socks"}
         and proxy.transport not in {"kcp", "quic"}
@@ -504,7 +502,7 @@ def tcp_only(proxy: Proxy) -> bool:
 
 async def tcp_handshake(proxy: Proxy, timeout: float) -> Observation | None:
     """Negative evidence only. An endpoint that refuses, or does not complete a TCP handshake
-    within the full validation timeout, cannot pass the core check over the same network."""
+    within the prefilter timeout, cannot pass the core check over the same network."""
     started = time.monotonic()
     try:
         async with asyncio.timeout(timeout):

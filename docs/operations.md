@@ -46,7 +46,7 @@ Configuration is validated once per invocation. Legacy launch modules and the fi
 | `OPENRAY_MEMORY_MB` | 2048; heuristic reserves 256 MiB plus 96 MiB per worker |
 | `OPENRAY_FETCH_WORKERS`, `OPENRAY_QUEUE_SIZE` | 8, four times worker count |
 | `OPENRAY_RUN_BUDGET_S`, CLI `--budget` | 3000 seconds; reserves 60 seconds (at most a quarter of the budget) for exports/client gates |
-| `OPENRAY_STAGE3_MAX` | 5000 per validation category/target |
+| `OPENRAY_STAGE3_MAX` | 20000 per validation category/target |
 | `OPENRAY_STAGE3_NEW_TIMEOUT_S`, `OPENRAY_STAGE3_EXISTING_TIMEOUT_S` | 12 seconds each for core startup and probe; the clock starts when a core worker is free |
 | `OPENRAY_TCP_PREFILTER`, `OPENRAY_TCP_PREFILTER_SLOTS` | `0`; `1` gates literal-IP TCP candidates on a TCP handshake, with 128 extra slots that wait without a core |
 | `OPENRAY_FETCH_TIMEOUT`, `OPENRAY_SOURCE_CACHE_MB` | 15 seconds per request attempt, 128 MiB cached source bodies |

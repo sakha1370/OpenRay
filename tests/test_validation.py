@@ -303,8 +303,8 @@ class TcpHandshakeTests(unittest.IsolatedAsyncioTestCase):
         with unittest.mock.patch("asyncio.open_connection", side_effect=OSError("unreachable")):
             self.assertIsNone(await tcp_handshake(proxy, 5))
         self.assertTrue(tcp_only(proxy))
+        self.assertTrue(tcp_only(parse_uri(f"vless://{UUID}@example.com:443")))
         for uri in (
-            f"vless://{UUID}@example.com:443",
             "hy2://secret@127.0.0.1:443",
             f"vless://{UUID}@127.0.0.1:443?type=xhttp&alpn=h3",
             f"vless://{UUID}@127.0.0.1:443?type=kcp",

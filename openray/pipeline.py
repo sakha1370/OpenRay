@@ -52,6 +52,29 @@ def initialize(store: Store, root: Path) -> dict:
     return report
 
 
+def _clock(seconds: float) -> str:
+    return f"{int(seconds // 60):02d}:{int(seconds % 60):02d}"
+
+
+async def _ticker(emit, state: dict, results: list[dict], started: float, budget: float, interval: float):
+    while True:
+        await asyncio.sleep(interval)
+        now = time.monotonic()
+        ok = sum(1 for r in results if r["outcome"] == "success")
+        line = f"checks {len(results)} ({ok} ok)"
+        planned = state.get("planned")
+        if planned:
+            done = min(planned, len(results) - state["base"])
+            rate = done / (now - state["began"]) if now > state["began"] else 0
+            line = f"[{done * 100 // planned:3d}%] " + line + f" | stage {done}/{planned}"
+            if done and rate:
+                # The stage ends at whichever comes first: its queue draining or its time share.
+                left = max(0.0, state["deadline"] - now)
+                eta = (planned - done) / rate
+                line += f" | ETA {_clock(min(eta, left))}" + (" (time limit)" if eta > left else "")
+        emit(line)
+
+
 async def run(
     settings: Settings,
     mode: str = "combined",
@@ -59,6 +82,8 @@ async def run(
     *,
     install: bool = False,
     validator_factory=Validator,
+    progress=None,
+    progress_interval: float = 2.0,
 ) -> tuple[int, dict]:
     started = time.monotonic()
     run_id = uuid.uuid4().hex
@@ -95,6 +120,12 @@ async def run(
             atomic_write(settings.database.parent / "runs" / (run_id + ".json"), json_text(stats))
             return 2, stats
         results = []
+        state = {"phase": "starting"}
+        ticker = (
+            asyncio.create_task(_ticker(progress, state, results, started, settings.budget, progress_interval))
+            if progress
+            else None
+        )
         targets = (
             SITE_TARGETS
             if mode == "sites"
@@ -114,6 +145,7 @@ async def run(
                 # Time a stage leaves unused flows to later stages instead of idling.
                 carry = 0.0
                 if mode in {"combined", "discovery"}:
+                    state["phase"] = "discovery"
                     allowance = min(validation_deadline - time.monotonic(), settings.budget * 0.15)
                     began = time.monotonic()
                     try:
@@ -144,6 +176,19 @@ async def run(
                             else:
                                 allotted = remaining / (len(categories) - index)
                             began = time.monotonic()
+                            state["phase"] = f"validate {target.id}" + (
+                                " (retests)" if retests else " (existing)" if accepted else " (new)"
+                            )
+                            due = store.due(context)
+                            state.update(
+                                planned=min(
+                                    settings.batch_size,
+                                    due["retests" if retests else "accepted" if accepted else "never_checked"],
+                                ),
+                                base=len(results),
+                                began=began,
+                                deadline=time.monotonic() + allotted,
+                            )
                             validator.settings = dataclasses.replace(
                                 settings, timeout=settings.existing_timeout if accepted else settings.timeout
                             )
@@ -179,8 +224,12 @@ async def run(
         except TimeoutError:
             stats["budget_exhausted"] = True
         except BaseException:
+            if ticker:
+                ticker.cancel()
             store.release(run_id)
             raise
+        state["phase"] = "recording results"
+        state.pop("planned", None)
         from .domain import parse_uri
 
         positives = {r["target"] for r in results if r["outcome"] == "success"}
@@ -231,6 +280,7 @@ async def run(
             stats["bundle"] = str(bundle_path.resolve())
         code = 2 if stats["core_errors"] else 0
         if not stats["core_errors"]:
+            state["phase"] = "export + client validation"
             snapshot = build_snapshot(
                 store,
                 settings.root,
@@ -251,6 +301,8 @@ async def run(
                 stats["snapshot"] = str(snapshot.resolve())
                 if install:
                     install_snapshot(snapshot, settings.root)
+        if ticker:
+            ticker.cancel()
         stats["validation_wall_s"] = stats["wall_s"]
         stats["wall_s"] = time.monotonic() - started
         stats["checks_per_minute"] = len(results) * 60 / stats["wall_s"] if stats["wall_s"] else 0

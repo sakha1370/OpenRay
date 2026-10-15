@@ -28,7 +28,7 @@ class Settings:
     fetch_timeout: float = 15
     max_body: int = 10 * 1024 * 1024
     budget: float = 3000
-    batch_size: int = 5000
+    batch_size: int = 20000
     cooldown: float = 8 * 3600
     death_after: float = 72 * 3600
     xray: str = ""
@@ -39,7 +39,8 @@ class Settings:
     test_url: str = "https://cp.cloudflare.com/generate_204"
     test_status: int = 204
     body_sha256: str = ""
-    tcp_prefilter: bool = False
+    tcp_prefilter: bool = True
+    prefilter_timeout: float = 3
     prefilter_slots: int = 128
     check_sites: bool = True
     existing_timeout: float = 12
@@ -70,7 +71,7 @@ class Settings:
             timeout=env_int("OPENRAY_STAGE3_NEW_TIMEOUT_S", 12, 1, 120),
             fetch_timeout=env_int("OPENRAY_FETCH_TIMEOUT", 15, 1, 120),
             budget=env_int("OPENRAY_RUN_BUDGET_S", 3000, 1, 86400),
-            batch_size=env_int("OPENRAY_STAGE3_MAX", 5000, 1, 1000000),
+            batch_size=env_int("OPENRAY_STAGE3_MAX", 20000, 1, 1000000),
             cooldown=env_int("OPENRAY_ALIVE_CHECK_COOLDOWN_H", 8, 0, 720) * 3600,
             death_after=env_int("OPENRAY_ALIVE_DEATH_AFTER_H", 72, 1, 8760) * 3600,
             xray=os.environ.get(
@@ -85,7 +86,8 @@ class Settings:
             test_status=env_int("OPENRAY_TEST_STATUS", 204, 100, 599),
             body_sha256=os.environ.get("OPENRAY_TEST_BODY_SHA256", ""),
             check_sites=os.environ.get("OPENRAY_CHECK_SITES", "1") != "0",
-            tcp_prefilter=os.environ.get("OPENRAY_TCP_PREFILTER", "0") == "1",
+            tcp_prefilter=os.environ.get("OPENRAY_TCP_PREFILTER", "1") != "0",
+            prefilter_timeout=env_int("OPENRAY_TCP_PREFILTER_TIMEOUT_S", 3, 1, 120),
             prefilter_slots=env_int("OPENRAY_TCP_PREFILTER_SLOTS", 128, 1, 4096),
             source_cache_mb=env_int("OPENRAY_SOURCE_CACHE_MB", 128, 1, 4096),
             existing_timeout=env_int("OPENRAY_STAGE3_EXISTING_TIMEOUT_S", 12, 1, 120),
