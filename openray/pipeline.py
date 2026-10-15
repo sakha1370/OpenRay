@@ -122,7 +122,9 @@ async def run(
         results = []
         state = {"phase": "starting"}
         ticker = (
-            asyncio.create_task(_ticker(progress, state, results, started, settings.budget, progress_interval))
+            asyncio.create_task(
+                _ticker(progress, state, results, started, settings.budget, progress_interval)
+            )
             if progress
             else None
         )
@@ -183,7 +185,9 @@ async def run(
                             state.update(
                                 planned=min(
                                     settings.batch_size,
-                                    due["retests" if retests else "accepted" if accepted else "never_checked"],
+                                    due[
+                                        "retests" if retests else "accepted" if accepted else "never_checked"
+                                    ],
                                 ),
                                 base=len(results),
                                 began=began,

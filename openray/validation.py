@@ -474,9 +474,7 @@ class Validator:
             body_sha256=self.settings.body_sha256,
         )
         if self.settings.tcp_prefilter and tcp_only(proxy):
-            rejected = await tcp_handshake(
-                proxy, min(self.settings.timeout, self.settings.prefilter_timeout)
-            )
+            rejected = await tcp_handshake(proxy, min(self.settings.timeout, self.settings.prefilter_timeout))
             if rejected:
                 return rejected
         # Waiting for a free core is not the candidate's time: its full timeout starts with the core.
