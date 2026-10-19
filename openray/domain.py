@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import ipaddress
 import json
@@ -11,7 +12,7 @@ from enum import StrEnum
 from functools import cached_property
 from urllib.parse import parse_qsl, unquote, urlsplit
 
-IDENTITY_VERSION = 2
+IDENTITY_VERSION = 3
 SCHEMES = frozenset(
     {
         "vmess",
@@ -43,6 +44,47 @@ QUERY_ALIASES = {
 URI_PATTERN = re.compile(
     r"(?:" + "|".join(sorted(SCHEMES, key=len, reverse=True)) + r")://[^\s<>\"'`]+", re.I
 )
+
+# Identity v3 hashes the connection a client would make, not the URI text. A parameter leaves the
+# identity only when no renderer in render.py reads it for this connection *and* its mere presence
+# cannot change what supported_params() accepts; everything else, unknown names included, is kept.
+# tests/test_identity.py renders every merged pair through all three clients to enforce this.
+PRESENTATION_PARAMS = frozenset({"telegram", "descriptions", "_t"})
+TLS_PARAMS = frozenset(
+    {"sni", "peer", "fp", "fingerprint", "alpn", "allowinsecure", "insecure", "pbk", "sid"}
+)
+REALITY_PARAMS = frozenset({"pbk", "sid"})
+# Transport-scoped parameters. mode/extra/authority/multimode are deliberately absent: they are not in
+# render.COMMON_PARAMS, so sing-box and mihomo reject them on presence whatever the transport.
+SCOPED_PARAMS = frozenset(
+    {
+        "path",
+        "host",
+        "headertype",
+        "ed",
+        "eh",
+        "max_early_data",
+        "early_data_header_name",
+        "servicename",
+        "service",
+    }
+)
+TRANSPORT_PARAMS = {
+    "raw": frozenset({"headertype"}),  # host/path join this set when headerType is http
+    "ws": frozenset({"path", "host", "ed", "eh", "max_early_data", "early_data_header_name"}),
+    "wss": frozenset({"path", "host", "ed", "eh", "max_early_data", "early_data_header_name"}),
+    "grpc": frozenset({"servicename", "service"}),
+    "httpupgrade": frozenset({"path", "host"}),
+    "xhttp": frozenset({"path", "host"}),
+    "splithttp": frozenset({"path", "host"}),
+    "http": frozenset({"path", "host"}),
+    "h2": frozenset({"path", "host"}),
+}
+# VMess metadata duplicates what the derived params already carry (type, security, cipher).
+VMESS_REDUNDANT = frozenset({"net", "tls", "scy"})
+# Shared with render.py so identity and rendering cannot disagree about these defaults.
+TLS_BY_DEFAULT = frozenset({"trojan", "hysteria", "hysteria2", "tuic", "https"})
+TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
 class ParseError(ValueError):
@@ -149,9 +191,6 @@ class Proxy:
     @cached_property
     def identity(self) -> str:
         # JSON boundaries prevent delimiter collisions; repeat-value order is retained.
-        grouped: dict[str, list[str]] = {}
-        for key, value in self.params:
-            grouped.setdefault(QUERY_ALIASES.get(key.lower(), key.lower()), []).append(value)
         data = [
             IDENTITY_VERSION,
             self.scheme,
@@ -159,11 +198,73 @@ class Proxy:
             self.port,
             self.username,
             self.password,
-            grouped,
-            self.metadata_fields,
+            self._effective_params(),
         ]
         encoded = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(encoded.encode()).hexdigest()
+
+    def _effective_params(self) -> dict[str, list]:
+        """Parameters that shape the connection, with defaults and spelling variants resolved.
+
+        Every drop or rewrite below mirrors what render.py reads through get(), which answers from the
+        first matching parameter; names this does not understand pass through verbatim.
+        """
+        values: dict[str, list] = {}
+        for key, value in self.params:
+            values.setdefault(QUERY_ALIASES.get(key.lower(), key.lower()), []).append(value)
+        if self.scheme == "vmess":
+            # get() reads the derived params first, so only names they lack carry information. JSON
+            # values stay as they are: null, 1 and "1" are different inputs to the clients.
+            for key, value in self.metadata_fields.items():
+                name = "headertype" if key.lower() == "type" else QUERY_ALIASES.get(key.lower(), key.lower())
+                if name not in values and name not in VMESS_REDUNDANT:
+                    values[name] = [value]
+
+        net = "raw" if self.transport in {"tcp", "raw", ""} else self.transport
+        header = self.get("headerType", "none")
+        scoped = TRANSPORT_PARAMS.get(net)
+        if scoped is not None and net == "raw" and header == "http":
+            scoped = scoped | {"host", "path"}
+        security = self.get(
+            "security", "tls" if self.scheme in TLS_BY_DEFAULT or net == "wss" else "none"
+        ).lower()
+        security = "none" if security == "" else security
+
+        for name in list(values):
+            if (
+                name in PRESENTATION_PARAMS
+                or (security == "none" and name in TLS_PARAMS)
+                or (security in {"none", "tls"} and name in REALITY_PARAMS)
+                or (scoped is not None and name in SCOPED_PARAMS and name not in scoped)
+            ):
+                del values[name]
+
+        values["type"] = [net]
+        values["security"] = [security]
+        if net == "raw":
+            values["headertype"] = [header]
+        if security in {"tls", "reality"}:
+            values["sni"] = [self.get("sni", self.get("peer", self.server))]
+            values["insecure"] = [
+                self.get("allowInsecure", self.get("insecure", "false")).lower() in TRUE_VALUES
+            ]
+            fingerprint = self.get("fp", self.get("fingerprint")) or (
+                "chrome" if security == "reality" else ""
+            )
+            values.update(fp=[fingerprint], alpn=[self.get("alpn")])
+            for alias in ("peer", "allowinsecure", "fingerprint"):
+                values.pop(alias, None)
+        # Blank and absent are the same input for these; presence only matters for a non-blank value.
+        # A JSON 0 or false in VMess metadata is not blank: supported_params() counts it as set.
+        for name in ("fp", "alpn", "flow", "packetencoding", "sid"):
+            if name in values and all(v is None or v == "" for v in values[name]):
+                del values[name]
+        if self.scheme == "vless" and values.get("encryption") == ["none"]:
+            del values["encryption"]
+        if self.scheme == "vmess" and len(values.get("aid", ())) == 1:
+            with contextlib.suppress(ValueError):
+                values["aid"] = [int(values["aid"][0])]
+        return values
 
     @property
     def country(self) -> str:

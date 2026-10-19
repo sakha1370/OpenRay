@@ -17,7 +17,8 @@ from pathlib import Path
 from .domain import IDENTITY_VERSION, Observation, Outcome, ParseError, Proxy, parse_uri
 from .files import fsync_directory
 
-SCHEMA_VERSION = 5
+# 6: proxy ids are identity v3 hashes. Older code reading them would duplicate every proxy, so it must refuse.
+SCHEMA_VERSION = 6
 # Unaccepted candidates stop being scheduled after this many consecutive failures
 # spanning at least two cooldowns; production history showed 0.5% recovering afterwards.
 RETIRE_AFTER_FAILURES = 3
@@ -57,7 +58,87 @@ CREATE TABLE IF NOT EXISTS event_identity(event_id TEXT PRIMARY KEY,run TEXT NOT
 """
 
 
+CHILD_TABLES = ("alias", "observation", "event_identity")  # rows that only point at a proxy
+
+
+def rekey_identities(db) -> dict[str, int] | None:
+    """Move every proxy to the current identity version in the caller's transaction.
+
+    Proxies that now share one identity fold into a single row: the accepted member's URI represents
+    the group, scores merge by max as in migrate(), and each health row comes from the member with
+    the newest target version and observation. Returns None when the database is already current.
+    """
+    if db.execute(
+        "SELECT 1 FROM meta WHERE key='identity_version' AND value=?", (str(IDENTITY_VERSION),)
+    ).fetchone():
+        return None
+    rows = db.execute("SELECT id,uri FROM proxy WHERE identity_version<>?", (IDENTITY_VERSION,)).fetchall()
+    report = {"rekeyed": len(rows), "folded": 0, "unparsed": 0}
+    if rows:
+        before = {t: db.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in (*CHILD_TABLES, "proxy")}
+        db.execute("CREATE TEMP TABLE remap(old TEXT PRIMARY KEY,new TEXT NOT NULL) WITHOUT ROWID")
+        pairs, unparsed = [], []
+        for row in rows:
+            try:
+                pairs.append((row["id"], parse_uri(row["uri"]).identity))
+            except (ParseError, UnicodeError):
+                unparsed.append((IDENTITY_VERSION, row["id"]))  # keeps its id; nothing can look it up anyway
+        db.executemany("INSERT INTO remap VALUES(?,?)", pairs)
+        db.executemany("UPDATE proxy SET identity_version=? WHERE id=?", unparsed)
+        report["unparsed"] = len(unparsed)
+        group = "PARTITION BY r.new"
+        db.execute(
+            "WITH ranked AS (SELECT r.new AS new,p.uri AS uri,p.scheme AS scheme,"
+            f"row_number() OVER ({group} ORDER BY p.accepted DESC,p.created,p.id) AS rn,"
+            f"min(p.created) OVER ({group}) AS created,max(p.accepted) OVER ({group}) AS accepted,"
+            f"max(p.seen) OVER ({group}) AS seen FROM remap r JOIN proxy p ON p.id=r.old) "
+            "INSERT INTO proxy(id,identity_version,uri,scheme,created,accepted,seen) "
+            "SELECT new,?,uri,scheme,created,accepted,seen FROM ranked WHERE rn=1 "
+            "ON CONFLICT(id) DO UPDATE SET accepted=max(accepted,excluded.accepted),seen=max(seen,excluded.seen)",
+            (IDENTITY_VERSION,),
+        )
+        for table in CHILD_TABLES:
+            db.execute(
+                f"UPDATE {table} SET proxy_id=(SELECT new FROM remap WHERE old=proxy_id) "
+                "WHERE proxy_id IN (SELECT old FROM remap)"
+            )
+        db.execute(
+            "INSERT INTO score SELECT r.new,s.context,max(s.count) FROM score s JOIN remap r ON r.old=s.proxy_id "
+            "WHERE true GROUP BY r.new,s.context ON CONFLICT(proxy_id,context) DO UPDATE SET count=max(count,excluded.count)"
+        )
+        group = "PARTITION BY r.new,h.context,h.target"
+        db.execute(
+            "WITH ranked AS (SELECT r.new AS new,h.*,"
+            f"row_number() OVER ({group} ORDER BY h.version DESC,h.observed_at DESC,h.proxy_id) AS rn,"
+            f"max(h.last_success) OVER ({group},h.version) AS newest_success "
+            "FROM remap r JOIN health h ON h.proxy_id=r.old) "
+            "INSERT INTO health(proxy_id,context,target,version,last_success,first_failure,failures,next_due,"
+            "lease_owner,lease_until,outcome,observed_at) "
+            "SELECT new,context,target,version,newest_success,first_failure,failures,next_due,lease_owner,"
+            "lease_until,outcome,observed_at FROM ranked WHERE rn=1 ON CONFLICT(proxy_id,context,target) DO NOTHING"
+        )
+        for table in ("score", "health"):
+            db.execute(f"DELETE FROM {table} WHERE proxy_id IN (SELECT old FROM remap)")
+        db.execute("DELETE FROM proxy WHERE id IN (SELECT old FROM remap)")
+        db.execute("DROP TABLE remap")
+        after = {t: db.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in (*CHILD_TABLES, "proxy")}
+        report["folded"] = before["proxy"] - after["proxy"]
+        # A failed check raises inside the caller's transaction, which rolls the whole migration back.
+        if any(before[t] != after[t] for t in CHILD_TABLES):
+            raise RuntimeError("identity migration changed the number of aliases or observations")
+        if (
+            db.execute("PRAGMA foreign_key_check").fetchone()
+            or db.execute("SELECT 1 FROM proxy WHERE identity_version<>?", (IDENTITY_VERSION,)).fetchone()
+        ):
+            raise RuntimeError("identity migration left dangling or unconverted rows")
+    db.execute("INSERT OR REPLACE INTO meta VALUES('identity_version',?)", (str(IDENTITY_VERSION),))
+    db.execute("INSERT OR REPLACE INTO meta VALUES('identity_rekey',?)", (json.dumps(report),))
+    return report
+
+
 class Store:
+    rekeyed: dict[str, int] | None = None
+
     def __init__(self, path: Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,19 +157,28 @@ class Store:
             self.close()
             raise ValueError("database schema is newer than this OpenRay")
         self.db.executescript(SCHEMA)
-        with self.transaction() as db:
-            if "observed_at" not in {r["name"] for r in db.execute("PRAGMA table_info(health)")}:
-                db.execute("ALTER TABLE health ADD COLUMN observed_at REAL NOT NULL DEFAULT 0")
-                db.execute(
-                    "UPDATE health SET observed_at=max(COALESCE(last_success,0),COALESCE(first_failure,0),"
-                    "COALESCE((SELECT max(time) FROM observation o WHERE o.proxy_id=health.proxy_id "
-                    "AND o.context=health.context AND o.target=health.target AND o.version=health.version),0))"
-                )
-            if "seen" not in {r["name"] for r in db.execute("PRAGMA table_info(proxy)")}:
-                # Last time a source listed the proxy; the unlisted grace starts at the upgrade.
-                db.execute("ALTER TABLE proxy ADD COLUMN seen REAL NOT NULL DEFAULT 0")
-                db.execute("UPDATE proxy SET seen=?", (time.time(),))
-            db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+        # rekey_identities checks foreign keys itself. Enforced, every parent row it deletes scans the
+        # unindexed alias and event_identity children: quadratic, minutes already at 20k proxies.
+        self.db.execute("PRAGMA foreign_keys=OFF")
+        try:
+            with self.transaction() as db:
+                if "observed_at" not in {r["name"] for r in db.execute("PRAGMA table_info(health)")}:
+                    db.execute("ALTER TABLE health ADD COLUMN observed_at REAL NOT NULL DEFAULT 0")
+                    db.execute(
+                        "UPDATE health SET observed_at=max(COALESCE(last_success,0),COALESCE(first_failure,0),"
+                        "COALESCE((SELECT max(time) FROM observation o WHERE o.proxy_id=health.proxy_id "
+                        "AND o.context=health.context AND o.target=health.target AND o.version=health.version),0))"
+                    )
+                if "seen" not in {r["name"] for r in db.execute("PRAGMA table_info(proxy)")}:
+                    # Last time a source listed the proxy; the unlisted grace starts at the upgrade.
+                    db.execute("ALTER TABLE proxy ADD COLUMN seen REAL NOT NULL DEFAULT 0")
+                    db.execute("UPDATE proxy SET seen=?", (time.time(),))
+                self.rekeyed = rekey_identities(db)
+                db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+            self.db.execute("PRAGMA foreign_keys=ON")
+        except BaseException:
+            self.close()
+            raise
 
     @contextlib.contextmanager
     def transaction(self):

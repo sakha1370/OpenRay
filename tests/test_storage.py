@@ -1,4 +1,5 @@
 import json
+import sqlite3
 import struct
 import tempfile
 import threading
@@ -8,7 +9,7 @@ from pathlib import Path
 
 from openray.domain import Observation, Outcome, parse_uri
 from openray.maintenance import maintain
-from openray.storage import RETIRED, Store, migrate
+from openray.storage import RETIRED, SCHEMA, SCHEMA_VERSION, Store, migrate
 from tests.test_domain import VLESS
 
 
@@ -388,7 +389,7 @@ class StorageTests(unittest.TestCase):
         self.store = Store(self.root / "state.sqlite3")
         seen = self.store.db.execute("SELECT seen FROM proxy").fetchone()[0]
         self.assertGreaterEqual(seen, before)
-        self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], 5)
+        self.assertEqual(self.store.db.execute("PRAGMA user_version").fetchone()[0], SCHEMA_VERSION)
 
     def test_out_of_order_observations_preserve_health_counters_and_lease(self):
         self.store.observe(
@@ -422,3 +423,145 @@ class StorageTests(unittest.TestCase):
         self.store.lease("mci", "connectivity", "policy", 1, 1000, version=2, now=202)
         self.assertFalse(self.store.lease("mci", "connectivity", "obsolete", 1, 1, version=1, now=203))
         self.assertEqual(self.store.db.execute("SELECT version FROM health").fetchone()[0], 2)
+
+
+class IdentityMigrationTests(unittest.TestCase):
+    """A schema 5 checkpoint holds identity v2 ids; opening it must fold them into v3 losslessly."""
+
+    RAW = VLESS + "?type=tcp"
+    SAME = VLESS + "?headerType=none&telegram=advert"  # the same connection as RAW
+    OTHER = VLESS + "?type=ws&path=%2Fx"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self.tmp.name) / "state.sqlite3"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def legacy_database(self, *, dangling=False):
+        db = sqlite3.connect(self.path)
+        db.executescript(SCHEMA)
+        db.execute("DELETE FROM meta")
+        db.executemany(
+            "INSERT INTO proxy VALUES(?,2,?,?,?,?,?)",
+            [
+                ("old-raw", self.RAW, "vless", 10, 1, 50),
+                ("old-same", self.SAME, "vless", 5, 0, 70),
+                ("old-other", self.OTHER, "vless", 20, 0, 60),
+                ("old-bad", "vless://not-a-connection", "vless", 30, 0, 80),
+            ],
+        )
+        db.executemany(
+            "INSERT INTO alias VALUES(?,?,?)",
+            [(self.RAW, "old-raw", "a"), (self.SAME, "old-same", "b"), (self.OTHER, "old-other", "c")],
+        )
+        db.executemany(
+            "INSERT INTO score VALUES(?,?,?)",
+            [
+                ("old-raw", "global", 3),
+                ("old-same", "global", 7),
+                ("old-same", "iran", 1),
+                ("old-other", "global", 2),
+            ],
+        )
+        # health columns: proxy, context, target, version, last_success, first_failure, failures, next_due,
+        # lease_owner, lease_until, outcome, observed_at
+        db.executemany(
+            "INSERT INTO health VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+            [
+                ("old-raw", "global", "connectivity", 1, 100, None, 0, 0, None, None, "success", 100),
+                ("old-same", "global", "connectivity", 2, 50, None, 0, 9, None, None, "success", 90),
+                ("old-raw", "global", "aistudio", 1, None, 80, 2, 0, None, None, "blocked", 80),
+            ],
+        )
+        db.executemany(
+            "INSERT INTO observation VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+            [
+                (f"e{n}", "run", pid, "global", "connectivity", 1, "success", 1.0, 1.0, "", None, "xray")
+                for n, pid in enumerate(("old-raw", "old-same", "old-other"))
+            ],
+        )
+        db.execute("INSERT INTO event_identity VALUES('e0','run','old-raw','global','connectivity',1)")
+        if dangling:
+            db.execute("INSERT INTO alias VALUES('vless://dangling','missing-proxy','x')")
+        db.execute("PRAGMA user_version=5")
+        db.commit()
+        db.close()
+
+    def test_equivalent_proxies_fold_with_their_history(self):
+        self.legacy_database()
+        merged = parse_uri(self.RAW).identity
+        self.assertEqual(merged, parse_uri(self.SAME).identity)
+        with Store(self.path) as store:
+            self.assertEqual(store.rekeyed, {"rekeyed": 4, "folded": 1, "unparsed": 1})
+            proxies = {r["id"]: dict(r) for r in store.db.execute("SELECT * FROM proxy")}
+            self.assertEqual(set(proxies), {merged, parse_uri(self.OTHER).identity, "old-bad"})
+            # The accepted member represents the group, with the earliest creation and latest sighting.
+            self.assertEqual(
+                (proxies[merged]["uri"], proxies[merged]["accepted"], proxies[merged]["created"]),
+                (self.RAW, 1, 5),
+            )
+            self.assertEqual(proxies[merged]["seen"], 70)
+            self.assertEqual({p["identity_version"] for p in proxies.values()}, {3})
+            self.assertEqual(store.view()[0][0].uri, self.RAW)
+            aliases = dict(store.db.execute("SELECT uri,proxy_id FROM alias").fetchall())
+            self.assertEqual(
+                aliases, {self.RAW: merged, self.SAME: merged, self.OTHER: parse_uri(self.OTHER).identity}
+            )
+            scores = store.view()[1]
+            self.assertEqual(scores[merged], {"global": 7, "iran": 1})  # max, never a sum
+            self.assertEqual(scores[parse_uri(self.OTHER).identity], {"global": 2})
+            health = {
+                r["target"]: dict(r)
+                for r in store.db.execute("SELECT * FROM health WHERE proxy_id=?", (merged,))
+            }
+            # The newest target version wins even though the other member was observed later.
+            self.assertEqual(
+                (health["connectivity"]["version"], health["connectivity"]["last_success"]), (2, 50)
+            )
+            self.assertEqual(health["aistudio"]["outcome"], "blocked")
+            self.assertEqual(store.db.execute("SELECT count(*) FROM observation").fetchone()[0], 3)
+            self.assertEqual(
+                {r[0] for r in store.db.execute("SELECT proxy_id FROM observation")},
+                {merged, parse_uri(self.OTHER).identity},
+            )
+            self.assertEqual(store.db.execute("SELECT proxy_id FROM event_identity").fetchone()[0], merged)
+            self.assertEqual(store.db.execute("PRAGMA foreign_key_check").fetchall(), [])
+            self.assertEqual(store.db.execute("PRAGMA foreign_keys").fetchone()[0], 1)
+            self.assertEqual(store.db.execute("PRAGMA user_version").fetchone()[0], SCHEMA_VERSION)
+            self.assertEqual(
+                store.db.execute("SELECT value FROM meta WHERE key='identity_version'").fetchone()[0], "3"
+            )
+
+    def test_migration_runs_once_and_new_sightings_join_the_folded_row(self):
+        self.legacy_database()
+        Store(self.path).close()
+        with Store(self.path) as store:
+            self.assertIsNone(store.rekeyed)
+            before = store.db.execute("SELECT count(*) FROM proxy").fetchone()[0]
+            self.assertFalse(store.add(parse_uri(self.SAME + "&fp=")))  # same connection, already known
+            self.assertEqual(store.db.execute("SELECT count(*) FROM proxy").fetchone()[0], before)
+
+    def test_failed_migration_changes_nothing(self):
+        self.legacy_database(dangling=True)
+        with self.assertRaisesRegex(RuntimeError, "dangling"):
+            Store(self.path)
+        db = sqlite3.connect(self.path)
+        self.assertEqual(db.execute("SELECT count(*) FROM proxy WHERE identity_version=2").fetchone()[0], 4)
+        self.assertIsNone(db.execute("SELECT 1 FROM meta WHERE key='identity_version'").fetchone())
+        self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 5)
+        db.close()
+
+    def test_older_code_cannot_open_a_migrated_database(self):
+        self.legacy_database()
+        Store(self.path).close()
+        db = sqlite3.connect(self.path)
+        db.execute(f"PRAGMA user_version={SCHEMA_VERSION + 1}")
+        db.close()
+        with self.assertRaisesRegex(ValueError, "newer"):
+            Store(self.path)
+
+    def test_fresh_database_needs_no_migration(self):
+        with Store(self.path) as store:
+            self.assertEqual(store.rekeyed, {"rekeyed": 0, "folded": 0, "unparsed": 0})

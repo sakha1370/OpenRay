@@ -10,10 +10,12 @@ VLESS = f"vless://{UUID}@example.com:443"
 
 class ProtocolTests(unittest.TestCase):
     def test_transport_identity(self):
+        # Each parameter only counts where the connection uses it: serviceName on gRPC, path on
+        # WebSocket and fp under TLS. tests/test_identity.py covers where they are inert.
         for left, right in (
-            ("serviceName=a", "serviceName=b"),
-            ("path=%2Fws%3Ftoken%3Da", "path=%2Fws%3Ftoken%3Db"),
-            ("fp=chrome", "fp=firefox"),
+            ("type=grpc&serviceName=a", "type=grpc&serviceName=b"),
+            ("type=ws&path=%2Fws%3Ftoken%3Da", "type=ws&path=%2Fws%3Ftoken%3Db"),
+            ("security=tls&fp=chrome", "security=tls&fp=firefox"),
             ("unknown=a", "unknown=b"),
         ):
             self.assertNotEqual(

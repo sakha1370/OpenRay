@@ -5,7 +5,7 @@ import json
 import re
 from pathlib import Path
 
-from .domain import QUERY_ALIASES, Proxy
+from .domain import QUERY_ALIASES, TLS_BY_DEFAULT, TRUE_VALUES, Proxy
 
 
 class Unsupported(ValueError):
@@ -156,7 +156,7 @@ def supported_params(p: Proxy, extra: set[str] = frozenset()):
 
 
 def _bool(value: str) -> bool:
-    return value.lower() in {"1", "true", "yes", "on"}
+    return value.lower() in TRUE_VALUES
 
 
 def vmess_security(p: Proxy) -> str:
@@ -192,9 +192,7 @@ def ss_method(p: Proxy, supported: set[str]) -> str:
 def tls_options(p: Proxy) -> dict | None:
     security = p.get(
         "security",
-        "tls"
-        if p.scheme in {"trojan", "hysteria", "hysteria2", "tuic", "https"} or p.transport == "wss"
-        else "none",
+        "tls" if p.scheme in TLS_BY_DEFAULT or p.transport == "wss" else "none",
     ).lower()
     if security not in {"tls", "reality", "none", ""}:
         raise Unsupported("unknown transport security mode")
