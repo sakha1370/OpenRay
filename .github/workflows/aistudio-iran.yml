@@ -1,0 +1,206 @@
+name: AI Studio list for Iran
+# Builds output/site_access/aistudio_iran.txt from aistudio.txt, which is never modified. See tools/iran_filter.py.
+# Manual only. Run it with publish=true on main to commit the result; otherwise the result is an artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Commit aistudio_iran.txt to main (only honoured on main)
+        type: boolean
+        default: false
+      limit:
+        description: Test an evenly spaced sample of this many lines (0 tests them all)
+        type: string
+        default: '0'
+      probe_minutes:
+        description: Time budget for the probes from Iranian nodes
+        type: string
+        default: '45'
+permissions:
+  contents: read
+concurrency:
+  group: aistudio-iran-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  LIMIT: ${{ inputs.limit }}
+  PROBE_MINUTES: ${{ inputs.probe_minutes }}
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements.lock
+      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - name: Read the current lists from main
+        id: source
+        run: |
+          git fetch --depth=1 origin main
+          mkdir -p work/source
+          git show FETCH_HEAD:output/site_access/aistudio.txt > work/source/aistudio.txt
+          git show FETCH_HEAD:output/check_counts.json > work/source/check_counts.json
+          echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
+          echo "blob=$(git rev-parse FETCH_HEAD:output/site_access/aistudio.txt)" >> "$GITHUB_OUTPUT"
+      - name: Classify, repair and shard
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          SOURCE_BLOB: ${{ steps.source.outputs.blob }}
+        run: |
+          python tools/iran_filter.py prepare --source work/source/aistudio.txt --work work --shards 4 \
+            --limit "$LIMIT" --source-sha "$SOURCE_SHA" --source-blob "$SOURCE_BLOB"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: iran-work
+          path: work/
+          retention-days: 7
+  check:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements.lock
+      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - run: python tools/install_cores.py
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: iran-work
+          path: work
+      - name: Re-test on the runner
+        env:
+          OPENRAY_STAGE3_BACKEND: subprocess
+          OPENRAY_STAGE3_WORKERS: '64'
+          OPENRAY_MEMORY_MB: '12288'
+          OPENRAY_STAGE3_NEW_TIMEOUT_S: '12'
+          OPENRAY_TCP_PREFILTER: '0'
+        run: |
+          python tools/iran_filter.py check --candidates work/candidates-${{ matrix.shard }}.jsonl \
+            --output results/results-${{ matrix.shard }}.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: iran-results-${{ matrix.shard }}
+          path: results/
+          retention-days: 7
+  probe:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements.lock
+      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: iran-work
+          path: work
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: iran-results-*
+          merge-multiple: true
+          path: results
+      - name: Probe the survivors from Iranian nodes
+        run: |
+          python tools/iran_filter.py probe --work work --results results --output probe/probe.json \
+            --budget-minutes "$PROBE_MINUTES"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: iran-probe
+          path: probe/
+          retention-days: 7
+          if-no-files-found: ignore
+  assemble:
+    needs: [prepare, check, probe]
+    if: ${{ !cancelled() && needs.check.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements.lock
+      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: iran-work
+          path: work
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: iran-results-*
+          merge-multiple: true
+          path: results
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        continue-on-error: true
+        with:
+          name: iran-probe
+          path: probe
+      - name: Assemble, rank and gate
+        env:
+          MIN_LINES: ${{ env.LIMIT == '0' && '300' || '1' }}
+        run: |
+          python tools/iran_filter.py assemble --work work --results results \
+            --probe probe/probe.json --check-counts work/source/check_counts.json \
+            --output artifacts/aistudio_iran.txt --report artifacts/report.json \
+            --summary artifacts/summary.md --min-lines "$MIN_LINES"
+      - name: Job summary
+        if: always()
+        run: |
+          if test -f artifacts/summary.md; then cat artifacts/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: iran-final
+          path: |
+            artifacts/
+            work/dropped.tsv
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Publish aistudio_iran.txt to main
+        if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
+        run: |
+          set -euo pipefail
+          source_sha=$(jq -r .source.sha artifacts/report.json)
+          published=$(jq -r .published artifacts/report.json)
+          git config user.name "OpenRay"
+          git config user.email "openray@localhost"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git checkout -B publish FETCH_HEAD
+            cp artifacts/aistudio_iran.txt output/site_access/aistudio_iran.txt
+            git add output/site_access/aistudio_iran.txt
+            if git diff --cached --quiet; then
+              echo "aistudio_iran.txt is already up to date"
+              exit 0
+            fi
+            test "$(git diff --cached --name-only)" = "output/site_access/aistudio_iran.txt"
+            git commit -m "Add aistudio_iran.txt: $published lines filtered from aistudio.txt at ${source_sha:0:12} [skip ci]"
+            if git push origin HEAD:refs/heads/main; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+          echo "could not push after 5 attempts" >&2
+          exit 1
