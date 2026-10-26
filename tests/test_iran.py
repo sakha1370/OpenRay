@@ -320,6 +320,11 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(report["verdicts"], {"unprobed": 1, "unreachable": 1, "reachable": 1})
             self.assertEqual(report["probe_stats"]["reached by no node"], 1)
             self.assertEqual(report["probe_stats"]["share of endpoints reached by ir1"], "50%")
+            # Reachable from a hosting network is not verified: that needs probes on subscriber networks.
+            nothing = root / "nothing.txt"
+            more = ("--min-lines", 1, "--verified", nothing, "--min-verified", 1)
+            self.assertEqual(run("assemble", *common, *args, *more), 3)
+            self.assertFalse(nothing.exists())
 
             out = root / "gated.txt"
             code = run("assemble", *common, "--output", out, "--report", root / "gated.json")
@@ -357,9 +362,13 @@ class ToolTests(unittest.TestCase):
             out, report_path = root / "out.txt", root / "report.json"
             common = ("--work", work, "--results", results, "--summary", root / "summary.md")
             args = ("--probe", root / "probe.json", "--output", out, "--report", report_path)
-            self.assertEqual(run("assemble", *common, *args, "--min-lines", 1), 0)
+            verified = root / "verified.txt"
+            more = ("--min-lines", 1, "--verified", verified, "--min-verified", 1)
+            self.assertEqual(run("assemble", *common, *args, *more), 0)
             # Reached from MCI first; unreachable from both trusted probes is dropped; one failure is kept.
             self.assertEqual(out.read_text(encoding="utf-8").split("\n")[:-1], [lines[0], lines[2]])
+            # Verified is only what a probe connected to in this run, not the unknown or the dropped line.
+            self.assertEqual(verified.read_text(encoding="utf-8").split("\n")[:-1], [lines[0]])
             report = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertEqual(report["verdicts"], {"reachable": 1, "unreachable": 1, "unknown": 1})
             self.assertEqual(report["dropped_after"]["probe: unreachable from Iranian nodes"], 1)
@@ -367,8 +376,16 @@ class ToolTests(unittest.TestCase):
             self.assertEqual((stats["AS197207 asked"], stats["AS197207 reached"]), (3, 1))
             self.assertEqual(stats["AS58224 asked"], 1)
             self.assertEqual(report["probe_controls"]["start AS197207"], "reached")
+            self.assertEqual(report["verified"], 1)
             audit = (root / "dropped_by_probe.tsv").read_text(encoding="utf-8")
             self.assertEqual(audit, f"{lines[1]}\ttried AS197207,AS58224\n")
+            # Demanding more verified lines than exist fails the gate and writes neither file.
+            short, none_out = root / "short.txt", root / "none.txt"
+            strict = ("--output", none_out, "--report", root / "strict.json", "--verified", short)
+            demand = ("--min-lines", 1, "--min-verified", 2)
+            code = run("assemble", *common, "--probe", root / "probe.json", *strict, *demand)
+            self.assertEqual(code, 3)
+            self.assertFalse(short.exists() or none_out.exists())
 
 
 if __name__ == "__main__":

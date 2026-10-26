@@ -1,11 +1,12 @@
 name: AI Studio list for Iran
-# Builds output/site_access/aistudio_iran.txt from aistudio.txt, which is never modified. See tools/iran_filter.py.
+# Builds aistudio_iran.txt, its verified subset and an Xray fragment subscription from aistudio.txt (never
+# modified), all in output/site_access/. See tools/iran_filter.py.
 # Manual only. Run it with publish=true on main to commit the result; otherwise the result is an artifact.
 on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Commit aistudio_iran.txt to main (only honoured on main)
+        description: Commit the three Iran files to main (only honoured on main)
         type: boolean
         default: false
       limit:
@@ -16,6 +17,10 @@ on:
         description: Time budget for the probes from Iranian nodes
         type: string
         default: '180'
+      reuse_run_id:
+        description: Re-assemble from the artifacts of this earlier run instead of testing again (empty tests afresh)
+        type: string
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -26,6 +31,7 @@ env:
   PROBE_MINUTES: ${{ inputs.probe_minutes }}
 jobs:
   prepare:
+    if: ${{ inputs.reuse_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -131,11 +137,12 @@ jobs:
           if-no-files-found: ignore
   assemble:
     needs: [prepare, check, probe]
-    if: ${{ !cancelled() && needs.check.result == 'success' }}
+    if: ${{ !cancelled() && (needs.check.result == 'success' || inputs.reuse_run_id != '') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
@@ -148,24 +155,32 @@ jobs:
         with:
           name: iran-work
           path: work
+          run-id: ${{ inputs.reuse_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: iran-results-*
           merge-multiple: true
           path: results
+          run-id: ${{ inputs.reuse_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         continue-on-error: true
         with:
           name: iran-probe
           path: probe
+          run-id: ${{ inputs.reuse_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Assemble, rank and gate
         env:
           MIN_LINES: ${{ env.LIMIT == '0' && '300' || '1' }}
+          MIN_VERIFIED: ${{ env.LIMIT == '0' && '50' || '1' }}
         run: |
           python tools/iran_filter.py assemble --work work --results results \
             --probe probe/probe.json --check-counts work/source/check_counts.json \
-            --output artifacts/aistudio_iran.txt --report artifacts/report.json \
-            --summary artifacts/summary.md --min-lines "$MIN_LINES"
+            --output artifacts/aistudio_iran.txt --verified artifacts/aistudio_iran_verified.txt \
+            --report artifacts/report.json --summary artifacts/summary.md \
+            --min-lines "$MIN_LINES" --min-verified "$MIN_VERIFIED"
       - name: Xray TLS-fragment subscription
         env:
           MIN_FRAGMENTS: ${{ env.LIMIT == '0' && '50' || '1' }}
@@ -188,31 +203,35 @@ jobs:
             work/dropped.tsv
           retention-days: 30
           if-no-files-found: ignore
-      - name: Publish aistudio_iran.txt to main
+      - name: Publish the Iran lists to main
         if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
         run: |
           set -euo pipefail
           source_sha=$(jq -r .source.sha artifacts/report.json)
           published=$(jq -r .published artifacts/report.json)
+          verified=$(jq -r .verified artifacts/report.json)
           fragments=$(jq -r .written artifacts/fragment.json)
           git config user.name "OpenRay"
           git config user.email "openray@localhost"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git checkout -B publish FETCH_HEAD
-            cp artifacts/aistudio_iran.txt artifacts/aistudio_iran_fragment.json output/site_access/
-            git add output/site_access/aistudio_iran.txt output/site_access/aistudio_iran_fragment.json
+            cp artifacts/aistudio_iran.txt artifacts/aistudio_iran_verified.txt \
+              artifacts/aistudio_iran_fragment.json output/site_access/
+            git add output/site_access/aistudio_iran.txt output/site_access/aistudio_iran_verified.txt \
+              output/site_access/aistudio_iran_fragment.json
             if git diff --cached --quiet; then
-              echo "both files are already up to date"
+              echo "all three files are already up to date"
               exit 0
             fi
             for name in $(git diff --cached --name-only); do
               case "$name" in
-                output/site_access/aistudio_iran.txt | output/site_access/aistudio_iran_fragment.json) ;;
+                output/site_access/aistudio_iran.txt | output/site_access/aistudio_iran_verified.txt) ;;
+                output/site_access/aistudio_iran_fragment.json) ;;
                 *) echo "unexpected staged path: $name" >&2; exit 1 ;;
               esac
             done
-            git commit -m "Update aistudio_iran.txt ($published lines) and its fragment subscription ($fragments configs) from aistudio.txt at ${source_sha:0:12} [skip ci]"
+            git commit -m "Update aistudio_iran.txt ($published lines), its verified subset ($verified) and fragment subscription ($fragments configs) from aistudio.txt at ${source_sha:0:12} [skip ci]"
             if git push origin HEAD:refs/heads/main; then
               exit 0
             fi

@@ -423,7 +423,8 @@ def summary_markdown(report: dict) -> str:
     lines = ["## aistudio_iran.txt", ""]
     source = report["source"]
     lines.append(f"Source commit `{str(source['sha'])[:12]}`, {report['input_lines']} input lines.")
-    lines.append(f"Published lines: **{report['published']}**. Gates: {report['gates']}.")
+    lines.append(f"Published lines: **{report['published']}**, verified: **{report['verified']}**.")
+    lines.append(f"Gates: {report['gates']}.")
     probing = report["probe"]
     status, probed = probing.get("status", "not run"), probing.get("probed", 0)
     limited = probing.get("rate_limited", probing.get("refused", 0))
@@ -505,19 +506,23 @@ def assemble(args) -> int:
         evidence = verdict == "reachable" or has_iran_evidence(counts.get(entry["source"]))
         rank = iran.bucket(proxy, iran_evidence=evidence)
         order = (rank, iran.protocol_rank(proxy), iran.port_rank(proxy), result["ms"], proxy.uri)
-        rows.append((order, proxy))
+        rows.append((order, proxy, verdict))
     rows.sort(key=lambda row: row[0])
 
     output: list[str] = []
+    verified: list[str] = []
     identities: set[str] = set()
     buckets: Counter = Counter()
     mix: Counter = Counter()
-    for (rank, *_), proxy in rows:
+    for (rank, *_), proxy, verdict in rows:
         if proxy.identity in identities:
             dropped_after["duplicate after repair"] += 1
             continue
         identities.add(proxy.identity)
         output.append(proxy.uri)
+        # Verified: a probe on a subscriber network connected to the endpoint during this run.
+        if verdict == "reachable" and probing.get("prober") == "globalping":
+            verified.append(proxy.uri)
         buckets[f"{rank}"] += 1
         mix[f"{proxy.scheme} / {proxy.transport} / {iran.security(proxy)}"] += 1
 
@@ -528,11 +533,14 @@ def assemble(args) -> int:
         "all parse and unique": len({p.identity for p in reparsed}) == len(output),
         "no dropped scheme": all(iran.drop_reason(p) is None for p in reparsed),
     }
+    if args.verified:
+        gates["enough verified lines (needs Globalping probes)"] = len(verified) >= args.min_verified
     failed = [name for name, ok in gates.items() if not ok]
     nodes = {name.split(".")[0]: describe_node(info) for name, info in probing.get("nodes", {}).items()}
     report = {
         **prepared,
         "published": len(output),
+        "verified": len(verified),
         "gates": "pass" if not failed else "FAIL: " + ", ".join(failed),
         "probe": {k: v for k, v in probing.items() if k not in {"endpoints", "samples", "controls"}},
         "repairs": dict(sorted(repairs.items())),
@@ -553,6 +561,8 @@ def assemble(args) -> int:
     if failed:
         return 3
     atomic_write(args.output, lines_text(output))
+    if args.verified:
+        atomic_write(args.verified, lines_text(verified))
     return 0
 
 
@@ -717,6 +727,8 @@ def main(argv=None) -> int:
     p.add_argument("--summary", type=Path, required=True)
     p.add_argument("--min-lines", type=int, default=300)
     p.add_argument("--min-share", type=float, default=0.25)
+    p.add_argument("--verified", type=Path)
+    p.add_argument("--min-verified", type=int, default=1)
     p.set_defaults(run=assemble)
 
     p = commands.add_parser("fragment")

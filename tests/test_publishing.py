@@ -42,7 +42,7 @@ class PublishingTests(unittest.TestCase):
             self.assertFalse((root / "output/manifest.json").exists())
 
     def test_unmanaged_files_beside_the_site_lists_survive_an_install(self):
-        # aistudio_iran.txt and its fragment subscription are published by hand, not by the manifest.
+        # The aistudio_iran files are published by hand, not by the manifest.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             with Store(root / ".state/state.sqlite3") as store:
@@ -50,7 +50,11 @@ class PublishingTests(unittest.TestCase):
                 snapshot = build_snapshot(store, root, root / ".state/snapshots")
             site = root / "output/site_access"
             site.mkdir(parents=True)
-            kept = {"aistudio_iran.txt": "vless://one\n", "aistudio_iran_fragment.json": "[\n]\n"}
+            kept = {
+                "aistudio_iran.txt": "vless://one\n",
+                "aistudio_iran_verified.txt": "vless://two\n",
+                "aistudio_iran_fragment.json": "[\n]\n",
+            }
             for name, text in kept.items():
                 (site / name).write_text(text)
             install_snapshot(snapshot, root)
