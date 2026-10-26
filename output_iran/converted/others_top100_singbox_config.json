@@ -63,7 +63,6 @@
         "p-532fc2d79c3638fd",
         "p-543f42d0d457c2ae",
         "p-561d7f506b4fa176",
-        "p-57ed480947b3cef5",
         "p-58b8bed288bac040",
         "p-629e0bacfcf00412",
         "p-632bbba058b024dc",
@@ -74,6 +73,7 @@
         "p-754263a002c75a02",
         "p-761ca45494a850bd",
         "p-771f1fa8932f6031",
+        "p-772a2f77b4807f32",
         "p-7a437727b8c07e3f",
         "p-7a59f5e90c7c6876",
         "p-7d47b48d4a936061",
@@ -155,7 +155,6 @@
         "p-532fc2d79c3638fd",
         "p-543f42d0d457c2ae",
         "p-561d7f506b4fa176",
-        "p-57ed480947b3cef5",
         "p-58b8bed288bac040",
         "p-629e0bacfcf00412",
         "p-632bbba058b024dc",
@@ -166,6 +165,7 @@
         "p-754263a002c75a02",
         "p-761ca45494a850bd",
         "p-771f1fa8932f6031",
+        "p-772a2f77b4807f32",
         "p-7a437727b8c07e3f",
         "p-7a59f5e90c7c6876",
         "p-7d47b48d4a936061",
@@ -754,15 +754,6 @@
       "uuid": "18535741-e8b3-4b43-9348-785b55936751"
     },
     {
-      "alter_id": 0,
-      "security": "auto",
-      "server": "165.154.195.38",
-      "server_port": 35034,
-      "tag": "p-57ed480947b3cef5",
-      "type": "vmess",
-      "uuid": "959a8caf-4cea-43d0-a548-3628e7ddfafc"
-    },
-    {
       "method": "chacha20-ietf-poly1305",
       "password": "k1dBOmOB4oqi7Ump37a1bQ",
       "server": "82.38.31.208",
@@ -918,6 +909,28 @@
       "server_port": 8080,
       "tag": "p-771f1fa8932f6031",
       "type": "shadowsocks"
+    },
+    {
+      "flow": "xtls-rprx-vision",
+      "server": "server.slavkiti.monster",
+      "server_port": 443,
+      "tag": "p-772a2f77b4807f32",
+      "tls": {
+        "enabled": true,
+        "insecure": false,
+        "reality": {
+          "enabled": true,
+          "public_key": "J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk",
+          "short_id": "6c825bc79850"
+        },
+        "server_name": "www.microsoft.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "type": "vless",
+      "uuid": "1896c6c9-a941-4688-a865-29027bf7f8e6"
     },
     {
       "method": "chacha20-ietf-poly1305",
