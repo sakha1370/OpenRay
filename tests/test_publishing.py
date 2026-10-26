@@ -41,6 +41,24 @@ class PublishingTests(unittest.TestCase):
             self.assertFalse((root / "output/all_valid_proxies.txt").exists())
             self.assertFalse((root / "output/manifest.json").exists())
 
+    def test_unmanaged_files_beside_the_site_lists_survive_an_install(self):
+        # aistudio_iran.txt and its fragment subscription are published by hand, not by the manifest.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with Store(root / ".state/state.sqlite3") as store:
+                store.add(parse_uri(VLESS), accepted=True)
+                snapshot = build_snapshot(store, root, root / ".state/snapshots")
+            site = root / "output/site_access"
+            site.mkdir(parents=True)
+            kept = {"aistudio_iran.txt": "vless://one\n", "aistudio_iran_fragment.json": "[\n]\n"}
+            for name, text in kept.items():
+                (site / name).write_text(text)
+            install_snapshot(snapshot, root)
+            install_snapshot(snapshot, root)
+            for name, text in kept.items():
+                self.assertEqual((site / name).read_text(), text)
+            self.assertTrue((root / "output/manifest.json").is_file())
+
     def repository(self, root):
         remote, repo = root / "remote.git", root / "repo"
 

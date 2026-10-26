@@ -11,17 +11,27 @@ import ipaddress
 import json
 import re
 import sys
+import tempfile
 import time
 from collections import Counter
 from pathlib import Path
 
 import httpx
 
-from openray import iran
+from openray import globalping, iran
 from openray.config import Settings
 from openray.domain import Outcome, ParseError, Proxy, parse_uri
 from openray.files import atomic_write, json_text, lines_text
-from openray.validation import SITE_TARGETS, Validator
+from openray.validation import (
+    SITE_TARGETS,
+    Target,
+    Validator,
+    http_probe,
+    owned_listener,
+    reserve_port,
+    spawn_owned,
+    terminate,
+)
 
 RETRYABLE = frozenset({Outcome.PROXY_FAILURE, Outcome.TIMEOUT, Outcome.TARGET_FAILURE, Outcome.CORE_FAILURE})
 CORE_FAILURE_LIMIT = 0.05
@@ -253,21 +263,6 @@ async def tcp_check(client: httpx.AsyncClient, endpoint: str, nodes: list[str], 
     return outcome
 
 
-async def globalping_iran(client: httpx.AsyncClient) -> dict:
-    try:
-        response = await client.get("https://api.globalping.io/v1/probes")
-        response.raise_for_status()
-        probes = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        return {"status": type(exc).__name__}
-    found: Counter = Counter()
-    for probe in probes:
-        location = probe.get("location", {}) if isinstance(probe, dict) else {}
-        if location.get("country") == "IR":
-            found[f"AS{location.get('asn')} {location.get('network', '')}".strip()] += 1
-    return {"status": "ok", "total_probes": len(probes), "iran": dict(found)}
-
-
 async def run_probe(endpoints: list[str], budget_minutes: float) -> dict:
     started = time.monotonic()
     budget = budget_minutes * 60
@@ -275,7 +270,6 @@ async def run_probe(endpoints: list[str], budget_minutes: float) -> dict:
     report.update(rate_limited=0, errors=0, rate_limit_hints=[])
     samples: list[dict] = []
     async with httpx.AsyncClient(timeout=20, headers={"User-Agent": "OpenRay-iran-probe/1"}) as client:
-        report["globalping"] = await globalping_iran(client)
         try:
             nodes = iranian_nodes(await check_host(client, "/nodes/hosts"))
         except (httpx.HTTPError, ValueError, RateLimited, RuntimeError) as exc:
@@ -349,16 +343,21 @@ async def run_probe(endpoints: list[str], budget_minutes: float) -> dict:
 
 def probe(args) -> int:
     chosen = choose(load_candidates(args.work), load_results(args.results))
-    best: dict[str, int] = {}
+    best: dict[str, tuple[int, int]] = {}
     for item, _ in chosen.values():
         proxy = parse_uri(item["uri"])
-        rank = iran.protocol_rank(proxy)
-        # Evidence cannot lift the last tier, so probing it would only spend the service's goodwill.
-        if (key := endpoint_key(proxy)) and rank < 5:
-            best[key] = min(rank, best.get(key, rank))
-    # Best protocols first, each tier in a fixed shuffle, so that a budget that runs out samples it evenly.
-    ordered = sorted(best, key=lambda k: (best[k], hashlib.sha256(k.encode()).hexdigest()))
-    report = asyncio.run(run_probe(ordered, args.budget_minutes))
+        tier = (iran.protocol_rank(proxy), iran.port_rank(proxy))
+        # Evidence cannot lift the last tier, so probing it would only spend the services' goodwill.
+        if (key := endpoint_key(proxy)) and tier[0] < 5:
+            best[key] = min(tier, best.get(key, tier))
+    # The head of the published list first, each tier in a fixed shuffle, so a spent budget has covered it.
+    ordered = sorted(best, key=lambda k: (*best[k], hashlib.sha256(k.encode()).hexdigest()))
+    report = asyncio.run(globalping.run(ordered, args.budget_minutes))
+    if report["status"] != "ok":
+        # Globalping could not serve us; the check-host nodes are hosting networks, but they are something.
+        failed = {k: v for k, v in report.items() if k != "endpoints"}
+        report = asyncio.run(run_probe(ordered, args.budget_minutes))
+        report.update(prober="check-host", fallback_from=failed)
     atomic_write(args.output, json_text(report))
     brief = {k: v for k, v in report.items() if k not in {"endpoints", "samples", "controls"}}
     print(json_text(brief), end="")
@@ -369,7 +368,23 @@ def has_iran_evidence(entry) -> bool:
     return bool(isinstance(entry, dict) and entry.get("iran", {}).get("total"))
 
 
-def probe_stats(endpoints: dict, rates: dict) -> dict:
+def probe_stats(probing: dict, rates: dict) -> dict:
+    endpoints = probing.get("endpoints", {})
+    if not endpoints:
+        return {}
+    if probing.get("prober") == "globalping":
+        # Later probes are only asked when earlier ones failed, so count asks rather than shares.
+        asked: Counter = Counter()
+        hits: Counter = Counter()
+        for nodes in endpoints.values():
+            for node, attempts in nodes.items():
+                asked[node] += 1
+                hits[node] += any(attempts)
+        counts: dict = {"endpoints probed": len(endpoints)}
+        for node in sorted(asked):
+            counts[f"{node} asked"] = asked[node]
+            counts[f"{node} reached"] = hits[node]
+        return counts
     reached = {key: [any(attempts) for attempts in nodes.values()] for key, nodes in endpoints.items()}
     stats = {
         "endpoints probed": len(reached),
@@ -380,6 +395,16 @@ def probe_stats(endpoints: dict, rates: dict) -> dict:
     for node, rate in sorted(rates.items()):
         stats[f"share of endpoints reached by {node.split('.')[0]}"] = f"{rate:.0%}"
     return stats
+
+
+def controls_table(probing: dict) -> dict:
+    if probing.get("prober") != "globalping":
+        return {}
+    table = {}
+    for label, seen in probing.get("controls", {}).items():
+        for node, ok in seen.items():
+            table[f"{label} {node}"] = "reached" if ok else "missed"
+    return table
 
 
 def describe_node(info: dict) -> str:
@@ -401,8 +426,9 @@ def summary_markdown(report: dict) -> str:
     lines.append(f"Published lines: **{report['published']}**. Gates: {report['gates']}.")
     probing = report["probe"]
     status, probed = probing.get("status", "not run"), probing.get("probed", 0)
-    limited = probing.get("rate_limited", 0)
-    lines.append(f"Iran probes: `{status}`, {probed} endpoints, {limited} rate-limit responses.")
+    limited = probing.get("rate_limited", probing.get("refused", 0))
+    prober = probing.get("prober", "none")
+    lines.append(f"Iran probes ({prober}): `{status}`, {probed} endpoints, {limited} rate-limit responses.")
     for title, key in (
         ("Dropped before testing", "dropped"),
         ("Normalised (identity unchanged)", "normalized"),
@@ -411,9 +437,9 @@ def summary_markdown(report: dict) -> str:
         ("Runner re-test, originals", "retest_originals"),
         ("Runner re-test, repaired links", "retest_fixes"),
         ("Dropped after testing", "dropped_after"),
-        ("Probes from Iranian nodes", "probe_stats"),
-        ("Probing nodes in Iran (ASN, city, ISP label)", "probe_nodes"),
-        ("Globalping probes in Iran (inventory only, not used)", "globalping_iran"),
+        ("Probes from inside Iran", "probe_stats"),
+        ("Probe controls (8.8.8.8 and 1.1.1.1 on 443)", "probe_controls"),
+        ("Probes used (ASN, city, ISP label)", "probe_nodes"),
         ("Probe verdicts", "verdicts"),
         ("Published, by rank bucket", "buckets"),
         ("Published, by protocol and security", "mix"),
@@ -433,9 +459,15 @@ def assemble(args) -> int:
         probing = json.loads(args.probe.read_text(encoding="utf-8"))
     endpoints = probing.get("endpoints", {})
     rates = iran.node_rates(endpoints)
+    trusted = iran.trusted_probes(probing.get("controls", {}))
     counts = {}
     if args.check_counts and args.check_counts.is_file():
         counts = json.loads(args.check_counts.read_text(encoding="utf-8"))
+
+    def judge(nodes: dict) -> str:
+        if probing.get("prober") == "globalping":
+            return iran.eyeball_verdict(nodes, trusted)
+        return iran.probe_verdict(nodes, rates)
 
     repairs: Counter = Counter()
     for item in candidates:
@@ -450,6 +482,7 @@ def assemble(args) -> int:
                 if original != Outcome.SUCCESS:
                     repairs[f"{tag}: rescued (original fails)"] += 1
 
+    unreachable: list[str] = []
     dropped_after: Counter = Counter()
     verdicts: Counter = Counter()
     rows = []
@@ -462,10 +495,12 @@ def assemble(args) -> int:
         item, result = pair
         proxy = parse_uri(item["uri"])
         key = endpoint_key(proxy)
-        verdict = iran.probe_verdict(endpoints[key], rates) if key in endpoints else "unprobed"
+        verdict = judge(endpoints[key]) if key in endpoints else "unprobed"
         verdicts[verdict] += 1
         if verdict == "unreachable":
             dropped_after["probe: unreachable from Iranian nodes"] += 1
+            tried = ",".join(sorted(endpoints[key]))
+            unreachable.append(f"{item['uri']}\ttried {tried}\n")
             continue
         evidence = verdict == "reachable" or has_iran_evidence(counts.get(entry["source"]))
         rank = iran.bucket(proxy, iran_evidence=evidence)
@@ -504,20 +539,147 @@ def assemble(args) -> int:
         "retest_originals": dict(Counter(r["outcome"] for i, r in results.items() if i.endswith(".o"))),
         "retest_fixes": dict(Counter(r["outcome"] for i, r in results.items() if i.endswith(".f"))),
         "dropped_after": dict(dropped_after),
-        "probe_stats": probe_stats(endpoints, rates) if endpoints else {},
+        "probe_stats": probe_stats(probing, rates),
+        "probe_controls": controls_table(probing),
         "probe_nodes": nodes,
-        "globalping_iran": probing.get("globalping", {}).get("iran", {}),
         "verdicts": dict(verdicts),
         "buckets": dict(sorted(buckets.items())),
         "mix": dict(mix.most_common()),
     }
     atomic_write(args.report, json_text(report))
+    atomic_write(args.report.with_name("dropped_by_probe.tsv"), "".join(unreachable))
     atomic_write(args.summary, summary_markdown(report))
     print(args.summary.read_text(encoding="utf-8"), end="")
     if failed:
         return 3
     atomic_write(args.output, lines_text(output))
     return 0
+
+
+def array_text(configs: list[dict]) -> str:
+    """A JSON array with one config per line, which keeps the file small and its diffs readable."""
+    body = ",\n".join(json.dumps(config, ensure_ascii=False, separators=(",", ":")) for config in configs)
+    return "[\n" + body + "\n]\n"
+
+
+async def xray_accepts(xray: str, path: Path) -> bool:
+    process = await spawn_owned(
+        xray,
+        "run",
+        "-test",
+        "-c",
+        str(path),
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    try:
+        return await asyncio.wait_for(process.wait(), 30) == 0
+    except TimeoutError:
+        return False
+    finally:
+        await terminate(process)
+
+
+async def serves(xray: str, config: dict, directory: Path, target: Target) -> bool:
+    """Run the config with its inbounds on free ports and fetch the target through its HTTP inbound."""
+    socks, web = reserve_port(), reserve_port()
+    live = json.loads(json.dumps(config))
+    live["inbounds"][0]["port"] = socks.getsockname()[1]
+    live["inbounds"][1]["port"] = port = web.getsockname()[1]
+    path = directory / "live.json"
+    atomic_write(path, json_text(live))
+    socks.close()
+    web.close()
+    process = await spawn_owned(
+        xray,
+        "run",
+        "-c",
+        str(path),
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    try:
+        deadline = time.monotonic() + 20
+        while time.monotonic() < deadline:
+            if process.returncode is not None:
+                return False
+            if await asyncio.to_thread(owned_listener, process.pid, port):
+                break
+            await asyncio.sleep(0.05)
+        else:
+            return False
+        result = await http_probe(port, "none", target, time.monotonic() + 15)
+        return result.outcome == Outcome.SUCCESS
+    finally:
+        await terminate(process)
+
+
+async def judge_fragments(xray: str, proxies: list[Proxy]) -> list[dict]:
+    """Per proxy: does its fragment config parse, and which packets setting still serves traffic."""
+    gate = asyncio.Semaphore(12)
+    target = SITE_TARGETS[0]
+
+    async def judge(index: int, proxy: Proxy) -> dict:
+        async with gate:
+            verdict: dict = {"syntax": True, "tried": {}, "packets": None}
+            with tempfile.TemporaryDirectory(prefix="openray-fragment-") as directory:
+                folder = Path(directory)
+                for packets in ("tlshello", "1-3"):
+                    # REALITY is reported to break under tlshello (v2rayN#10407), so both are measured.
+                    if packets != "tlshello" and iran.security(proxy) != "reality":
+                        break
+                    config = iran.fragment_config(proxy, index + 1, packets=packets)
+                    atomic_write(folder / "config.json", json_text(config))
+                    if not await xray_accepts(xray, folder / "config.json"):
+                        verdict["syntax"] = False
+                        break
+                    verdict["tried"][packets] = await serves(xray, config, folder, target)
+            verdict["packets"] = next((k for k in ("tlshello", "1-3") if verdict["tried"].get(k)), None)
+            return verdict
+
+    return list(await asyncio.gather(*(judge(i, p) for i, p in enumerate(proxies))))
+
+
+def fragment(args) -> int:
+    candidates = iran.fragment_candidates(args.input.read_text(encoding="utf-8").split("\n"))
+    # Test more than are needed, so that links the fragment breaks can be replaced by the next ones.
+    pool = candidates[: args.count * 2] if args.verify else candidates[: args.count]
+    verdicts = [{"syntax": True, "tried": {}, "packets": "tlshello"} for _ in pool]
+    if args.verify:
+        verdicts = asyncio.run(judge_fragments(Settings.from_env().xray, pool))
+    pairs = list(zip(pool, verdicts, strict=True))
+    usable = [(p, v["packets"]) for p, v in pairs if v["packets"]][: args.count]
+    configs = [iran.fragment_config(p, i + 1, packets=k) for i, (p, k) in enumerate(usable)]
+    report: dict = {
+        "candidates": len(candidates),
+        "tested": len(pool) if args.verify else 0,
+        "written": len(configs),
+        "syntax_failed": sum(not v["syntax"] for v in verdicts),
+        "written_by_security": dict(Counter(iran.security(p) for p, _ in usable)),
+        "written_by_packets": dict(Counter(k for _, k in usable)),
+    }
+    if args.verify:
+        for kind in ("reality", "tls"):
+            tried = [v["tried"] for p, v in pairs if iran.security(p) == kind]
+            report[f"{kind} tested"] = len(tried)
+            report[f"{kind} served with tlshello"] = sum(bool(t.get("tlshello")) for t in tried)
+            if kind == "reality":
+                report["reality served with 1-3"] = sum(bool(t.get("1-3")) for t in tried)
+    atomic_write(args.report, json_text(report))
+    atomic_write(args.summary, lines_text(["### Xray TLS-fragment subscription", *table_rows(report)]))
+    print(json_text(report), end="")
+    if args.verify and report["syntax_failed"] > 0.05 * max(1, len(pool)):
+        print("too many configs failed Xray's own check; the generator is wrong", file=sys.stderr)
+        return 2
+    if len(configs) < args.minimum:
+        print(f"only {len(configs)} usable configs, fewer than {args.minimum}", file=sys.stderr)
+        return 3
+    atomic_write(args.output, array_text(configs))
+    return 0
+
+
+def table_rows(mapping: dict) -> list[str]:
+    return ["", "| Item | Value |", "|---|---|", *(f"| {key} | {value} |" for key, value in mapping.items())]
 
 
 def main(argv=None) -> int:
@@ -556,6 +718,16 @@ def main(argv=None) -> int:
     p.add_argument("--min-lines", type=int, default=300)
     p.add_argument("--min-share", type=float, default=0.25)
     p.set_defaults(run=assemble)
+
+    p = commands.add_parser("fragment")
+    p.add_argument("--input", type=Path, required=True)
+    p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--report", type=Path, required=True)
+    p.add_argument("--summary", type=Path, required=True)
+    p.add_argument("--count", type=int, default=100)
+    p.add_argument("--minimum", type=int, default=50)
+    p.add_argument("--verify", action="store_true")
+    p.set_defaults(run=fragment)
 
     args = parser.parse_args(argv)
     return args.run(args)

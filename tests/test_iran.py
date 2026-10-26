@@ -174,6 +174,20 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(probe_verdict(failing, {"n1": 0.2, "n2": 0.1}), "unknown")
         self.assertEqual(probe_verdict({}, {"n1": 0.9}), "unknown")
 
+    def test_eyeball_verdicts(self):
+        controls = {
+            "start": {"a": True, "b": True, "c": False},
+            "end": {"a": True, "b": True, "c": True},
+        }
+        trusted = iran.trusted_probes(controls)
+        self.assertEqual(trusted, {"a", "b"})
+        self.assertEqual(iran.trusted_probes({"start": {"a": True}, "end": {"a": False}}), set())
+        self.assertEqual(iran.eyeball_verdict({"a": [True]}, trusted), "reachable")
+        self.assertEqual(iran.eyeball_verdict({"a": [False], "b": [False]}, trusted), "unreachable")
+        # One failing probe is one network's filtering, and an untrusted probe counts for nothing.
+        self.assertEqual(iran.eyeball_verdict({"a": [False]}, trusted), "unknown")
+        self.assertEqual(iran.eyeball_verdict({"a": [False], "c": [False]}, trusted), "unknown")
+
     def test_only_ipv4_literals_are_probed(self):
         self.assertEqual(iran_filter.endpoint_key(parse_uri(TLS_WS)), "1.2.3.4:443")
         self.assertIsNone(iran_filter.endpoint_key(parse_uri(REALITY)))
@@ -183,6 +197,63 @@ class ProbeTests(unittest.TestCase):
 def run(*argv) -> int:
     with contextlib.redirect_stdout(io.StringIO()):
         return iran_filter.main([str(a) for a in argv])
+
+
+PBK = "A" * 43
+REALITY_OK = REALITY.replace("pbk=abc", f"pbk={PBK}") + "#R"
+TROJAN_T = TROJAN + "#T"
+
+
+class FragmentTests(unittest.TestCase):
+    def test_config_shape(self):
+        config = iran.fragment_config(parse_uri(REALITY_OK), 7)
+        self.assertEqual(config["remarks"], "007 - [Iran-Fragment] R")
+        tags = [outbound["tag"] for outbound in config["outbounds"]]
+        self.assertEqual(tags, ["proxy", "fragment-out", "direct", "block"])
+        sockopt = {"dialerProxy": "fragment-out", "tcpKeepAliveIdle": 100, "tcpNoDelay": True}
+        self.assertEqual(config["outbounds"][0]["streamSettings"]["sockopt"], sockopt)
+        self.assertEqual(
+            config["outbounds"][1],
+            {
+                "tag": "fragment-out",
+                "protocol": "freedom",
+                "settings": {"fragment": {"packets": "tlshello", "length": "10-20", "interval": "10-20"}},
+                "streamSettings": {"sockopt": {"tcpNoDelay": True}},
+            },
+        )
+        inbounds = [(i["protocol"], i["port"], i["sniffing"]["enabled"]) for i in config["inbounds"]]
+        self.assertEqual(inbounds, [("socks", 10808, True), ("http", 10809, True)])
+
+    def test_packets_can_be_overridden_without_touching_the_template(self):
+        config = iran.fragment_config(parse_uri(REALITY_OK), 1, packets="1-3")
+        self.assertEqual(config["outbounds"][1]["settings"]["fragment"]["packets"], "1-3")
+        self.assertEqual(iran.FRAGMENT_OUT["settings"]["fragment"]["packets"], "tlshello")
+
+    def test_only_tls_and_reality_links_that_xray_can_run_are_candidates(self):
+        lines = [
+            REALITY_OK,
+            TROJAN_T,
+            f"vless://{UUID}@example.com:443?security=none&type=ws",
+            f"vless://{UUID}@example.com:443?security=tls&allowInsecure=1",
+            REALITY,
+            "ss://aes-128-gcm:pass@example.com:80",
+            "not a proxy",
+        ]
+        self.assertEqual([p.uri for p in iran.fragment_candidates(lines)], [REALITY_OK, TROJAN_T])
+
+    def test_command_writes_a_json_array_and_enforces_the_minimum(self):
+        lines = [REALITY_OK, TROJAN_T, f"vless://{UUID}@example.com:443?security=none&type=ws"]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, out = root / "list.txt", root / "fragment.json"
+            source.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            args = ("--input", source, "--report", root / "r.json", "--summary", root / "s.md")
+            self.assertEqual(run("fragment", *args, "--output", out, "--minimum", 5), 3)
+            self.assertFalse(out.exists())
+            self.assertEqual(run("fragment", *args, "--output", out, "--minimum", 1), 0)
+            configs = json.loads(out.read_text(encoding="utf-8"))
+            remarks = [c["remarks"] for c in configs]
+            self.assertEqual(remarks, ["001 - [Iran-Fragment] R", "002 - [Iran-Fragment] T"])
 
 
 class ToolTests(unittest.TestCase):
@@ -256,6 +327,48 @@ class ToolTests(unittest.TestCase):
             self.assertFalse(out.exists())
             report = json.loads((root / "gated.json").read_text(encoding="utf-8"))
             self.assertTrue(report["gates"].startswith("FAIL"))
+
+    def test_assemble_with_probes_on_subscriber_networks(self):
+        lines = [
+            "trojan://secret@9.9.9.9:443?type=ws&sni=t.example.com&fp=chrome#e",
+            "trojan://secret@8.8.4.4:443?type=ws&sni=t.example.com&fp=chrome#f",
+            "trojan://secret@7.7.7.7:443?type=ws&sni=t.example.com&fp=chrome#g",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, work, results = root / "source.txt", root / "work", root / "results"
+            source.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            self.assertEqual(run("prepare", "--source", source, "--work", work, "--shards", 1), 0)
+            rows = [{"id": f"{i}.o", "outcome": "success", "ms": 100} for i in range(3)]
+            results.mkdir()
+            (results / "results-0.jsonl").write_text(iran_filter.jsonl_text(rows), encoding="utf-8")
+            everyone = {"AS197207": True, "AS58224": True}
+            probe = {
+                "prober": "globalping",
+                "status": "ok",
+                "controls": {"start": everyone, "end": everyone},
+                "endpoints": {
+                    "9.9.9.9:443": {"AS197207": [True]},
+                    "8.8.4.4:443": {"AS197207": [False], "AS58224": [False]},
+                    "7.7.7.7:443": {"AS197207": [False]},
+                },
+            }
+            (root / "probe.json").write_text(json.dumps(probe), encoding="utf-8")
+            out, report_path = root / "out.txt", root / "report.json"
+            common = ("--work", work, "--results", results, "--summary", root / "summary.md")
+            args = ("--probe", root / "probe.json", "--output", out, "--report", report_path)
+            self.assertEqual(run("assemble", *common, *args, "--min-lines", 1), 0)
+            # Reached from MCI first; unreachable from both trusted probes is dropped; one failure is kept.
+            self.assertEqual(out.read_text(encoding="utf-8").split("\n")[:-1], [lines[0], lines[2]])
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(report["verdicts"], {"reachable": 1, "unreachable": 1, "unknown": 1})
+            self.assertEqual(report["dropped_after"]["probe: unreachable from Iranian nodes"], 1)
+            stats = report["probe_stats"]
+            self.assertEqual((stats["AS197207 asked"], stats["AS197207 reached"]), (3, 1))
+            self.assertEqual(stats["AS58224 asked"], 1)
+            self.assertEqual(report["probe_controls"]["start AS197207"], "reached")
+            audit = (root / "dropped_by_probe.tsv").read_text(encoding="utf-8")
+            self.assertEqual(audit, f"{lines[1]}\ttried AS197207,AS58224\n")
 
 
 if __name__ == "__main__":

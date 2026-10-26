@@ -8,6 +8,7 @@ names its source. Most sources are single anecdotal reports: the ordering is a h
 from __future__ import annotations
 
 import base64
+import copy
 import ipaddress
 import json
 import re
@@ -16,7 +17,7 @@ from dataclasses import dataclass
 from urllib.parse import quote, unquote
 
 from .domain import TLS_BY_DEFAULT, ParseError, Proxy, b64decode, parse_uri
-from .render import SS_ALIASES, XRAY_SS_METHODS
+from .render import SS_ALIASES, XRAY_SS_METHODS, xray_outbound
 
 # QUIC Initial packets are blocked on every ISP since 2025-06-17 (net4people/bbs#648), unidentified UDP is
 # dropped on most (bbs#489) and WireGuard is blackholed (bbs#628).
@@ -43,6 +44,18 @@ PARAM_SPELLINGS = {
 WEB_PORTS = frozenset({80, 2052, 2053, 2082, 2083, 2086, 2087, 2095, 2096, 8080, 8443})
 # A probing node only counts a failure against an endpoint when it reaches this share of the sample.
 CALIBRATED_RATE = 0.5
+
+
+# The outbound a fragmenting config dials its proxy through (Xray's legacy freedom.fragment, still parsed by
+# the pinned core). Fragmenting is client-side behaviour: no standard share link can carry it.
+FRAGMENT_OUT = {
+    "tag": "fragment-out",
+    "protocol": "freedom",
+    "settings": {"fragment": {"packets": "tlshello", "length": "10-20", "interval": "10-20"}},
+    "streamSettings": {"sockopt": {"tcpNoDelay": True}},
+}
+SNIFFING = {"enabled": True, "destOverride": ["http", "tls", "quic"], "routeOnly": False}
+PRIVATE_RANGES = ["10.0.0.0/8", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.168.0.0/16"]
 
 
 @dataclass(frozen=True)
@@ -236,6 +249,62 @@ def bucket(p: Proxy, *, iran_evidence: bool = False) -> int:
     return 1 if iran_evidence and rank < 5 else rank
 
 
+def fragment_candidates(lines: list[str]) -> list[Proxy]:
+    """Links Xray can run over TLS or REALITY, in order: the ones a ClientHello fragment can help."""
+    found = []
+    for line in lines:
+        try:
+            proxy = parse_uri(line.strip())
+            xray_outbound(proxy)
+        except (ValueError, KeyError):
+            continue
+        if proxy.scheme in {"vless", "vmess", "trojan"} and security(proxy) in {"tls", "reality"}:
+            found.append(proxy)
+    return found
+
+
+def fragment_config(p: Proxy, index: int, *, packets: str = "tlshello") -> dict:
+    """A complete Xray client config that sends the proxy's TLS ClientHello through a fragmenting outbound."""
+    outbound = xray_outbound(p)
+    outbound["tag"] = "proxy"
+    sockopt = {"dialerProxy": "fragment-out", "tcpKeepAliveIdle": 100, "tcpNoDelay": True}
+    outbound.setdefault("streamSettings", {}).setdefault("sockopt", {}).update(sockopt)
+    fragment = copy.deepcopy(FRAGMENT_OUT)
+    fragment["settings"]["fragment"]["packets"] = packets
+    return {
+        "remarks": f"{index:03d} - [Iran-Fragment] {p.remark}",
+        "log": {"loglevel": "warning"},
+        "inbounds": [
+            {
+                "tag": "socks",
+                "listen": "127.0.0.1",
+                "port": 10808,
+                "protocol": "socks",
+                "settings": {"auth": "noauth", "udp": True},
+                "sniffing": copy.deepcopy(SNIFFING),
+            },
+            {
+                "tag": "http",
+                "listen": "127.0.0.1",
+                "port": 10809,
+                "protocol": "http",
+                "settings": {},
+                "sniffing": copy.deepcopy(SNIFFING),
+            },
+        ],
+        "outbounds": [
+            outbound,
+            fragment,
+            {"tag": "direct", "protocol": "freedom", "settings": {}},
+            {"tag": "block", "protocol": "blackhole", "settings": {}},
+        ],
+        "routing": {
+            "domainStrategy": "AsIs",
+            "rules": [{"type": "field", "ip": PRIVATE_RANGES, "outboundTag": "direct"}],
+        },
+    }
+
+
 def node_rates(probes: dict[str, dict[str, list[bool]]]) -> dict[str, float]:
     """Share of probed endpoints each node reached. probes[endpoint][node] holds its attempt results."""
     seen: dict[str, list[bool]] = {}
@@ -243,6 +312,22 @@ def node_rates(probes: dict[str, dict[str, list[bool]]]) -> dict[str, float]:
         for node, attempts in nodes.items():
             seen.setdefault(node, []).append(any(attempts))
     return {node: sum(reached) / len(reached) for node, reached in seen.items()}
+
+
+def trusted_probes(controls: dict[str, dict[str, bool]]) -> set[str]:
+    """Probes on subscriber networks that reached a control endpoint both before and after the run."""
+    start, end = controls.get("start", {}), controls.get("end", {})
+    return {probe for probe, reached in start.items() if reached and end.get(probe)}
+
+
+def eyeball_verdict(nodes: dict[str, list[bool]], trusted: set[str]) -> str:
+    """reachable: a probe connected. unreachable: none did and at least two trusted probes tried. unknown:
+    anything else, which keeps the line, because one network's filtering is not another's: on 2026-10-26
+    MCI and Rightel reached endpoints that TCI and most datacenter probes could not."""
+    if any(any(attempts) for attempts in nodes.values()):
+        return "reachable"
+    tried = [probe for probe in trusted if nodes.get(probe)]
+    return "unreachable" if len(tried) >= 2 else "unknown"
 
 
 def probe_verdict(nodes: dict[str, list[bool]], rates: dict[str, float]) -> str:

@@ -15,7 +15,7 @@ on:
       probe_minutes:
         description: Time budget for the probes from Iranian nodes
         type: string
-        default: '45'
+        default: '180'
 permissions:
   contents: read
 concurrency:
@@ -143,6 +143,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install -r requirements.lock
       - run: python -m pip install --no-deps --no-build-isolation -e .
+      - run: python tools/install_cores.py xray
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: iran-work
@@ -165,10 +166,19 @@ jobs:
             --probe probe/probe.json --check-counts work/source/check_counts.json \
             --output artifacts/aistudio_iran.txt --report artifacts/report.json \
             --summary artifacts/summary.md --min-lines "$MIN_LINES"
+      - name: Xray TLS-fragment subscription
+        env:
+          MIN_FRAGMENTS: ${{ env.LIMIT == '0' && '50' || '1' }}
+        run: |
+          python tools/iran_filter.py fragment --input artifacts/aistudio_iran.txt \
+            --output artifacts/aistudio_iran_fragment.json --report artifacts/fragment.json \
+            --summary artifacts/fragment.md --count 100 --minimum "$MIN_FRAGMENTS" --verify
       - name: Job summary
         if: always()
         run: |
-          if test -f artifacts/summary.md; then cat artifacts/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+          for file in artifacts/summary.md artifacts/fragment.md; do
+            if test -f "$file"; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -184,19 +194,25 @@ jobs:
           set -euo pipefail
           source_sha=$(jq -r .source.sha artifacts/report.json)
           published=$(jq -r .published artifacts/report.json)
+          fragments=$(jq -r .written artifacts/fragment.json)
           git config user.name "OpenRay"
           git config user.email "openray@localhost"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git checkout -B publish FETCH_HEAD
-            cp artifacts/aistudio_iran.txt output/site_access/aistudio_iran.txt
-            git add output/site_access/aistudio_iran.txt
+            cp artifacts/aistudio_iran.txt artifacts/aistudio_iran_fragment.json output/site_access/
+            git add output/site_access/aistudio_iran.txt output/site_access/aistudio_iran_fragment.json
             if git diff --cached --quiet; then
-              echo "aistudio_iran.txt is already up to date"
+              echo "both files are already up to date"
               exit 0
             fi
-            test "$(git diff --cached --name-only)" = "output/site_access/aistudio_iran.txt"
-            git commit -m "Add aistudio_iran.txt: $published lines filtered from aistudio.txt at ${source_sha:0:12} [skip ci]"
+            for name in $(git diff --cached --name-only); do
+              case "$name" in
+                output/site_access/aistudio_iran.txt | output/site_access/aistudio_iran_fragment.json) ;;
+                *) echo "unexpected staged path: $name" >&2; exit 1 ;;
+              esac
+            done
+            git commit -m "Update aistudio_iran.txt ($published lines) and its fragment subscription ($fragments configs) from aistudio.txt at ${source_sha:0:12} [skip ci]"
             if git push origin HEAD:refs/heads/main; then
               exit 0
             fi
