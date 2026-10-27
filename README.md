@@ -58,8 +58,8 @@ curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/outp
 
 **🇮🇷 Iran Users (Optimized):**
 ```bash
-# get just the top 100 most reliable
-curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output_iran/iran_top100_checked.txt
+# get the endpoints verified from Iranian subscriber networks
+curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/site_access/aistudio_iran_verified.txt
 ```
 
 ### 📱 Popular Clients
