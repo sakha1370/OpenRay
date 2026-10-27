@@ -1,8 +1,12 @@
 name: AI Studio list for Iran
 # Builds aistudio_iran.txt, its verified subset and an Xray fragment subscription from aistudio.txt (never
 # modified), all in output/site_access/. See tools/iran_filter.py.
-# Manual only. Run it with publish=true on main to commit the result; otherwise the result is an artifact.
+# Runs hourly at minute 50 (UTC) on main as a full run (limit 0) and publishes it. A scheduled run has no inputs,
+# so the env block below supplies the defaults. A manual run publishes only with publish=true; otherwise the
+# result is an artifact. Publishing needs main and limit 0, and the assemble gates still decide whether to commit.
 on:
+  schedule:
+    - cron: '50 * * * *'
   workflow_dispatch:
     inputs:
       publish:
@@ -27,11 +31,11 @@ concurrency:
   group: aistudio-iran-${{ github.ref }}
   cancel-in-progress: false
 env:
-  LIMIT: ${{ inputs.limit }}
-  PROBE_MINUTES: ${{ inputs.probe_minutes }}
+  LIMIT: ${{ inputs.limit || '0' }}
+  PROBE_MINUTES: ${{ inputs.probe_minutes || '180' }}
 jobs:
   prepare:
-    if: ${{ inputs.reuse_run_id == '' }}
+    if: ${{ !inputs.reuse_run_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -137,7 +141,7 @@ jobs:
           if-no-files-found: ignore
   assemble:
     needs: [prepare, check, probe]
-    if: ${{ !cancelled() && (needs.check.result == 'success' || inputs.reuse_run_id != '') }}
+    if: ${{ !cancelled() && (needs.check.result == 'success' || inputs.reuse_run_id) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -204,7 +208,7 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
       - name: Publish the Iran lists to main
-        if: ${{ inputs.publish && github.ref == 'refs/heads/main' && inputs.limit == '0' }}
+        if: ${{ (github.event_name == 'schedule' || inputs.publish) && github.ref == 'refs/heads/main' && env.LIMIT == '0' }}
         run: |
           set -euo pipefail
           source_sha=$(jq -r .source.sha artifacts/report.json)

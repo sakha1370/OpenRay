@@ -42,7 +42,7 @@ class PublishingTests(unittest.TestCase):
             self.assertFalse((root / "output/manifest.json").exists())
 
     def test_unmanaged_files_beside_the_site_lists_survive_an_install(self):
-        # The aistudio_iran files are published by hand, not by the manifest.
+        # The aistudio_iran files are published by the aistudio-iran workflow, not by the manifest.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             with Store(root / ".state/state.sqlite3") as store:
