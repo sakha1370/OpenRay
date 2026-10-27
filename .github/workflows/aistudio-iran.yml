@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Commit the three Iran files to main (only honoured on main)
+        description: Commit the three Iran files to main (only honoured on main, and only when limit is 0)
         type: boolean
         default: false
       limit:
@@ -204,7 +204,7 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
       - name: Publish the Iran lists to main
-        if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.publish && github.ref == 'refs/heads/main' && inputs.limit == '0' }}
         run: |
           set -euo pipefail
           source_sha=$(jq -r .source.sha artifacts/report.json)
