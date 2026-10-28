@@ -74,7 +74,9 @@ class PipelineTests(unittest.IsolatedAsyncioTestCase):
                     r"https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/([^\s\"<>)]+)",
                     readme,
                 )
-                self.assertTrue(set(urls) <= set(manifest["files"]), set(urls) - set(manifest["files"]))
+                # The aistudio_iran files are published by the aistudio-iran workflow, not by the manifest.
+                linked = {url for url in urls if not url.startswith("output/site_access/aistudio_iran")}
+                self.assertTrue(linked <= set(manifest["files"]), linked - set(manifest["files"]))
                 (a / "output/all_valid_proxies.txt").write_text("tampered")
                 with self.assertRaises(ValueError):
                     verify_snapshot(a)
