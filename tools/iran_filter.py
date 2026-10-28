@@ -535,6 +535,9 @@ def assemble(args) -> int:
     }
     if args.verified:
         gates["enough verified lines (needs Globalping probes)"] = len(verified) >= args.min_verified
+        # A probe that drops out mid-run leaves most endpoints unasked and the verified list thin.
+        covered = probing.get("probed", 0) >= args.min_probed_share * probing.get("requested", 0)
+        gates["enough endpoints probed"] = covered
     failed = [name for name, ok in gates.items() if not ok]
     nodes = {name.split(".")[0]: describe_node(info) for name, info in probing.get("nodes", {}).items()}
     report = {
@@ -731,6 +734,7 @@ def main(argv=None) -> int:
     p.add_argument("--min-share", type=float, default=0.25)
     p.add_argument("--verified", type=Path)
     p.add_argument("--min-verified", type=int, default=1)
+    p.add_argument("--min-probed-share", type=float, default=0.0)
     p.set_defaults(run=assemble)
 
     p = commands.add_parser("fragment")

@@ -179,12 +179,13 @@ jobs:
         env:
           MIN_LINES: ${{ env.LIMIT == '0' && '300' || '1' }}
           MIN_VERIFIED: ${{ env.LIMIT == '0' && '50' || '1' }}
+          MIN_PROBED_SHARE: ${{ env.LIMIT == '0' && '0.5' || '0' }}
         run: |
           python tools/iran_filter.py assemble --work work --results results \
             --probe probe/probe.json --check-counts work/source/check_counts.json \
             --output artifacts/aistudio_iran.txt --verified artifacts/aistudio_iran_verified.txt \
             --report artifacts/report.json --summary artifacts/summary.md \
-            --min-lines "$MIN_LINES" --min-verified "$MIN_VERIFIED"
+            --min-lines "$MIN_LINES" --min-verified "$MIN_VERIFIED" --min-probed-share "$MIN_PROBED_SHARE"
       - name: Xray TLS-fragment subscription
         env:
           MIN_FRAGMENTS: ${{ env.LIMIT == '0' && '50' || '1' }}

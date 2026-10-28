@@ -429,6 +429,20 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(code, 3)
             self.assertFalse(short.exists() or none_out.exists())
 
+            # A probe that dropped out early covered 3 of 10 endpoints: too thin to publish at half, fine at a third.
+            (root / "probe.json").write_text(
+                json.dumps({**probe, "requested": 10, "probed": 3}), encoding="utf-8"
+            )
+            thin, thin_report = root / "thin.txt", root / "thin.json"
+            args = ("--probe", root / "probe.json", "--output", thin, "--report", thin_report)
+            share = ("--min-lines", 1, "--verified", root / "thin_verified.txt", "--min-verified", 1)
+            self.assertEqual(run("assemble", *common, *args, *share, "--min-probed-share", 0.5), 3)
+            self.assertFalse(thin.exists())
+            self.assertEqual(
+                json.loads(thin_report.read_text(encoding="utf-8"))["gates"], "FAIL: enough endpoints probed"
+            )
+            self.assertEqual(run("assemble", *common, *args, *share, "--min-probed-share", 0.3), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
