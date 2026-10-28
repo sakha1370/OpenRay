@@ -384,6 +384,9 @@ def probe_stats(probing: dict, rates: dict) -> dict:
         for node in sorted(asked):
             counts[f"{node} asked"] = asked[node]
             counts[f"{node} reached"] = hits[node]
+        counts["probes came back after a miss"] = probing.get("recovered", 0)
+        for kind, count in sorted(probing.get("refusals", {}).items()):
+            counts[f"refused: {kind}"] = count
         return counts
     reached = {key: [any(attempts) for attempts in nodes.values()] for key, nodes in endpoints.items()}
     stats = {
