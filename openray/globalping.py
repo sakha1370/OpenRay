@@ -152,8 +152,9 @@ async def run(
             report.update(status="api-unavailable", error=type(exc).__name__)
             return report
         report["nodes"] = {f"AS{asn}": info for asn, info in targets.items()}
-        if len(targets) < 2:
-            report["status"] = "too-few-probes"
+        if not targets:
+            # One probe is enough: a connect is positive evidence, and a drop needs two trusted probes to fail.
+            report["status"] = "no-probes"
             return report
         report["credits_at_start"] = budget.remaining
         offline: set[int] = set()

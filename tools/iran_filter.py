@@ -353,7 +353,7 @@ def probe(args) -> int:
     # The head of the published list first, each tier in a fixed shuffle, so a spent budget has covered it.
     ordered = sorted(best, key=lambda k: (*best[k], hashlib.sha256(k.encode()).hexdigest()))
     report = asyncio.run(globalping.run(ordered, args.budget_minutes))
-    if report["status"] != "ok":
+    if report["status"] != "ok" and not args.no_fallback:
         # Globalping could not serve us; the check-host nodes are hosting networks, but they are something.
         failed = {k: v for k, v in report.items() if k != "endpoints"}
         report = asyncio.run(run_probe(ordered, args.budget_minutes))
@@ -715,6 +715,8 @@ def main(argv=None) -> int:
     p.add_argument("--results", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--budget-minutes", type=float, default=120)
+    # Verified lines need Globalping, so check-host cannot rescue a publish and only burns the whole budget.
+    p.add_argument("--no-fallback", action="store_true", help="do not fall back to check-host nodes")
     p.set_defaults(run=probe)
 
     p = commands.add_parser("assemble")

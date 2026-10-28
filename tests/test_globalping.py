@@ -94,9 +94,21 @@ class GlobalpingTests(unittest.TestCase):
         asked = {node for nodes in report["endpoints"].values() for node in nodes}
         self.assertEqual(asked, {"AS197207", "AS57218"})
 
-    def test_too_few_probes_or_an_unreachable_api_gives_no_data(self):
-        report = run(FakeApi(probes=[probe(MCI)]))
-        self.assertEqual((report["status"], report["endpoints"]), ("too-few-probes", {}))
+    def test_a_single_probe_is_enough(self):
+        # Hourly runs often find only one Iranian subscriber probe online; its connects still count.
+        api = FakeApi(probes=[probe(RIGHTEL)])
+        report = run(api)
+        self.assertEqual(report["status"], "ok")
+        self.assertEqual(set(report["nodes"]), {"AS57218"})
+        self.assertEqual(
+            report["endpoints"],
+            {endpoint: {"AS57218": [False]} for endpoint in ENDPOINTS},
+        )
+        self.assertEqual(report["controls"], {"start": {"AS57218": True}, "end": {"AS57218": True}})
+
+    def test_no_probe_or_an_unreachable_api_gives_no_data(self):
+        report = run(FakeApi(probes=[probe(3320, country="DE"), probe(202468)]))
+        self.assertEqual((report["status"], report["endpoints"]), ("no-probes", {}))
 
         def broken(request: httpx.Request) -> httpx.Response:
             return httpx.Response(500)

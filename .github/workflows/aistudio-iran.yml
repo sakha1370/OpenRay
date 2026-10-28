@@ -131,7 +131,7 @@ jobs:
       - name: Probe the survivors from Iranian nodes
         run: |
           python tools/iran_filter.py probe --work work --results results --output probe/probe.json \
-            --budget-minutes "$PROBE_MINUTES"
+            --budget-minutes "$PROBE_MINUTES" --no-fallback
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
