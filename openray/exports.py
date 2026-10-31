@@ -7,6 +7,7 @@ import os
 import re
 import tempfile
 import time
+from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 
 from .domain import ALIASES, SCHEMES, Proxy
@@ -30,6 +31,22 @@ def rank(proxies: list[Proxy], scores: dict, context: str) -> list[Proxy]:
     return sorted(proxies, key=key)[:100]
 
 
+def client_unique(proxies: Iterable[Proxy]) -> list[Proxy]:
+    """One proxy per client key, in list order, so a client that removes duplicates keeps every line.
+
+    Identity separates variants that were each checked; clients merge them (see Proxy.client_key), so a
+    published list keeps only the variant most worth running.
+    """
+    proxies = list(proxies)
+    best: dict[str, Proxy] = {}
+    for p in proxies:
+        kept = best.get(p.client_key)
+        if kept is None or p.client_preference < kept.client_preference:
+            best[p.client_key] = p
+    keep = {p.identity for p in best.values()}
+    return [p for p in proxies if p.identity in keep]
+
+
 def build_snapshot(
     store: Store, root: Path, destination: Path, *, local: bool = False, local_context="others"
 ) -> Path:
@@ -42,6 +59,10 @@ def build_snapshot(
         proxies = [geo.label(p, counters) for p in proxies]
     finally:
         geo.close()
+    # Every list below is thinned from the full set, so a variant that passed a check is never lost
+    # to a sibling that did not.
+    everything = proxies
+    proxies = client_unique(everything)
     files: dict[str, bytes] = {}
 
     def write(name: str, content: str):
@@ -59,7 +80,8 @@ def build_snapshot(
             and h["outcome"] == "success"
         }
         write(
-            "output/Iran_valid_proxies.txt", lines_text(p.uri for p in proxies if p.identity in locally_valid)
+            "output/Iran_valid_proxies.txt",
+            lines_text(p.uri for p in client_unique(p for p in everything if p.identity in locally_valid)),
         )
     for kind in sorted((SCHEMES - set(ALIASES)) | {p.scheme for p in proxies}):
         write(f"output/kind/{kind}.txt", lines_text(p.uri for p in proxies if p.scheme == kind))
@@ -74,7 +96,7 @@ def build_snapshot(
         and h["last_success"] is not None
         and h["outcome"] == "success"
     }
-    iran_proxies = [p for p in proxies if p.identity in iran_ids]
+    iran_proxies = client_unique(p for p in everything if p.identity in iran_ids)
     if not local:
         write("output/Iran_valid_proxies.txt", lines_text(p.uri for p in iran_proxies))
     write("output_iran/all_valid_proxies.txt", lines_text(p.uri for p in iran_proxies))
@@ -109,9 +131,15 @@ def build_snapshot(
             and h["proxy_id"] in alive
         }
         sets[site] = eligible
-        write(f"output/site_access/{site}.txt", lines_text(p.uri for p in proxies if p.identity in eligible))
+        write(
+            f"output/site_access/{site}.txt",
+            lines_text(p.uri for p in client_unique(p for p in everything if p.identity in eligible)),
+        )
     common = set.intersection(*sets.values())
-    write("output/site_access/all_sites.txt", lines_text(p.uri for p in proxies if p.identity in common))
+    write(
+        "output/site_access/all_sites.txt",
+        lines_text(p.uri for p in client_unique(p for p in everything if p.identity in common)),
+    )
     clash_path, sing_path = root / "src/converter/config.yaml", root / "src/converter/singbox.json"
     assets = Path(__file__).parent / "assets"
     clash_template = (

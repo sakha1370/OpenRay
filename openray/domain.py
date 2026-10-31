@@ -85,6 +85,30 @@ VMESS_REDUNDANT = frozenset({"net", "tls", "scy"})
 # Shared with render.py so identity and rendering cannot disagree about these defaults.
 TLS_BY_DEFAULT = frozenset({"trojan", "hysteria", "hysteria2", "tuic", "https"})
 TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
+# Client key: the fields v2rayN's "remove duplicates" compares (ConfigHandler.CompareProfileItem), minus
+# the ones only some releases compare (xhttp mode/extra, gRPC authority/mode), so no release keeps two
+# entries this key merges. It is only used to thin published lists; health and scores stay on identity.
+CLIENT_PARAMS = frozenset(
+    {
+        "type",
+        "security",
+        "headertype",
+        "host",
+        "path",
+        "servicename",
+        "service",
+        "encryption",
+        "cipher",
+        "flow",
+        "sni",
+        "alpn",
+        "fp",
+        "pbk",
+        "sid",
+        "obfs",
+        "obfs-password",
+    }
+)
 
 
 class ParseError(ValueError):
@@ -202,6 +226,28 @@ class Proxy:
         ]
         encoded = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(encoded.encode()).hexdigest()
+
+    @cached_property
+    def client_key(self) -> str:
+        """Coarser than identity: URIs sharing it differ only in what v2rayN ignores, such as
+        allowInsecure, packetEncoding, spiderX and parameters no client reads."""
+        # v2rayN stores a blank value and an absent one alike, and an empty SNI falls back to the server.
+        kept = {
+            k: v
+            for k, v in self._effective_params().items()
+            if k in CLIENT_PARAMS and any(x not in (None, "") for x in v)
+        }
+        if kept.get("security", [""])[0] in {"tls", "reality"}:
+            kept.setdefault("sni", [self.server])
+        data = [self.scheme, self.server, self.port, self.username, self.password, kept]
+        encoded = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(encoded.encode()).hexdigest()
+
+    @property
+    def client_preference(self) -> tuple[bool, bool]:
+        """Sorts the variant to keep first: verified TLS over allowInsecure, then UDP-capable."""
+        insecure = self.get("allowInsecure", self.get("insecure", "false")).lower() in TRUE_VALUES
+        return insecure, not self.get("packetEncoding")
 
     def _effective_params(self) -> dict[str, list]:
         """Parameters that shape the connection, with defaults and spelling variants resolved.
