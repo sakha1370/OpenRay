@@ -325,10 +325,13 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(report["verdicts"], {"unprobed": 1, "unreachable": 1, "reachable": 1})
             self.assertEqual(report["probe_stats"]["reached by no node"], 1)
             self.assertEqual(report["probe_stats"]["share of endpoints reached by ir1"], "50%")
-            # Reachable from a hosting network is not verified: that needs probes on subscriber networks.
-            nothing = root / "nothing.txt"
+            # Reachable from a hosting network is not verified: that needs probes on subscriber networks. The
+            # list is still written, and only the verified file is left alone (exit 4).
+            nothing, listed = root / "nothing.txt", root / "listed.txt"
             more = ("--min-lines", 1, "--verified", nothing, "--min-verified", 1)
-            self.assertEqual(run("assemble", *common, *args, *more), 3)
+            listing = ("--probe", root / "probe.json", "--output", listed, "--report", root / "listed.json")
+            self.assertEqual(run("assemble", *common, *listing, *more), 4)
+            self.assertTrue(listed.exists())
             self.assertFalse(nothing.exists())
 
             out = root / "gated.txt"
@@ -421,27 +424,30 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(report["verified"], 1)
             audit = (root / "dropped_by_probe.tsv").read_text(encoding="utf-8")
             self.assertEqual(audit, f"{lines[1]}\ttried AS197207,AS58224\n")
-            # Demanding more verified lines than exist fails the gate and writes neither file.
-            short, none_out = root / "short.txt", root / "none.txt"
-            strict = ("--output", none_out, "--report", root / "strict.json", "--verified", short)
+            # Demanding more verified lines than exist leaves the verified file unwritten but keeps the list.
+            short, kept_out = root / "short.txt", root / "kept.txt"
+            strict = ("--output", kept_out, "--report", root / "strict.json", "--verified", short)
             demand = ("--min-lines", 1, "--min-verified", 2)
             code = run("assemble", *common, "--probe", root / "probe.json", *strict, *demand)
-            self.assertEqual(code, 3)
-            self.assertFalse(short.exists() or none_out.exists())
+            self.assertEqual(code, 4)
+            self.assertTrue(kept_out.exists())
+            self.assertFalse(short.exists())
+            strict_report = json.loads((root / "strict.json").read_text(encoding="utf-8"))
+            self.assertEqual(strict_report["gates"], "pass")
+            self.assertTrue(strict_report["verified_gate"].startswith("left unchanged"))
 
-            # A probe that dropped out early covered 3 of 10 endpoints: too thin to publish at half, fine at a third.
-            (root / "probe.json").write_text(
-                json.dumps({**probe, "requested": 10, "probed": 3}), encoding="utf-8"
+            # A gate on the list itself still stops everything.
+            blocked = (
+                "--output",
+                root / "blocked.txt",
+                "--report",
+                root / "blocked.json",
+                "--verified",
+                short,
             )
-            thin, thin_report = root / "thin.txt", root / "thin.json"
-            args = ("--probe", root / "probe.json", "--output", thin, "--report", thin_report)
-            share = ("--min-lines", 1, "--verified", root / "thin_verified.txt", "--min-verified", 1)
-            self.assertEqual(run("assemble", *common, *args, *share, "--min-probed-share", 0.5), 3)
-            self.assertFalse(thin.exists())
-            self.assertEqual(
-                json.loads(thin_report.read_text(encoding="utf-8"))["gates"], "FAIL: enough endpoints probed"
-            )
-            self.assertEqual(run("assemble", *common, *args, *share, "--min-probed-share", 0.3), 0)
+            code = run("assemble", *common, "--probe", root / "probe.json", *blocked, "--min-lines", 99)
+            self.assertEqual(code, 3)
+            self.assertFalse((root / "blocked.txt").exists() or short.exists())
 
 
 if __name__ == "__main__":

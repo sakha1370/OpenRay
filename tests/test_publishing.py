@@ -54,6 +54,7 @@ class PublishingTests(unittest.TestCase):
                 "aistudio_iran.txt": "vless://one\n",
                 "aistudio_iran_verified.txt": "vless://two\n",
                 "aistudio_iran_fragment.json": "[\n]\n",
+                "aistudio_iran_evidence.json": '{"version":1,"endpoints":{}}\n',
             }
             for name, text in kept.items():
                 (site / name).write_text(text)

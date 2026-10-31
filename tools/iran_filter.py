@@ -2,6 +2,9 @@
 
 Stages, driven by .github/workflows/aistudio-iran.yml: prepare, check (sharded), probe, assemble. The rules
 live in openray/iran.py. Nothing here touches the SQLite state or the original aistudio.txt.
+
+assemble exits 0 when it wrote the lists, 3 when a gate on the list itself failed (nothing is written), and 4
+when the list was written but too few lines have probe evidence to replace the verified list.
 """
 
 import argparse
@@ -14,11 +17,12 @@ import sys
 import tempfile
 import time
 from collections import Counter
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
 
-from openray import globalping, iran
+from openray import globalping, iran, iran_evidence
 from openray.config import Settings
 from openray.domain import Outcome, ParseError, Proxy, parse_uri
 from openray.files import atomic_write, json_text, lines_text
@@ -342,6 +346,8 @@ async def run_probe(endpoints: list[str], budget_minutes: float) -> dict:
 
 
 def probe(args) -> int:
+    started = datetime.now(UTC)
+    ledger = iran_evidence.load(args.evidence)
     chosen = choose(load_candidates(args.work), load_results(args.results))
     best: dict[str, tuple[int, int]] = {}
     for item, _ in chosen.values():
@@ -350,14 +356,25 @@ def probe(args) -> int:
         # Evidence cannot lift the last tier, so probing it would only spend the services' goodwill.
         if (key := endpoint_key(proxy)) and tier[0] < 5:
             best[key] = min(tier, best.get(key, tier))
-    # The head of the published list first, each tier in a fixed shuffle, so a spent budget has covered it.
-    ordered = sorted(best, key=lambda k: (*best[k], hashlib.sha256(k.encode()).hexdigest()))
+    # Whatever no probe has answered for longest goes first, so a run that is cut short still moves the ledger
+    # on and the next one starts where it stopped. Within that, the head of the published list first, each tier
+    # in a fixed shuffle.
+    ordered = sorted(
+        best,
+        key=lambda k: (
+            iran_evidence.last_checked(ledger, k),
+            *best[k],
+            hashlib.sha256(k.encode()).hexdigest(),
+        ),
+    )
     report = asyncio.run(globalping.run(ordered, args.budget_minutes))
     if report["status"] != "ok" and not args.no_fallback:
         # Globalping could not serve us; the check-host nodes are hosting networks, but they are something.
         failed = {k: v for k, v in report.items() if k != "endpoints"}
         report = asyncio.run(run_probe(ordered, args.budget_minutes))
         report.update(prober="check-host", fallback_from=failed)
+    # The ledger stamps every result with the start of the probe, which is the oldest the answers can be.
+    report["at"] = iran_evidence.stamp(started)
     atomic_write(args.output, json_text(report))
     brief = {k: v for k, v in report.items() if k not in {"endpoints", "samples", "controls"}}
     print(json_text(brief), end="")
@@ -425,6 +442,8 @@ def summary_markdown(report: dict) -> str:
     lines.append(f"Source commit `{str(source['sha'])[:12]}`, {report['input_lines']} input lines.")
     lines.append(f"Published lines: **{report['published']}**, verified: **{report['verified']}**.")
     lines.append(f"Gates: {report['gates']}.")
+    if "verified_gate" in report:
+        lines.append(f"Verified list: {report['verified_gate']}.")
     probing = report["probe"]
     status, probed = probing.get("status", "not run"), probing.get("probed", 0)
     limited = probing.get("rate_limited", probing.get("refused", 0))
@@ -442,6 +461,7 @@ def summary_markdown(report: dict) -> str:
         ("Probe controls (8.8.8.8 and 1.1.1.1 on 443)", "probe_controls"),
         ("Probes used (ASN, city, ISP label)", "probe_nodes"),
         ("Probe verdicts", "verdicts"),
+        ("Evidence ledger", "evidence"),
         ("Published, by rank bucket", "buckets"),
         ("Published, by protocol and security", "mix"),
     ):
@@ -464,6 +484,15 @@ def assemble(args) -> int:
     counts = {}
     if args.check_counts and args.check_counts.is_file():
         counts = json.loads(args.check_counts.read_text(encoding="utf-8"))
+    now = args.now or datetime.now(UTC)
+    ledger = iran_evidence.load(args.evidence)
+    # Only answers from subscriber-network probes are kept, and only when the probe says when it started.
+    stamped = iran_evidence.parse_stamp(probing.get("at")) if probing.get("prober") == "globalping" else None
+    folded: Counter = Counter()
+    if stamped:
+        ledger, folded = iran_evidence.merge(ledger, endpoints, trusted, stamped)
+    ledger = iran_evidence.prune(ledger, now)
+    carried = iran_evidence.recent(ledger, now, timedelta(hours=args.evidence_ttl_hours))
 
     def judge(nodes: dict) -> str:
         if probing.get("prober") == "globalping":
@@ -497,13 +526,17 @@ def assemble(args) -> int:
         proxy = parse_uri(item["uri"])
         key = endpoint_key(proxy)
         verdict = judge(endpoints[key]) if key in endpoints else "unprobed"
+        # Recent evidence stands in for an answer this run did not get. A run's own answer wins over it, and
+        # without a stamp the ledger cannot tell whether that answer was a trusted miss, so it wins there too.
+        if key in carried and (verdict == "unprobed" or (stamped and verdict == "unknown")):
+            verdict = "carried"
         verdicts[verdict] += 1
         if verdict == "unreachable":
             dropped_after["probe: unreachable from Iranian nodes"] += 1
             tried = ",".join(sorted(endpoints[key]))
             unreachable.append(f"{item['uri']}\ttried {tried}\n")
             continue
-        evidence = verdict == "reachable" or has_iran_evidence(counts.get(entry["source"]))
+        evidence = verdict in {"reachable", "carried"} or has_iran_evidence(counts.get(entry["source"]))
         rank = iran.bucket(proxy, iran_evidence=evidence)
         order = (rank, iran.protocol_rank(proxy), iran.port_rank(proxy), result["ms"], proxy.uri)
         rows.append((order, proxy, verdict))
@@ -520,8 +553,8 @@ def assemble(args) -> int:
             continue
         identities.add(proxy.identity)
         output.append(proxy.uri)
-        # Verified: a probe on a subscriber network connected to the endpoint during this run.
-        if verdict == "reachable" and probing.get("prober") == "globalping":
+        # Verified: a probe on a subscriber network connected to the endpoint in this run, or recently enough.
+        if verdict == "carried" or (verdict == "reachable" and probing.get("prober") == "globalping"):
             verified.append(proxy.uri)
         buckets[f"{rank}"] += 1
         mix[f"{proxy.scheme} / {proxy.transport} / {iran.security(proxy)}"] += 1
@@ -533,12 +566,10 @@ def assemble(args) -> int:
         "all parse and unique": len({p.identity for p in reparsed}) == len(output),
         "no dropped scheme": all(iran.drop_reason(p) is None for p in reparsed),
     }
-    if args.verified:
-        gates["enough verified lines (needs Globalping probes)"] = len(verified) >= args.min_verified
-        # A probe that drops out mid-run leaves most endpoints unasked and the verified list thin.
-        covered = probing.get("probed", 0) >= args.min_probed_share * probing.get("requested", 0)
-        gates["enough endpoints probed"] = covered
     failed = [name for name, ok in gates.items() if not ok]
+    # The verified list stands apart from the gates above: too few lines with evidence only leaves the
+    # published verified list as it is, and the list itself is still worth publishing.
+    thin = bool(args.verified) and len(verified) < args.min_verified
     nodes = {name.split(".")[0]: describe_node(info) for name, info in probing.get("nodes", {}).items()}
     report = {
         **prepared,
@@ -546,6 +577,11 @@ def assemble(args) -> int:
         "verified": len(verified),
         "gates": "pass" if not failed else "FAIL: " + ", ".join(failed),
         "probe": {k: v for k, v in probing.items() if k not in {"endpoints", "samples", "controls"}},
+        "evidence": {
+            "ledger endpoints": len(ledger),
+            "reached within the window": len(carried),
+            **{f"this run: {name}": count for name, count in folded.items()},
+        },
         "repairs": dict(sorted(repairs.items())),
         "retest_originals": dict(Counter(r["outcome"] for i, r in results.items() if i.endswith(".o"))),
         "retest_fixes": dict(Counter(r["outcome"] for i, r in results.items() if i.endswith(".f"))),
@@ -557,16 +593,24 @@ def assemble(args) -> int:
         "buckets": dict(sorted(buckets.items())),
         "mix": dict(mix.most_common()),
     }
+    if args.verified:
+        report["verified_gate"] = (
+            f"left unchanged, {len(verified)} lines have evidence and {args.min_verified} are needed"
+            if thin
+            else f"refreshed, {len(verified)} lines"
+        )
     atomic_write(args.report, json_text(report))
     atomic_write(args.report.with_name("dropped_by_probe.tsv"), "".join(unreachable))
     atomic_write(args.summary, summary_markdown(report))
+    if args.evidence_output and (ledger or (args.evidence and args.evidence.is_file())):
+        atomic_write(args.evidence_output, iran_evidence.dump(ledger))
     print(args.summary.read_text(encoding="utf-8"), end="")
     if failed:
         return 3
     atomic_write(args.output, lines_text(output))
-    if args.verified:
+    if args.verified and not thin:
         atomic_write(args.verified, lines_text(verified))
-    return 0
+    return 4 if thin else 0
 
 
 def array_text(configs: list[dict]) -> str:
@@ -695,6 +739,12 @@ def table_rows(mapping: dict) -> list[str]:
     return ["", "| Item | Value |", "|---|---|", *(f"| {key} | {value} |" for key, value in mapping.items())]
 
 
+def stamp_argument(value: str) -> datetime:
+    if (moment := iran_evidence.parse_stamp(value)) is None:
+        raise argparse.ArgumentTypeError("expected a UTC time like 2026-10-31T09:00:00Z")
+    return moment
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -720,6 +770,9 @@ def main(argv=None) -> int:
     p.add_argument("--budget-minutes", type=float, default=120)
     # Verified lines need Globalping, so check-host cannot rescue a publish and only burns the whole budget.
     p.add_argument("--no-fallback", action="store_true", help="do not fall back to check-host nodes")
+    p.add_argument(
+        "--evidence", type=Path, help="ledger from earlier runs; the endpoints checked longest ago go first"
+    )
     p.set_defaults(run=probe)
 
     p = commands.add_parser("assemble")
@@ -734,7 +787,10 @@ def main(argv=None) -> int:
     p.add_argument("--min-share", type=float, default=0.25)
     p.add_argument("--verified", type=Path)
     p.add_argument("--min-verified", type=int, default=1)
-    p.add_argument("--min-probed-share", type=float, default=0.0)
+    p.add_argument("--evidence", type=Path, help="ledger from earlier runs")
+    p.add_argument("--evidence-output", type=Path, help="where to write the ledger with this run folded in")
+    p.add_argument("--evidence-ttl-hours", type=float, default=iran_evidence.TTL / timedelta(hours=1))
+    p.add_argument("--now", type=stamp_argument, help="UTC time to measure the ledger's age against (tests)")
     p.set_defaults(run=assemble)
 
     p = commands.add_parser("fragment")

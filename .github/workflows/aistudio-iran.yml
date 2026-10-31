@@ -4,6 +4,9 @@ name: AI Studio list for Iran
 # Runs hourly at minute 50 (UTC) on main as a full run (limit 0) and publishes it. A scheduled run has no inputs,
 # so the env block below supplies the defaults. A manual run publishes only with publish=true; otherwise the
 # result is an artifact. Publishing needs main and limit 0, and the assemble gates still decide whether to commit.
+# The Iranian probes drop out mid-run, so what they reach is kept in aistudio_iran_evidence.json for a day and
+# the verified list is this run's connects plus the ones still on record. A gate on the list itself stops the
+# publish; too few lines with evidence only leaves the verified file as it is (assemble exits 4, a warning).
 on:
   schedule:
     - cron: '50 * * * *'
@@ -54,6 +57,10 @@ jobs:
           mkdir -p work/source
           git show FETCH_HEAD:output/site_access/aistudio.txt > work/source/aistudio.txt
           git show FETCH_HEAD:output/check_counts.json > work/source/check_counts.json
+          # Absent until the first publish with evidence; assemble refuses a file that exists but is damaged.
+          if git cat-file -e FETCH_HEAD:output/site_access/aistudio_iran_evidence.json 2> /dev/null; then
+            git show FETCH_HEAD:output/site_access/aistudio_iran_evidence.json > work/source/evidence.json
+          fi
           echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
           echo "blob=$(git rev-parse FETCH_HEAD:output/site_access/aistudio.txt)" >> "$GITHUB_OUTPUT"
       - name: Classify, repair and shard
@@ -131,7 +138,7 @@ jobs:
       - name: Probe the survivors from Iranian nodes
         run: |
           python tools/iran_filter.py probe --work work --results results --output probe/probe.json \
-            --budget-minutes "$PROBE_MINUTES" --no-fallback
+            --budget-minutes "$PROBE_MINUTES" --no-fallback --evidence work/source/evidence.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
@@ -179,13 +186,19 @@ jobs:
         env:
           MIN_LINES: ${{ env.LIMIT == '0' && '300' || '1' }}
           MIN_VERIFIED: ${{ env.LIMIT == '0' && '50' || '1' }}
-          MIN_PROBED_SHARE: ${{ env.LIMIT == '0' && '0.5' || '0' }}
         run: |
+          status=0
           python tools/iran_filter.py assemble --work work --results results \
             --probe probe/probe.json --check-counts work/source/check_counts.json \
+            --evidence work/source/evidence.json --evidence-output artifacts/aistudio_iran_evidence.json \
             --output artifacts/aistudio_iran.txt --verified artifacts/aistudio_iran_verified.txt \
             --report artifacts/report.json --summary artifacts/summary.md \
-            --min-lines "$MIN_LINES" --min-verified "$MIN_VERIFIED" --min-probed-share "$MIN_PROBED_SHARE"
+            --min-lines "$MIN_LINES" --min-verified "$MIN_VERIFIED" || status=$?
+          if test "$status" -eq 4; then
+            echo "::warning title=Verified list not refreshed::fewer than $MIN_VERIFIED lines have recent probe evidence, so the published verified list stays as it is"
+          elif test "$status" -ne 0; then
+            exit "$status"
+          fi
       - name: Xray TLS-fragment subscription
         env:
           MIN_FRAGMENTS: ${{ env.LIMIT == '0' && '50' || '1' }}
@@ -216,27 +229,37 @@ jobs:
           published=$(jq -r .published artifacts/report.json)
           verified=$(jq -r .verified artifacts/report.json)
           fragments=$(jq -r .written artifacts/fragment.json)
+          # The verified file and the evidence ledger exist only when assemble had something to say.
+          files="aistudio_iran.txt aistudio_iran_fragment.json"
+          subset="its verified subset is unchanged"
+          if test -f artifacts/aistudio_iran_verified.txt; then
+            files="$files aistudio_iran_verified.txt"
+            subset="its verified subset ($verified)"
+          fi
+          if test -f artifacts/aistudio_iran_evidence.json; then
+            files="$files aistudio_iran_evidence.json"
+          fi
           git config user.name "OpenRay"
           git config user.email "openray@localhost"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git checkout -B publish FETCH_HEAD
-            cp artifacts/aistudio_iran.txt artifacts/aistudio_iran_verified.txt \
-              artifacts/aistudio_iran_fragment.json output/site_access/
-            git add output/site_access/aistudio_iran.txt output/site_access/aistudio_iran_verified.txt \
-              output/site_access/aistudio_iran_fragment.json
+            for name in $files; do
+              cp "artifacts/$name" output/site_access/
+              git add "output/site_access/$name"
+            done
             if git diff --cached --quiet; then
-              echo "all three files are already up to date"
+              echo "the published files are already up to date"
               exit 0
             fi
             for name in $(git diff --cached --name-only); do
               case "$name" in
                 output/site_access/aistudio_iran.txt | output/site_access/aistudio_iran_verified.txt) ;;
-                output/site_access/aistudio_iran_fragment.json) ;;
+                output/site_access/aistudio_iran_fragment.json | output/site_access/aistudio_iran_evidence.json) ;;
                 *) echo "unexpected staged path: $name" >&2; exit 1 ;;
               esac
             done
-            git commit -m "Update aistudio_iran.txt ($published lines), its verified subset ($verified) and fragment subscription ($fragments configs) from aistudio.txt at ${source_sha:0:12} [skip ci]"
+            git commit -m "Update aistudio_iran.txt ($published lines), $subset and fragment subscription ($fragments configs) from aistudio.txt at ${source_sha:0:12} [skip ci]"
             if git push origin HEAD:refs/heads/main; then
               exit 0
             fi

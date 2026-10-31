@@ -58,7 +58,7 @@ curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/outp
 
 **🇮🇷 Iran Users (Optimized):**
 ```bash
-# get the endpoints verified from Iranian subscriber networks
+# get the endpoints reached from Iranian subscriber networks in the last 24 hours
 curl -s https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/site_access/aistudio_iran_verified.txt
 ```
 
