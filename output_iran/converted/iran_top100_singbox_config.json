@@ -66,6 +66,7 @@
         "p-58b8bed288bac040",
         "p-5b57ad69cb9e1dce",
         "p-6ed86632c359d636",
+        "p-7552582ccfcd23bc",
         "p-761ca45494a850bd",
         "p-771f1fa8932f6031",
         "p-772a2f77b4807f32",
@@ -114,8 +115,7 @@
         "p-ee4ebb9ed7f8ef68",
         "p-f159a12f8f49a095",
         "p-f615f51dba07e5c7",
-        "p-f8e229c0556d5194",
-        "p-ff0975ad01f7d60f"
+        "p-f8e229c0556d5194"
       ],
       "tag": "proxy",
       "type": "selector"
@@ -158,6 +158,7 @@
         "p-58b8bed288bac040",
         "p-5b57ad69cb9e1dce",
         "p-6ed86632c359d636",
+        "p-7552582ccfcd23bc",
         "p-761ca45494a850bd",
         "p-771f1fa8932f6031",
         "p-772a2f77b4807f32",
@@ -206,8 +207,7 @@
         "p-ee4ebb9ed7f8ef68",
         "p-f159a12f8f49a095",
         "p-f615f51dba07e5c7",
-        "p-f8e229c0556d5194",
-        "p-ff0975ad01f7d60f"
+        "p-f8e229c0556d5194"
       ],
       "tag": "auto",
       "type": "urltest",
@@ -595,6 +595,28 @@
       "server_port": 8080,
       "tag": "p-6ed86632c359d636",
       "type": "shadowsocks"
+    },
+    {
+      "flow": "xtls-rprx-vision",
+      "server": "server.slavkiti.monster",
+      "server_port": 443,
+      "tag": "p-7552582ccfcd23bc",
+      "tls": {
+        "enabled": true,
+        "insecure": false,
+        "reality": {
+          "enabled": true,
+          "public_key": "J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk",
+          "short_id": "d659da01fb94"
+        },
+        "server_name": "www.foxsports.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "type": "vless",
+      "uuid": "ff40696b-06d6-443b-9481-8d01eddd13e1"
     },
     {
       "method": "chacha20-ietf-poly1305",
@@ -1248,14 +1270,6 @@
       "server": "213.202.208.199",
       "server_port": 7001,
       "tag": "p-f8e229c0556d5194",
-      "type": "shadowsocks"
-    },
-    {
-      "method": "chacha20-ietf-poly1305",
-      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
-      "server": "82.38.31.16",
-      "server_port": 8080,
-      "tag": "p-ff0975ad01f7d60f",
       "type": "shadowsocks"
     }
   ],
