@@ -37,6 +37,7 @@
         "p-0e486f367a228205",
         "p-14f6c96aec712fb9",
         "p-150d18960882d44a",
+        "p-15f08a8cbed268a4",
         "p-18d1b5161410d205",
         "p-19a80662e3d41460",
         "p-19c2a2db72025810",
@@ -61,7 +62,6 @@
         "p-41c7c039e892933c",
         "p-47fa3c9a433342d2",
         "p-4f66db9ac3d1110c",
-        "p-505b6f971daf7486",
         "p-5532259ab19dde31",
         "p-58b8bed288bac040",
         "p-5b57ad69cb9e1dce",
@@ -78,6 +78,7 @@
         "p-872f2156777bdeb1",
         "p-885821c9db55b150",
         "p-8efddcebe297338f",
+        "p-9437a0b843706e91",
         "p-9440e6c126c8b787",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
@@ -85,7 +86,6 @@
         "p-a2895cd19516c31e",
         "p-a5864713beff888b",
         "p-a6d008bb05a4608e",
-        "p-adbc9524c4ad56b1",
         "p-b1eab8c0660f004c",
         "p-b2898639411a31a8",
         "p-b703055e08a212a8",
@@ -99,7 +99,6 @@
         "p-c66b17b1a25f069f",
         "p-c709904fea2fffa9",
         "p-c7221c04dcf7a121",
-        "p-cab8e86dc85cf48a",
         "p-cb8e406f90aade7a",
         "p-ce16fed09f559cb2",
         "p-ce5298a0a529a166",
@@ -129,6 +128,7 @@
         "p-0e486f367a228205",
         "p-14f6c96aec712fb9",
         "p-150d18960882d44a",
+        "p-15f08a8cbed268a4",
         "p-18d1b5161410d205",
         "p-19a80662e3d41460",
         "p-19c2a2db72025810",
@@ -153,7 +153,6 @@
         "p-41c7c039e892933c",
         "p-47fa3c9a433342d2",
         "p-4f66db9ac3d1110c",
-        "p-505b6f971daf7486",
         "p-5532259ab19dde31",
         "p-58b8bed288bac040",
         "p-5b57ad69cb9e1dce",
@@ -170,6 +169,7 @@
         "p-872f2156777bdeb1",
         "p-885821c9db55b150",
         "p-8efddcebe297338f",
+        "p-9437a0b843706e91",
         "p-9440e6c126c8b787",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
@@ -177,7 +177,6 @@
         "p-a2895cd19516c31e",
         "p-a5864713beff888b",
         "p-a6d008bb05a4608e",
-        "p-adbc9524c4ad56b1",
         "p-b1eab8c0660f004c",
         "p-b2898639411a31a8",
         "p-b703055e08a212a8",
@@ -191,7 +190,6 @@
         "p-c66b17b1a25f069f",
         "p-c709904fea2fffa9",
         "p-c7221c04dcf7a121",
-        "p-cab8e86dc85cf48a",
         "p-cb8e406f90aade7a",
         "p-ce16fed09f559cb2",
         "p-ce5298a0a529a166",
@@ -275,6 +273,20 @@
       "transport": {
         "headers": {
           "Host": "OV-Germany1.09vpn.com"
+        },
+        "path": "/vless/",
+        "type": "ws"
+      },
+      "type": "vless",
+      "uuid": "18535741-e8b3-4b43-9348-785b55936751"
+    },
+    {
+      "server": "57.129.41.216",
+      "server_port": 80,
+      "tag": "p-15f08a8cbed268a4",
+      "transport": {
+        "headers": {
+          "Host": "ov-germany1.09vpn.comfreenettirGermanyLimburg"
         },
         "path": "/vless/",
         "type": "ws"
@@ -558,14 +570,6 @@
     },
     {
       "method": "chacha20-ietf-poly1305",
-      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
-      "server": "82.38.31.174",
-      "server_port": 8080,
-      "tag": "p-505b6f971daf7486",
-      "type": "shadowsocks"
-    },
-    {
-      "method": "chacha20-ietf-poly1305",
       "password": "k1dBOmOB4oqi7Ump37a1bQ",
       "server": "82.38.31.191",
       "server_port": 8080,
@@ -804,6 +808,28 @@
       "uuid": "cdb7d825-9892-4d6f-80b8-7add83159dac"
     },
     {
+      "flow": "xtls-rprx-vision",
+      "server": "server.slavkiti.monster",
+      "server_port": 443,
+      "tag": "p-9437a0b843706e91",
+      "tls": {
+        "enabled": true,
+        "insecure": false,
+        "reality": {
+          "enabled": true,
+          "public_key": "J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk",
+          "short_id": "2a2ce9e42980"
+        },
+        "server_name": "www.mozilla.org",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "type": "vless",
+      "uuid": "d84c13b2-c2b9-4a7c-838f-05ac09ee422e"
+    },
+    {
       "method": "chacha20-ietf-poly1305",
       "password": "oZIoA69Q8yhcQV8ka3Pa3A",
       "server": "82.38.31.9",
@@ -863,14 +889,6 @@
       "server": "82.38.31.211",
       "server_port": 8080,
       "tag": "p-a6d008bb05a4608e",
-      "type": "shadowsocks"
-    },
-    {
-      "method": "chacha20-ietf-poly1305",
-      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
-      "server": "193.29.139.204",
-      "server_port": 8080,
-      "tag": "p-adbc9524c4ad56b1",
       "type": "shadowsocks"
     },
     {
@@ -1023,14 +1041,6 @@
       "server": "82.38.31.180",
       "server_port": 8080,
       "tag": "p-c7221c04dcf7a121",
-      "type": "shadowsocks"
-    },
-    {
-      "method": "chacha20-ietf-poly1305",
-      "password": "oZIoA69Q8yhcQV8ka3Pa3A",
-      "server": "82.38.31.11",
-      "server_port": 8080,
-      "tag": "p-cab8e86dc85cf48a",
       "type": "shadowsocks"
     },
     {
