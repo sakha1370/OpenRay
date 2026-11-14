@@ -43,6 +43,7 @@
         "p-19c2a2db72025810",
         "p-1a181dd30536e38a",
         "p-1b8e7170c565c793",
+        "p-1c63b720f85de535",
         "p-1d1865a6e4e056c7",
         "p-1d290158039c6e62",
         "p-1e54a29ee4ea900b",
@@ -74,7 +75,6 @@
         "p-806b6849079d8198",
         "p-81b1497a05133022",
         "p-872f2156777bdeb1",
-        "p-885821c9db55b150",
         "p-8efddcebe297338f",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
@@ -132,6 +132,7 @@
         "p-19c2a2db72025810",
         "p-1a181dd30536e38a",
         "p-1b8e7170c565c793",
+        "p-1c63b720f85de535",
         "p-1d1865a6e4e056c7",
         "p-1d290158039c6e62",
         "p-1e54a29ee4ea900b",
@@ -163,7 +164,6 @@
         "p-806b6849079d8198",
         "p-81b1497a05133022",
         "p-872f2156777bdeb1",
-        "p-885821c9db55b150",
         "p-8efddcebe297338f",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
@@ -356,6 +356,22 @@
       "server_port": 8008,
       "tag": "p-1b8e7170c565c793",
       "type": "shadowsocks"
+    },
+    {
+      "alter_id": 0,
+      "security": "auto",
+      "server": "168.138.43.75",
+      "server_port": 80,
+      "tag": "p-1c63b720f85de535",
+      "transport": {
+        "headers": {
+          "Host": "168.138.43.75"
+        },
+        "path": "/cctv13.m3u8",
+        "type": "ws"
+      },
+      "type": "vmess",
+      "uuid": "11c3627f-31e8-4695-dfbd-34076e2f1f5d"
     },
     {
       "method": "chacha20-ietf-poly1305",
@@ -728,28 +744,6 @@
       },
       "type": "vless",
       "uuid": "7d90f043-ed7f-40c9-ac2f-352987904958"
-    },
-    {
-      "flow": "xtls-rprx-vision",
-      "server": "server.slavkiti.monster",
-      "server_port": 443,
-      "tag": "p-885821c9db55b150",
-      "tls": {
-        "enabled": true,
-        "insecure": false,
-        "reality": {
-          "enabled": true,
-          "public_key": "J-dv-HrWfQ_IOoyutv0Kg-rO8QwoRwc02dS1dS_tblk",
-          "short_id": "ee1716767f9b"
-        },
-        "server_name": "www.tradingview.com",
-        "utls": {
-          "enabled": true,
-          "fingerprint": "chrome"
-        }
-      },
-      "type": "vless",
-      "uuid": "4d017db2-7655-4276-9557-e2ec25b04ee7"
     },
     {
       "server": "43.108.48.169",
