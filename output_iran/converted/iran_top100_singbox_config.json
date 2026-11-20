@@ -45,7 +45,6 @@
         "p-1b8e7170c565c793",
         "p-1c63b720f85de535",
         "p-1d1865a6e4e056c7",
-        "p-1d290158039c6e62",
         "p-1e54a29ee4ea900b",
         "p-1e6d028c15963671",
         "p-246988dec46a803a",
@@ -79,6 +78,7 @@
         "p-8efddcebe297338f",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
+        "p-a1319ec2cc2ee174",
         "p-a1abcc54c71b1c52",
         "p-a2895cd19516c31e",
         "p-a5864713beff888b",
@@ -132,7 +132,6 @@
         "p-1b8e7170c565c793",
         "p-1c63b720f85de535",
         "p-1d1865a6e4e056c7",
-        "p-1d290158039c6e62",
         "p-1e54a29ee4ea900b",
         "p-1e6d028c15963671",
         "p-246988dec46a803a",
@@ -166,6 +165,7 @@
         "p-8efddcebe297338f",
         "p-9aaab14b00b11734",
         "p-a0c0b03148ee710c",
+        "p-a1319ec2cc2ee174",
         "p-a1abcc54c71b1c52",
         "p-a2895cd19516c31e",
         "p-a5864713beff888b",
@@ -376,22 +376,6 @@
       "server_port": 8080,
       "tag": "p-1d1865a6e4e056c7",
       "type": "shadowsocks"
-    },
-    {
-      "alter_id": 0,
-      "security": "auto",
-      "server": "3h-kazakhstan1.09vpn.com",
-      "server_port": 80,
-      "tag": "p-1d290158039c6e62",
-      "transport": {
-        "headers": {
-          "Host": "3h-kazakhstan1.09vpn.com"
-        },
-        "path": "/vmess/",
-        "type": "ws"
-      },
-      "type": "vmess",
-      "uuid": "567f4be5-12ab-42e1-b8d9-db6fd1fdd31c"
     },
     {
       "method": "chacha20-ietf-poly1305",
@@ -794,6 +778,31 @@
       "server_port": 16233,
       "tag": "p-a0c0b03148ee710c",
       "type": "shadowsocks"
+    },
+    {
+      "flow": "xtls-rprx-vision",
+      "server": "159.89.87.21",
+      "server_port": 28190,
+      "tag": "p-a1319ec2cc2ee174",
+      "tls": {
+        "alpn": [
+          "networld_vpn-channel@.networld_vpn-channel@.networld_vpn-channel@.networld_vpn-channel@.networld_vpn-channel@.networld_vpn-channel@.networld_vpn-"
+        ],
+        "enabled": true,
+        "insecure": false,
+        "reality": {
+          "enabled": true,
+          "public_key": "ZJRnFU-1s1JOnO8E9uZ7b00l1fPEh63fGRbdBANFRno",
+          "short_id": ""
+        },
+        "server_name": "aws.amazon.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "type": "vless",
+      "uuid": "14c80e0e-f7ce-4991-94fc-99a1db4a9b1e"
     },
     {
       "method": "chacha20-ietf-poly1305",
